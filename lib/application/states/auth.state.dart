@@ -18,7 +18,7 @@ class LoggedIn extends AuthState {
   List<Object?> get props => [role];
 }
 
-class SignUpState extends AuthState {}
+
 
 class AuthError extends AuthState {
   final String error;

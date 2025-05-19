@@ -22,78 +22,69 @@ class RemoteDataSource {
       headers: {"Content-Type": "application/json"},
       body: json.encode({"username": username, "password": password}),
     );
+    
+    print('Login Response Status: ${response.statusCode}');
+    print('Login Response Body: ${response.body}');
+    
     if (response.statusCode == 201) {
-      return jsonDecode(response.body);
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      print('Decoded Data: $data');
+      print('Role Type: ${data["role"].runtimeType}');
+      print('UserId Type: ${data["userId"].runtimeType}');
+      
+      if (data["role"] == null || data["access_token"] == null || data["userId"] == null) {
+        throw Exception('Invalid response from server: missing required fields');
+      }
+      return data;
     } else {
-      throw Exception('Invalid credentials!');
+      final error = jsonDecode(response.body);
+      throw Exception(error["message"] ?? 'Invalid credentials!');
     }
   }
 
-  Future<void> signUpCustomer(
+  Future<Map<String, dynamic>> signup(
     String endpoint,
-    String email,
+    String username,
     String password,
-    String phone,
-    String fullName,
+    String email,
+    String fullname,
+    String gender,
+    String employmentType,
+    String designation,
+    String dateOfBirth,
+    String role,
   ) async {
     final response = await httpClient.post(
       Uri.parse('http://$endpoint:3000/api/signup'),
       headers: {"Content-Type": "application/json"},
       body: json.encode({
-        "role": "customer",
-        "email": email,
+        "username": username,
         "password": password,
-        "phone": phone,
-        "fullName": fullName,
+        "email": email,
+        "fullname": fullname,
+        "gender": gender,
+        "employmentType": employmentType,
+        "designation": designation,
+        "dateOfBirth": dateOfBirth,
+        "role": role,
       }),
     );
-    if (response.statusCode != 201) {
-      throw Exception('Error signing up');
-    }
-  }
-
-  Future<void> signUpTechnician(
-    String endpoint,
-    String email,
-    String password,
-    String phone,
-    String fullName,
-    String skills,
-    String experience,
-    String educationLevel,
-    String availableLocation,
-    String additionalBio,
-  ) async {
-    final response = await httpClient.post(
-      Uri.parse('http://$endpoint:9000/trader/signup'),
-      headers: {"Content-Type": "application/json"},
-      body: json.encode({
-        "role": "technician",
-        "email": email,
-        "password": password,
-        "phone": phone,
-        "fullName": fullName,
-        "skills": skills,
-        "experience": experience,
-        "educationLevel": educationLevel,
-        "availableLocation": availableLocation,
-        "additionalBio": additionalBio,
-      }),
-    );
-    if (response.statusCode != 201) {
-      throw Exception('Error signing up');
-    }
-  }
-
-  Future<void> deleteAccount(String endpoint, String id, String role) async {
-    final headers = await _getHeaders();
-
-    final response = await httpClient.delete(
-      Uri.parse('http://$endpoint:9000/trader/delete-profile/$id?role=$role'),
-      headers: headers,
-    );
-    if (response.statusCode != 200) {
-      throw Exception('Error deleting account');
+    
+    print('Signup Response Status: ${response.statusCode}');
+    print('Signup Response Body: ${response.body}');
+    
+    if (response.statusCode == 201) {
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      print('Decoded Data: $data');
+      print('Role Type: ${data["role"].runtimeType}');
+      
+      if (data["role"] == null) {
+        throw Exception('Invalid response from server: missing role field');
+      }
+      return data;
+    } else {
+      final error = jsonDecode(response.body);
+      throw Exception(error["message"] ?? 'Signup failed!');
     }
   }
 }

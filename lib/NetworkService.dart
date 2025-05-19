@@ -18,14 +18,52 @@ class NetworkService {
     try {
       final response = await _dio.post(
         '/api/login',
-        data: {'username': username, 'password': password},
+        data: {
+          'username': username,
+          'password': password,
+        },
       );
-
+      
       if (response.statusCode == 200) {
         final data = response.data as Map<String, dynamic>;
         return data['role'] as String;
       } else {
         throw Exception('Login failed: ${response.statusMessage}');
+      }
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<void> signup(
+    String username,
+    String password,
+    String email,
+    String fullname,
+    String gender,
+    String employmentType,
+    String designation,
+    String dateOfBirth,
+    String role,
+  ) async {
+    try {
+      final response = await _dio.post(
+        '/api/signup',
+        data: {
+          'username': username,
+          'password': password,
+          'email': email,
+          'fullname': fullname,
+          'gender': gender,
+          'employmentType': employmentType,
+          'designation': designation,
+          'dateOfBirth': dateOfBirth,
+          'role': role,
+        },
+      );
+      
+      if (response.statusCode != 201) {
+        throw Exception('Signup failed: ${response.statusMessage}');
       }
     } on DioException catch (e) {
       throw _handleError(e);

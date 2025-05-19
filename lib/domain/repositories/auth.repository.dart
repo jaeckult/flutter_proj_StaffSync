@@ -1,24 +1,17 @@
 abstract class AuthRepository {
   Future<String> logIn(String email, String password);
-  Future<void> signUpCustomer(
-    String email,
+  Future<String> signup(
+    String username,
     String password,
-    String phone,
-    String fullName,
-  );
-  Future<void> signUpTechnician(
     String email,
-    String password,
-    String phone,
-    String fullName,
-    String skills,
-    String experience,
-    String educationLevel,
-    String availableLocation,
-    String additionalBio,
+    String fullname,
+    String gender,
+    String employmentType,
+    String designation,
+    String dateOfBirth,
+    String role,
   );
   Future<String?> getToken();
   Future<String?> getRole();
   Future<void> clearData();
-  Future<void> deleteAccount();
 }

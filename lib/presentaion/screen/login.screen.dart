@@ -1,9 +1,7 @@
 // login_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:staffsync/application/providers/providers.dart';
-import 'package:staffsync/application/states/auth.state.dart';
 import 'package:staffsync/NetworkService.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
@@ -44,7 +42,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           _usernameController.text,
           _passwordController.text,
         );
-        
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Successfully logged in!')),
@@ -52,9 +50,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(e.toString())),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(e.toString())));
         }
       } finally {
         if (mounted) {
@@ -129,15 +127,18 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         borderRadius: BorderRadius.circular(15),
                       ),
                     ),
-                    child: _isLoading
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text(
-                            'Login',
-                            style: TextStyle(
-                              fontSize: 18,
+                    child:
+                        _isLoading
+                            ? const CircularProgressIndicator(
                               color: Colors.white,
+                            )
+                            : const Text(
+                              'Login',
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.white,
+                              ),
                             ),
-                          ),
                   ),
                 ),
                 const SizedBox(height: 15),

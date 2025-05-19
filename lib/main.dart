@@ -4,11 +4,7 @@ import './presentaion/screen/login.screen.dart'; // Corrected path
 import './presentaion/screen/signup.screen.dart'; // Add this import
 
 void main() {
-  runApp(
-    const ProviderScope(
-      child: MyApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -17,8 +13,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'StaffSync',
       theme: ThemeData(primarySwatch: Colors.blue),
+
       debugShowCheckedModeBanner: false,
       initialRoute: '/login', // Set initial screen to Login
       routes: {

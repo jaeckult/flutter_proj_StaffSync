@@ -1,5 +1,3 @@
-//this is where the auth notifier goes
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:staffsync/domain/repositories/auth.repository.dart';
 import 'package:staffsync/application/states/auth.state.dart';
@@ -28,57 +26,42 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<void> signUpCustomer(
+  // username,
+  //   password,
+  //   email,
+  //   fullName,
+  //   gender,
+  //   employmentType,
+  //   designation,
+  //   dateOfBirth,
+  //   role
+  Future<void> signup(
     String username,
     String password,
-    String phone,
-    String fullName,
+    String email,
+    String fullname,
+    String gender,
+    String employmentType,
+    String designation,
+    String dateOfBirth,
+    String role,
   ) async {
     try {
       print("hello signup in notifier");
-      await authRepository.signUpCustomer(username, password, phone, fullName);
-      await logIn(username, password);
-    } catch (error) {
-      state = AuthError(error.toString());
-    }
-  }
-
-  Future<void> signUpTechnician(
-    String email,
-    String password,
-    String phone,
-    String fullName,
-    String skills,
-    String experience,
-    String educationLevel,
-    String availableLocation,
-    String additionalBio,
-  ) async {
-    try {
-      await authRepository.signUpTechnician(
-        email,
+      await authRepository.signup(
+        username,
         password,
-        phone,
-        fullName,
-        skills,
-        experience,
-        educationLevel,
-        availableLocation,
-        additionalBio,
+        email,
+        fullname,
+        gender,
+        employmentType,
+        designation,
+        dateOfBirth,
+        role,
       );
-      state = const AuthSuccess('Successfully applied');
+      state = AuthSuccess("Successfully signed up!");
     } catch (error) {
       state = AuthError(error.toString());
     }
-  }
-
-  Future<void> unlog() async {
-    await authRepository.clearData();
-    state = UnLogged();
-  }
-
-  Future<void> deleteAccount() async {
-    await authRepository.deleteAccount();
-    state = UnLogged();
   }
 }
