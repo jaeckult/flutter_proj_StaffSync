@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:staffsync/application/providers/providers.dart';
 
 class SignupScreen extends ConsumerStatefulWidget {
-  const SignupScreen({Key? key}) : super(key: key);
+  const SignupScreen({super.key});
 
   @override
   ConsumerState<SignupScreen> createState() => _SignupScreen();
@@ -66,9 +66,9 @@ class _SignupScreen extends ConsumerState<SignupScreen> {
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(e.toString())),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(e.toString())));
         }
       } finally {
         if (mounted) {
@@ -113,39 +113,64 @@ class _SignupScreen extends ConsumerState<SignupScreen> {
             child: Form(
               key: _formKey,
               child: Stepper(
-                type: StepperType.vertical,
-                controlsBuilder: (context, details) => Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: _isLoading ? null : details.onStepContinue,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color.fromARGB(255, 232, 117, 35),
-                        ),
-                        child: _isLoading
-                            ? const CircularProgressIndicator(color: Colors.white)
-                            : Text(
-                                _currentStep == 8 ? 'Sign Up' : 'Continue',
-                                style: const TextStyle(color: Colors.white),
+                margin: const EdgeInsets.all(20),
+                type: StepperType.horizontal,
+                controlsBuilder:
+                    (context, details) => Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
+                      children: [
+                        Container(
+                          alignment: Alignment.center,
+                          margin: const EdgeInsets.symmetric(vertical: 20),
+                          child: ElevatedButton(
+                            onPressed:
+                                _isLoading ? null : details.onStepContinue,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color.fromARGB(
+                                255,
+                                232,
+                                117,
+                                35,
                               ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: _isLoading ? null : details.onStepCancel,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color.fromARGB(255, 232, 117, 35),
+                            ),
+                            child:
+                                _isLoading
+                                    ? const CircularProgressIndicator(
+                                      color: Colors.white,
+                                    )
+                                    : Text(
+                                      _currentStep == 8
+                                          ? 'Sign Up'
+                                          : 'Continue',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                          ),
                         ),
-                        child: const Text(
-                          'Back',
-                          style: TextStyle(color: Colors.white),
+                        const SizedBox(width: 10),
+                        Container(
+                          alignment: Alignment.center,
+                          margin: const EdgeInsets.symmetric(vertical: 20),
+                          child: ElevatedButton(
+                            onPressed: _isLoading ? null : details.onStepCancel,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color.fromARGB(
+                                255,
+                                232,
+                                117,
+                                35,
+                              ),
+                            ),
+                            child: const Text(
+                              'Back',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
-                  ],
-                ),
                 physics: const ScrollPhysics(),
                 currentStep: _currentStep,
                 onStepTapped: _stepTapped,
@@ -153,11 +178,12 @@ class _SignupScreen extends ConsumerState<SignupScreen> {
                 onStepCancel: _stepCancel,
                 steps: [
                   Step(
+                    stepStyle: StepStyle(color: Colors.orange[700]),
                     title: const Text('Username'),
                     content: TextFormField(
                       controller: _usernameController,
                       decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
+                        border: OutlineInputBorder(gapPadding: 4.0),
                         hintText: 'Enter your username',
                         prefixIcon: Icon(Icons.person),
                       ),
@@ -168,11 +194,16 @@ class _SignupScreen extends ConsumerState<SignupScreen> {
                         return null;
                       },
                     ),
+
                     isActive: _currentStep >= 0,
-                    state: _currentStep > 0 ? StepState.complete : StepState.indexed,
+                    state:
+                        _currentStep > 0
+                            ? StepState.complete
+                            : StepState.indexed,
                   ),
                   Step(
                     title: const Text('Email'),
+                    stepStyle: StepStyle(color: Colors.orange[700]),
                     content: TextFormField(
                       controller: _emailController,
                       decoration: const InputDecoration(
@@ -192,10 +223,14 @@ class _SignupScreen extends ConsumerState<SignupScreen> {
                       },
                     ),
                     isActive: _currentStep >= 1,
-                    state: _currentStep > 1 ? StepState.complete : StepState.indexed,
+                    state:
+                        _currentStep > 1
+                            ? StepState.complete
+                            : StepState.indexed,
                   ),
                   Step(
                     title: const Text('Full Name'),
+                    stepStyle: StepStyle(color: Colors.orange[700]),
                     content: TextFormField(
                       controller: _fullNameController,
                       decoration: const InputDecoration(
@@ -211,10 +246,14 @@ class _SignupScreen extends ConsumerState<SignupScreen> {
                       },
                     ),
                     isActive: _currentStep >= 2,
-                    state: _currentStep > 2 ? StepState.complete : StepState.indexed,
+                    state:
+                        _currentStep > 2
+                            ? StepState.complete
+                            : StepState.indexed,
                   ),
                   Step(
                     title: const Text('Gender'),
+                    stepStyle: StepStyle(color: Colors.orange[700]),
                     content: TextFormField(
                       controller: _genderController,
                       decoration: const InputDecoration(
@@ -230,10 +269,14 @@ class _SignupScreen extends ConsumerState<SignupScreen> {
                       },
                     ),
                     isActive: _currentStep >= 3,
-                    state: _currentStep > 3 ? StepState.complete : StepState.indexed,
+                    state:
+                        _currentStep > 3
+                            ? StepState.complete
+                            : StepState.indexed,
                   ),
                   Step(
                     title: const Text('Employment Type'),
+                    stepStyle: StepStyle(color: Colors.orange[700]),
                     content: TextFormField(
                       controller: _employmentTypeController,
                       decoration: const InputDecoration(
@@ -249,10 +292,14 @@ class _SignupScreen extends ConsumerState<SignupScreen> {
                       },
                     ),
                     isActive: _currentStep >= 4,
-                    state: _currentStep > 4 ? StepState.complete : StepState.indexed,
+                    state:
+                        _currentStep > 4
+                            ? StepState.complete
+                            : StepState.indexed,
                   ),
                   Step(
                     title: const Text('Designation'),
+                    stepStyle: StepStyle(color: Colors.orange[700]),
                     content: TextFormField(
                       controller: _designationController,
                       decoration: const InputDecoration(
@@ -268,10 +315,14 @@ class _SignupScreen extends ConsumerState<SignupScreen> {
                       },
                     ),
                     isActive: _currentStep >= 5,
-                    state: _currentStep > 5 ? StepState.complete : StepState.indexed,
+                    state:
+                        _currentStep > 5
+                            ? StepState.complete
+                            : StepState.indexed,
                   ),
                   Step(
                     title: const Text('Date of Birth'),
+                    stepStyle: StepStyle(color: Colors.orange[700]),
                     content: TextFormField(
                       controller: _dateOfBirthController,
                       decoration: const InputDecoration(
@@ -287,10 +338,14 @@ class _SignupScreen extends ConsumerState<SignupScreen> {
                       },
                     ),
                     isActive: _currentStep >= 6,
-                    state: _currentStep > 6 ? StepState.complete : StepState.indexed,
+                    state:
+                        _currentStep > 6
+                            ? StepState.complete
+                            : StepState.indexed,
                   ),
                   Step(
                     title: const Text('Role'),
+                    stepStyle: StepStyle(color: Colors.orange[700]),
                     content: TextFormField(
                       controller: _roleController,
                       decoration: const InputDecoration(
@@ -306,10 +361,14 @@ class _SignupScreen extends ConsumerState<SignupScreen> {
                       },
                     ),
                     isActive: _currentStep >= 7,
-                    state: _currentStep > 7 ? StepState.complete : StepState.indexed,
+                    state:
+                        _currentStep > 7
+                            ? StepState.complete
+                            : StepState.indexed,
                   ),
                   Step(
                     title: const Text('Password'),
+                    stepStyle: StepStyle(color: Colors.orange[700]),
                     content: TextFormField(
                       controller: _passwordController,
                       decoration: InputDecoration(
@@ -318,7 +377,9 @@ class _SignupScreen extends ConsumerState<SignupScreen> {
                         prefixIcon: const Icon(Icons.lock),
                         suffixIcon: IconButton(
                           icon: Icon(
-                            _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                            _obscurePassword
+                                ? Icons.visibility
+                                : Icons.visibility_off,
                           ),
                           onPressed: () {
                             setState(() {
@@ -339,7 +400,10 @@ class _SignupScreen extends ConsumerState<SignupScreen> {
                       },
                     ),
                     isActive: _currentStep >= 8,
-                    state: _currentStep > 8 ? StepState.complete : StepState.indexed,
+                    state:
+                        _currentStep > 8
+                            ? StepState.complete
+                            : StepState.indexed,
                   ),
                 ],
               ),
