@@ -43,7 +43,7 @@ class AuthRepositoryImpl implements AuthRepository {
     } catch (error) {
       print('Login error: $error');
       if (error is Exception) {
-        throw error;
+        rethrow;
       }
       throw Exception(error.toString().split(":")[1]);
     }
@@ -88,7 +88,7 @@ class AuthRepositoryImpl implements AuthRepository {
     } catch (error) {
       print('Signup error: $error');
       if (error is Exception) {
-        throw error;
+        rethrow;
       }
       throw Exception(error.toString().split(":")[1]);
     }

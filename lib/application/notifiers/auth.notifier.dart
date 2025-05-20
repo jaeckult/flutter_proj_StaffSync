@@ -59,7 +59,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         dateOfBirth,
         role,
       );
-      state = AuthSuccess("Successfully signed up!");
+      state = const AuthSuccess("Successfully signed up!");
     } catch (error) {
       state = AuthError(error.toString());
     }
