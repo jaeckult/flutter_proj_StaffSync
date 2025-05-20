@@ -47,6 +47,7 @@ class NetworkService {
     String role,
   ) async {
     try {
+     
       final response = await _dio.post(
         '/api/signup',
         data: {
@@ -60,6 +61,7 @@ class NetworkService {
           'dateOfBirth': dateOfBirth,
           'role': role,
         },
+       
       );
       
       if (response.statusCode != 201) {

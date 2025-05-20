@@ -47,7 +47,7 @@ class RemoteDataSource {
     String username,
     String password,
     String email,
-    String fullname,
+    String fullName,
     String gender,
     String employmentType,
     String designation,
@@ -55,13 +55,13 @@ class RemoteDataSource {
     String role,
   ) async {
     final response = await httpClient.post(
-      Uri.parse('http://$endpoint:3000/api/signup'),
+      Uri.parse('http://localhost:3000/api/signup'),
       headers: {"Content-Type": "application/json"},
       body: json.encode({
         "username": username,
         "password": password,
         "email": email,
-        "fullname": fullname,
+        "fullName": fullName,
         "gender": gender,
         "employmentType": employmentType,
         "designation": designation,

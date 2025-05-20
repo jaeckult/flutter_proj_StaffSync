@@ -88,6 +88,7 @@ class _SignupScreen extends ConsumerState<SignupScreen> {
     if (_currentStep < 8) {
       setState(() => _currentStep += 1);
     } else {
+      print("I am calling the handleSignup");
       _handleSignup();
     }
   }
@@ -112,7 +113,10 @@ class _SignupScreen extends ConsumerState<SignupScreen> {
           Expanded(
             child: Form(
               key: _formKey,
-              child: Stepper(
+              
+              child:
+             
+               Stepper(
                 margin: const EdgeInsets.all(20),
                 type: StepperType.horizontal,
                 controlsBuilder:
@@ -120,7 +124,8 @@ class _SignupScreen extends ConsumerState<SignupScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
 
                       children: [
-                        Container(
+                        if (_currentStep != 0 )
+                          Container(
                           alignment: Alignment.center,
                           margin: const EdgeInsets.symmetric(vertical: 20),
                           child: ElevatedButton(
@@ -150,6 +155,8 @@ class _SignupScreen extends ConsumerState<SignupScreen> {
                           ),
                         ),
                         const SizedBox(width: 10),
+                        if (_currentStep != 0 )
+ 
                         Container(
                           alignment: Alignment.center,
                           margin: const EdgeInsets.symmetric(vertical: 20),
@@ -169,6 +176,8 @@ class _SignupScreen extends ConsumerState<SignupScreen> {
                             ),
                           ),
                         ),
+                        
+                        
                       ],
                     ),
                 physics: const ScrollPhysics(),
@@ -178,6 +187,69 @@ class _SignupScreen extends ConsumerState<SignupScreen> {
                 onStepCancel: _stepCancel,
                 steps: [
                   Step(
+                    stepStyle: StepStyle(color: Colors.orange[700]),
+                    title: const Text("Role"),
+                  
+                    content: 
+                    Column( 
+                      children: [
+                        Center(
+                          child: Container(
+                          child:
+                            Row(
+                            children: [
+                              ElevatedButton(
+                                onPressed: _isLoading ? null : () {
+                                  _roleController.text="MANAGER";
+                                  print(_roleController);
+                                  _stepContinue();
+
+                                }, 
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color.fromARGB(255, 232, 117, 35),
+                                ),
+                                child: _isLoading
+                                    ? const CircularProgressIndicator(color: Colors.white)
+                                    : const Text(
+                                        'Manager',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                              ),
+                              SizedBox(width: 16),
+
+                              ElevatedButton(
+                                onPressed: _isLoading ? null : () {
+                                  _roleController.text="EMPLOYEE";
+                                   print(_roleController);
+                                  _stepContinue();
+                                  
+                                }, 
+                                  style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color.fromARGB(255, 232, 117, 35),
+                                ),
+                                child: _isLoading
+                                    ? const CircularProgressIndicator(color: Colors.white)
+                                    : const Text(
+                                        'Employee',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
+                              ),
+                            ],
+                          )
+                        ))
+                    
+                  ],
+
+                      
+                  ),
+                   isActive: _currentStep >= 0,
+                    state:
+                        _currentStep > 0
+                            ? StepState.complete
+                            : StepState.indexed,
+                  ),
+                  Step(
+
                     stepStyle: StepStyle(color: Colors.orange[700]),
                     title: const Text('Username'),
                     content: TextFormField(
@@ -195,9 +267,9 @@ class _SignupScreen extends ConsumerState<SignupScreen> {
                       },
                     ),
 
-                    isActive: _currentStep >= 0,
+                    isActive: _currentStep >= 1,
                     state:
-                        _currentStep > 0
+                        _currentStep > 1
                             ? StepState.complete
                             : StepState.indexed,
                   ),
@@ -245,9 +317,9 @@ class _SignupScreen extends ConsumerState<SignupScreen> {
                         return null;
                       },
                     ),
-                    isActive: _currentStep >= 2,
+                    isActive: _currentStep >= 3,
                     state:
-                        _currentStep > 2
+                        _currentStep > 3
                             ? StepState.complete
                             : StepState.indexed,
                   ),
@@ -268,9 +340,9 @@ class _SignupScreen extends ConsumerState<SignupScreen> {
                         return null;
                       },
                     ),
-                    isActive: _currentStep >= 3,
+                    isActive: _currentStep >= 4,
                     state:
-                        _currentStep > 3
+                        _currentStep > 4
                             ? StepState.complete
                             : StepState.indexed,
                   ),
@@ -291,9 +363,9 @@ class _SignupScreen extends ConsumerState<SignupScreen> {
                         return null;
                       },
                     ),
-                    isActive: _currentStep >= 4,
+                    isActive: _currentStep >= 5,
                     state:
-                        _currentStep > 4
+                        _currentStep > 5
                             ? StepState.complete
                             : StepState.indexed,
                   ),
@@ -314,9 +386,9 @@ class _SignupScreen extends ConsumerState<SignupScreen> {
                         return null;
                       },
                     ),
-                    isActive: _currentStep >= 5,
+                    isActive: _currentStep >= 6,
                     state:
-                        _currentStep > 5
+                        _currentStep > 6
                             ? StepState.complete
                             : StepState.indexed,
                   ),
@@ -337,35 +409,35 @@ class _SignupScreen extends ConsumerState<SignupScreen> {
                         return null;
                       },
                     ),
-                    isActive: _currentStep >= 6,
-                    state:
-                        _currentStep > 6
-                            ? StepState.complete
-                            : StepState.indexed,
-                  ),
-                  Step(
-                    title: const Text('Role'),
-                    stepStyle: StepStyle(color: Colors.orange[700]),
-                    content: TextFormField(
-                      controller: _roleController,
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        hintText: 'Enter your role',
-                        prefixIcon: Icon(Icons.assignment_ind),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your role';
-                        }
-                        return null;
-                      },
-                    ),
                     isActive: _currentStep >= 7,
                     state:
                         _currentStep > 7
                             ? StepState.complete
                             : StepState.indexed,
                   ),
+                  // Step(
+                  //   title: const Text('Role'),
+                  //   stepStyle: StepStyle(color: Colors.orange[700]),
+                  //   content: TextFormField(
+                  //     controller: _roleController,
+                  //     decoration: const InputDecoration(
+                  //       border: OutlineInputBorder(),
+                  //       hintText: 'Enter your role',
+                  //       prefixIcon: Icon(Icons.assignment_ind),
+                  //     ),
+                  //     validator: (value) {
+                  //       if (value == null || value.isEmpty) {
+                  //         return 'Please enter your role';
+                  //       }
+                  //       return null;
+                  //     },
+                  //   ),
+                  //   isActive: _currentStep >= 7,
+                  //   state:
+                  //       _currentStep > 7
+                  //           ? StepState.complete
+                  //           : StepState.indexed,
+                  // ),
                   Step(
                     title: const Text('Password'),
                     stepStyle: StepStyle(color: Colors.orange[700]),
