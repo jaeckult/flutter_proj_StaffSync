@@ -13,12 +13,12 @@ class RemoteDataSource {
   }
 
   Future<Map<String, dynamic>> logIn(
-    String endpoint,
+    
     String username,
     String password,
   ) async {
     final response = await httpClient.post(
-      Uri.parse('http://$endpoint:3000/api/login'),
+      Uri.parse('http://localhost:3000/api/login'),
       headers: {"Content-Type": "application/json"},
       body: json.encode({"username": username, "password": password}),
     );
@@ -30,9 +30,9 @@ class RemoteDataSource {
       final data = jsonDecode(response.body) as Map<String, dynamic>;
       print('Decoded Data: $data');
       print('Role Type: ${data["role"].runtimeType}');
-      print('UserId Type: ${data["userId"].runtimeType}');
+      print('UserId Type: ${data["id"].runtimeType}');
       
-      if (data["role"] == null || data["access_token"] == null || data["userId"] == null) {
+      if (data["role"] == null || data["token"] == null || data["id"] == null) {
         throw Exception('Invalid response from server: missing required fields');
       }
       return data;

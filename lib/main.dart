@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:staffsync/presentaion/screen/home.screen.dart';
 import './presentaion/screen/login.screen.dart'; // Corrected path
 import './presentaion/screen/signup.screen.dart'; // Add this import
 import 'package:inspector/inspector.dart';
@@ -24,6 +25,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/login': (context) => const LoginPage(), // Define Login route
         '/signup': (context) => const SignupScreen(), // Define Signup route
+        '/home' : (context) => const HomeScreen()
       },
     );
   }

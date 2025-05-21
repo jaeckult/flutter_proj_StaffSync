@@ -10,16 +10,17 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<String> logIn(String username, String password) async {
-    final endpoint = await secureStorage.read("endpoint");
-    if (endpoint == null) {
-      throw Exception('Endpoint not configured');
-    }
+    print('logIn() method in AuthRepositoryImpl called with $username');
+  
+    
     try {
-      final data = await remoteDataSource.logIn(endpoint, username, password);
+      print("entering the remoteData...");
+      final data = await remoteDataSource.logIn(username, password);
       print('Repository received data: $data');
+      
 
       // Store token
-      final token = data["access_token"];
+      final token = data["token"];
       if (token == null) {
         throw Exception('Access token not found in response');
       }
@@ -33,11 +34,13 @@ class AuthRepositoryImpl implements AuthRepository {
       await secureStorage.write("role", role.toString());
 
       // Store userId
-      final userId = data["userId"];
+      final userId = data["id"];
       if (userId == null) {
         throw Exception('User ID not found in response');
       }
       await secureStorage.write("id", userId.toString());
+     
+
 
       return role.toString();
     } catch (error) {
@@ -97,7 +100,12 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<String?> getToken() async {
     return await secureStorage.read("token");
-  }
+  } 
+  @override
+  Future<String?> getId() async {
+    return await secureStorage.read("id");
+  } 
+ 
 
   @override
   Future<String?> getRole() async {

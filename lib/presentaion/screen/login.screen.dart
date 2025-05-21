@@ -1,4 +1,4 @@
-// login_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:staffsync/application/providers/providers.dart';
@@ -32,10 +32,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       });
 
       try {
-        final role = await _networkService.login(
-          _usernameController.text,
-          _passwordController.text,
-        );
+       
 
         final authNotifier = ref.read(authNotifierProvider.notifier);
         await authNotifier.logIn(
@@ -46,7 +43,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Successfully logged in!')),
+
           );
+          Navigator.pushReplacementNamed(context, '/home');
+          
         }
       } catch (e) {
         if (mounted) {

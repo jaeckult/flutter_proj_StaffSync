@@ -1,4 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:staffsync/application/notifiers/user.notifier.dart';
+import 'package:staffsync/domain/model/user.model.dart';
 import 'package:staffsync/domain/repositories/auth.repository.dart';
 import 'package:staffsync/application/notifiers/auth.notifier.dart';
 import 'package:staffsync/application/states/auth.state.dart';
@@ -25,3 +27,6 @@ final authNotifierProvider = StateNotifierProvider<AuthNotifier, AuthState>((
   final authRepository = ref.watch(authRepositoryProvider);
   return AuthNotifier(authRepository: authRepository);
 });
+final userNotifierProvider = StateNotifierProvider<UserNotifier, User?>(
+  (ref) => UserNotifier(ref.read(authRepositoryProvider)),
+);

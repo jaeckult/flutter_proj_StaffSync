@@ -26,15 +26,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  // username,
-  //   password,
-  //   email,
-  //   fullName,
-  //   gender,
-  //   employmentType,
-  //   designation,
-  //   dateOfBirth,
-  //   role
   Future<void> signup(
     String username,
     String password,
@@ -47,7 +38,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     String role,
   ) async {
     try {
-      print("hello signup in notifier");
+      
       await authRepository.signup(
         username,
         password,
