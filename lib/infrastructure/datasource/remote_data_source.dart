@@ -87,4 +87,21 @@ class RemoteDataSource {
       throw Exception(error["message"] ?? 'Signup failed!');
     }
   }
+
+    Future<Map<String, dynamic>> getCurrUser(int id) async {
+       final response = await httpClient.get(
+      Uri.parse('http://localhost:3000/api/users/${id}'), headers: {"Content-Type": "application/json"});
+      if( response.statusCode == 200) {
+        final data = jsonDecode(response.body) as Map<String, dynamic>;
+        return data;
+      }
+      else {
+        print(response.statusCode);
+        final error = jsonDecode(response.body);
+        throw Exception(error["message"] ?? 'Signup failed!');
+      }
+      
+
+
+  }
 }

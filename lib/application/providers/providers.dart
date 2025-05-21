@@ -5,8 +5,10 @@ import 'package:staffsync/domain/repositories/auth.repository.dart';
 import 'package:staffsync/application/notifiers/auth.notifier.dart';
 import 'package:staffsync/application/states/auth.state.dart';
 import 'package:http/http.dart' as http;
+import 'package:staffsync/domain/repositories/user.repository.dart';
 import 'package:staffsync/infrastructure/repository/auth.repositoryImpl.dart';
 import 'package:staffsync/infrastructure/datasource/remote_data_source.dart';
+import 'package:staffsync/infrastructure/repository/user.repositoryImpl.dart';
 import 'package:staffsync/infrastructure/storage/storage.dart';
 
 final httpClient = http.Client();
@@ -16,7 +18,11 @@ final authRepository = AuthRepositoryImpl(
   remoteDataSource,
   SecureStorage.instance,
 );
+final userRepository = UserRepositoryImpl( remoteDataSource);
+final userRepositoryProvider = Provider<UserRepository>((ref) {
+  return userRepository;
 
+});
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return authRepository;
 });
@@ -28,5 +34,10 @@ final authNotifierProvider = StateNotifierProvider<AuthNotifier, AuthState>((
   return AuthNotifier(authRepository: authRepository);
 });
 final userNotifierProvider = StateNotifierProvider<UserNotifier, User?>(
-  (ref) => UserNotifier(ref.read(authRepositoryProvider)),
+  (ref) {
+    final authRepository = ref.watch(authRepositoryProvider);
+    final userRepository = ref.watch(userRepositoryProvider);
+    return UserNotifier(authRepository, userRepository);
+  },
 );
+

@@ -37,6 +37,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   const SizedBox(height: 8),
                   Text('Role: ${user.role}', style: TextStyle(fontSize: 18)),
                   const SizedBox(height: 8),
+                  Text('email: ${user.email}', style: TextStyle(fontSize: 18)),
+                  const SizedBox(height: 8),
+                  Text('email: ${user.profile.fullName}', style: TextStyle(fontSize: 18)),
+                  const SizedBox(height: 8),
+
                   
                 ],
               ),

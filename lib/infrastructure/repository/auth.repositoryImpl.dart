@@ -39,6 +39,14 @@ class AuthRepositoryImpl implements AuthRepository {
         throw Exception('User ID not found in response');
       }
       await secureStorage.write("id", userId.toString());
+
+      final email = data["email"];
+      if (email == null) {
+        print("email is null");
+        throw Exception("email not found in response");
+    
+      }
+      await secureStorage.write("email", email);
      
 
 
