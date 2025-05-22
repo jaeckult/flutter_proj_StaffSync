@@ -130,6 +130,8 @@ leaveRequestRouter.patch('/:id', identifyUser, rbacMiddleware(['MANAGER']), asyn
 
 // Get leave request stats for the dashboard
 leaveRequestRouter.get('/stats', identifyUser, async (req, res) => {
+  console.log(req.body);
+  
   const userId = req.user.id;
 
   try {
@@ -156,6 +158,7 @@ leaveRequestRouter.get('/stats', identifyUser, async (req, res) => {
       leavePending: pendingCount,
       leaveCancelled: cancelledCount,
     });
+    
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to fetch leave stats' });

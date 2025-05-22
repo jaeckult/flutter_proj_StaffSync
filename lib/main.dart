@@ -18,15 +18,14 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'StaffSync',
-      theme: ThemeData(primarySwatch: Colors.blue),
+      theme: ThemeData(primarySwatch: Colors.orange),
       builder:
           (context, child) =>
               Inspector(child: child!), // Wrap [child] with [Inspector]
       debugShowCheckedModeBanner: false,
-      home: const LoginPage(), // Set initial screen to Login
+      home: const LoginPage(), // Set initial screenr to Login
       routes: {
        
-        
         '/signup': (context) => const SignupScreen(), 
         '/employee/home' : (context) =>  const EmployeeLogic(),
         '/manager/home' : (context) => const ManagerScreen()

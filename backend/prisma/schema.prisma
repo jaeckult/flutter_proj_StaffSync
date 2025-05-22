@@ -1,0 +1,147 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  EMPLOYEE
+  MANAGER
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum EmploymentType {
+  PERMANENT
+  CONTRACTUAL
+  INTERNSHIP
+}
+
+enum LeaveType {
+  SICK
+  VACATION
+  PERSONAL
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum Attendances {
+  PRESENT
+  ABSENT
+}
+
+model User {
+  id            Int            @id @default(autoincrement())
+  username      String         @unique
+  password      String
+  email         String         @unique
+  role          Role           @default(EMPLOYEE)
+  points        Int            @default(100) // Initial points allocated upon signup - crucial for leave balance logic
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  deletedAt     DateTime?
+  profile       Profile?
+  leaveRequests LeaveRequest[] @relation("UserLeaveRequests")
+  leaveBalances LeaveBalance[]
+  attendance    Attendance[]
+  notifications Notification[]
+  approvedLeaves LeaveRequest[] @relation("ApprovedByUser")
+  holidays     Holiday[] 
+}
+
+model Profile {
+  id             Int            @id @default(autoincrement())
+  fullName       String
+  gender         Gender
+  employmentType EmploymentType
+  designation    String
+  userId         Int            @unique
+  user           User           @relation(fields: [userId], references: [id])
+  dateOfBirth    DateTime
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  deletedAt      DateTime?
+  profilePicture String?
+}
+
+model LeaveBalance {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  user      User      @relation(fields: [userId], references: [id])
+  type      LeaveType
+  balance   Int
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model BlacklistedToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model LeaveRequest {
+  id              Int          @id @default(autoincrement())
+  userId          Int
+  user            User         @relation("UserLeaveRequests", fields: [userId], references: [id])
+  type            LeaveType
+  startDate       DateTime
+  endDate         DateTime
+  reason          String
+  status          LeaveStatus  @default(PENDING)
+  pointsDeduction Int          @default(0) // Points to deduct if leave is approved
+  approvedById    Int?         // Foreign key to User who approved the request
+  approvedBy      User?        @relation("ApprovedByUser", fields: [approvedById], references: [id])
+  approvedAt      DateTime?    // When the request was approved
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  notification    Notification[]
+
+}
+
+model Attendance {
+  id         Int         @id @default(autoincrement())
+  userId     Int
+  user       User        @relation(fields: [userId], references: [id])
+  date       DateTime
+  checkIn    DateTime?
+  checkOut   DateTime?
+  attendance Attendances?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+}
+
+
+model Notification {
+  id           Int          @id @default(autoincrement())
+  userId       Int
+  user         User         @relation(fields: [userId], references: [id])
+  message      String
+  createdAt    DateTime     @default(now())
+  leaveRequest LeaveRequest? @relation(fields: [leaveRequestId], references: [id])
+  leaveRequestId Int?
+}
+model Holiday {
+  id          Int       @id @default(autoincrement())
+  title       String    // Name or title of the holiday (e.g., "Independence Day")
+  startDate   DateTime // Optional start date for holidays spanning multiple days
+  endDate     DateTime // Optional end date for holidays spanning multiple days
+  description String?   // Optional description
+  createdById Int  ?     // Manager who added the holiday
+  createdBy   User?      @relation(fields: [createdById], references: [id])
+  createdAt   DateTime ? @default(now())
+  updatedAt   DateTime?  @updatedAt
+}
