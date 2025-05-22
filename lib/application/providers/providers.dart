@@ -1,11 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:staffsync/application/notifiers/attendance.notifier.dart';
 import 'package:staffsync/application/notifiers/user.notifier.dart';
 import 'package:staffsync/domain/model/user.model.dart';
+import 'package:staffsync/domain/repositories/attendance.repository.dart';
 import 'package:staffsync/domain/repositories/auth.repository.dart';
 import 'package:staffsync/application/notifiers/auth.notifier.dart';
 import 'package:staffsync/application/states/auth.state.dart';
 import 'package:http/http.dart' as http;
 import 'package:staffsync/domain/repositories/user.repository.dart';
+import 'package:staffsync/infrastructure/repository/attendance.repositoryImpl.dart';
 import 'package:staffsync/infrastructure/repository/auth.repositoryImpl.dart';
 import 'package:staffsync/infrastructure/datasource/remote_data_source.dart';
 import 'package:staffsync/infrastructure/repository/user.repositoryImpl.dart';
@@ -26,7 +29,13 @@ final userRepositoryProvider = Provider<UserRepository>((ref) {
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return authRepository;
 });
-
+final attendanceRepository = AttendanceRepositoryImpl(
+  remoteDataSource,
+  SecureStorage.instance,
+);
+final attendanceRepositoryProvider = Provider<AttendanceRepository>((ref) {
+  return attendanceRepository;
+});
 final authNotifierProvider = StateNotifierProvider<AuthNotifier, AuthState>((
   ref,
 ) {
@@ -40,4 +49,10 @@ final userNotifierProvider = StateNotifierProvider<UserNotifier, User?>(
     return UserNotifier(authRepository, userRepository);
   },
 );
-
+final attendanceNotifierProvider = StateNotifierProvider<AttendanceNotifier, void>(
+  (ref) {
+    final authRepository = ref.watch(authRepositoryProvider);
+    final attendanceRepository = ref.watch(attendanceRepositoryProvider);
+    return AttendanceNotifier(authRepository, attendanceRepository);
+  },
+);

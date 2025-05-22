@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:staffsync/presentaion/screen/home.screen.dart';
+import 'package:staffsync/presentaion/screen/employee.dart';
+import 'package:staffsync/presentaion/screen/employee.home.dart';
+import 'package:staffsync/presentaion/screen/manager.dart';
 import './presentaion/screen/login.screen.dart'; // Corrected path
 import './presentaion/screen/signup.screen.dart'; // Add this import
 import 'package:inspector/inspector.dart';
@@ -21,11 +23,13 @@ class MyApp extends StatelessWidget {
           (context, child) =>
               Inspector(child: child!), // Wrap [child] with [Inspector]
       debugShowCheckedModeBanner: false,
-      initialRoute: '/login', // Set initial screen to Login
+      home: const LoginPage(), // Set initial screen to Login
       routes: {
-        '/login': (context) => const LoginPage(), // Define Login route
-        '/signup': (context) => const SignupScreen(), // Define Signup route
-        '/home' : (context) => const HomeScreen()
+       
+        
+        '/signup': (context) => const SignupScreen(), 
+        '/employee/home' : (context) =>  const EmployeeLogic(),
+        '/manager/home' : (context) => const ManagerScreen()
       },
     );
   }

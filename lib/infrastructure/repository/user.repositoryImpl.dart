@@ -9,8 +9,6 @@ class UserRepositoryImpl implements UserRepository {
   final RemoteDataSource remoteDataSource;
   UserRepositoryImpl(this.remoteDataSource);
 
-    
-
   @override
   Future<User> getCurrUser(int id) async {
     try {

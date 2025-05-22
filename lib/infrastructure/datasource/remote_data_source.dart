@@ -103,5 +103,27 @@ class RemoteDataSource {
       
 
 
+    }
+    
+
+  Future<void> checkIn(String token) async {
+  final url = Uri.parse('http://localhost:3000/api/attendance/check-in');
+
+  final response = await http.post(
+    url,
+    headers: {
+      'Authorization': 'Bearer $token',
+      'Content-Type': 'application/json',
+    },
+  );
+
+  if (response.statusCode == 201) {
+    final data = json.decode(response.body);
+    print('Checked in successfully: ${data['attendance']}');
+  } else {
+    final error = json.decode(response.body);
+    throw Exception('Check-in failed: ${error['error']}');
   }
+}
+
 }

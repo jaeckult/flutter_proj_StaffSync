@@ -17,10 +17,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<void> logIn(String username, String password) async {
+  Future<String?> logIn(String username, String password) async {
     try {
       final loggedInRole = await authRepository.logIn(username, password);
       state = LoggedIn(role: loggedInRole);
+      return loggedInRole;
     } catch (error) {
       state = AuthError(error.toString().split(":")[1]);
     }

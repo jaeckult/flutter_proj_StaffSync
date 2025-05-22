@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:staffsync/application/providers/providers.dart';
 import 'package:staffsync/NetworkService.dart';
+import 'package:staffsync/domain/repositories/auth.repository.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
+
   const LoginPage({super.key});
 
   @override
@@ -35,7 +37,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
        
 
         final authNotifier = ref.read(authNotifierProvider.notifier);
-        await authNotifier.logIn(
+        final role = await authNotifier.logIn(
           _usernameController.text,
           _passwordController.text,
         );
@@ -43,9 +45,20 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Successfully logged in!')),
+            
+
 
           );
-          Navigator.pushReplacementNamed(context, '/home');
+          switch(role) {
+            case "EMPLOYEE":
+            Navigator.pushReplacementNamed(context, '/employee/home');
+            break;
+            case "MANAGER":
+            Navigator.pushReplacementNamed(context, "manager/home");
+    
+          }
+          
+          
           
         }
       } catch (e) {
