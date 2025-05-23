@@ -9,52 +9,20 @@ const attendanceRouter = express.Router();
 // POST /api/attendance/check-in - Record check-in (all authenticated users)
 attendanceRouter.post('/check-in', identifyUser, async (req, res, next) => {
   try {
-    // Check for active check-in (no check-out)
-    const activeAttendance = await prisma.attendance.findFirst({
-      where: {
-        userId: req.user.id,
-        checkOut: null,
-      },
-    });
-
-    if (activeAttendance) {
-      return res.status(400).json({ error: 'You must check out before checking in again' });
-    }
-
     const now = new Date();
     const dateStr = now.toISOString().split('T')[0]; // Get date in YYYY-MM-DD format
     const dateForQuery = new Date(dateStr); // Create a Date object for the start of the day
 
-    // Check if an attendance record already exists for the day
-    let attendance = await prisma.attendance.findFirst({
-      where: {
+    // Create new attendance record
+    const attendance = await prisma.attendance.create({
+      data: {
         userId: req.user.id,
         date: dateForQuery,
+        checkIn: now,
+        attendance: 'PRESENT',
       },
+      include: { user: { select: { email: true, profile: { select: { fullName: true } } } } },
     });
-
-    if (attendance) {
-      // Update existing record with check-in
-      attendance = await prisma.attendance.update({
-        where: { id: attendance.id },
-        data: {
-          checkIn: now,
-          attendance: 'PRESENT', // Set to PRESENT since user checked in
-        },
-        include: { user: { select: { email: true, profile: { select: { fullName: true } } } } },
-      });
-    } else {
-      // Create new attendance record
-      attendance = await prisma.attendance.create({
-        data: {
-          userId: req.user.id,
-          date: dateForQuery,
-          checkIn: now,
-          attendance: 'PRESENT', // Set to PRESENT since user checked in
-        },
-        include: { user: { select: { email: true, profile: { select: { fullName: true } } } } },
-      });
-    }
 
     res.status(201).json({
       message: 'Checked in successfully',
@@ -75,22 +43,30 @@ attendanceRouter.post('/check-in', identifyUser, async (req, res, next) => {
 // POST /api/attendance/check-out - Record check-out (all authenticated users)
 attendanceRouter.post('/check-out', identifyUser, async (req, res, next) => {
   try {
+    const now = new Date();
+    const dateStr = now.toISOString().split('T')[0];
+    const dateForQuery = new Date(dateStr);
+
+    // Find the most recent attendance record for today without a check-out
     const activeAttendance = await prisma.attendance.findFirst({
       where: {
         userId: req.user.id,
+        date: dateForQuery,
         checkOut: null,
       },
-      include: { user: { select: { email: true, profile: { select: { fullName: true } } } } },
+      orderBy: {
+        checkIn: 'desc',
+      },
     });
 
     if (!activeAttendance) {
-      return res.status(400).json({ error: 'No active check-in found' });
+      return res.status(400).json({ error: 'No active check-in found for today' });
     }
 
-    // Update attendance record
+    // Update attendance record with check-out time
     const attendance = await prisma.attendance.update({
       where: { id: activeAttendance.id },
-      data: { checkOut: new Date() },
+      data: { checkOut: now },
       select: {
         id: true,
         checkIn: true,
@@ -135,7 +111,6 @@ attendanceRouter.get('/', identifyUser, async (req, res, next) => {
         checkOut: true,
         attendance: true,
         createdAt: true,
-        user: { select: { username: true, profile: { select: { fullName: true } } } },
       },
     });
 

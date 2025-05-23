@@ -6,6 +6,8 @@ const { identifyUser, rbacMiddleware, calculateLeaveDuration, isOnLeave, isOnWor
 
 // Create a leave request
 leaveRequestRouter.post('/', identifyUser, async (req, res) => {
+  console.log(req.body);
+  
   const { type, startDate, endDate, reason } = req.body;
   const userId = req.user.id;
 
