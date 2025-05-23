@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:staffsync/domain/model/user.model.dart';
 import 'package:staffsync/infrastructure/storage/storage.dart';
 
 class RemoteDataSource {
@@ -123,6 +124,27 @@ class RemoteDataSource {
   } else {
     final error = json.decode(response.body);
     throw Exception('Check-in failed: ${error['error']}');
+  }
+}
+
+  Future<List<User>> getUsers(String token) async {
+  final url = Uri.parse('http://localhost:3000/api/users/employees/');
+
+  final response = await http.get(
+    url,
+    headers: {
+      'Authorization': 'Bearer $token',
+      'Content-Type': 'application/json',
+    },
+  );
+
+  if (response.statusCode == 201) {
+    final data = json.decode(response.body);
+    print('Successfully retrived');
+    return data;
+  } else {
+    final error = json.decode(response.body);
+    throw Exception('Failed to retrieve');
   }
 }
 

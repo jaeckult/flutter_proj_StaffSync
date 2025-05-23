@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:staffsync/application/notifiers/attendance.notifier.dart';
+import 'package:staffsync/application/notifiers/bulkUser.notifier.dart';
 import 'package:staffsync/application/notifiers/leaveDashboard.notifier.dart';
 import 'package:staffsync/application/notifiers/leaveRequest.notifiers.dart';
 import 'package:staffsync/application/notifiers/user.notifier.dart';
@@ -73,6 +74,13 @@ final userNotifierProvider = StateNotifierProvider<UserNotifier, User?>(
     final authRepository = ref.watch(authRepositoryProvider);
     final userRepository = ref.watch(userRepositoryProvider);
     return UserNotifier(authRepository, userRepository);
+  },
+);
+final bulkUserNotifierProvider = StateNotifierProvider<BulkUserNotifier, List<User>?>(
+  (ref) {
+    final authRepository = ref.watch(authRepositoryProvider);
+    final userRepository = ref.watch(userRepositoryProvider);
+    return BulkUserNotifier(authRepository, userRepository);
   },
 );
 final attendanceNotifierProvider = StateNotifierProvider<AttendanceNotifier, states.AttendanceState>(

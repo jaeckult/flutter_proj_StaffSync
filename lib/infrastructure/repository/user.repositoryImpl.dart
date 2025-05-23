@@ -32,6 +32,27 @@ class UserRepositoryImpl implements UserRepository {
     
    
   }
+  
+  @override
+  Future<List<User>> getEmployees(String token) async {
+    try {
+      print("we are trying to get access to all the users");
+      final data = await remoteDataSource.getUsers(token);
+      print(data);
+      return data;
+    }
+    catch(e) {
+      if (e is Exception) {
+        rethrow;
+
+      }
+      else {
+        throw Exception("Can't retrive user infromation");
+      }
+    }
+    
+  }
+  
 
   // @override
   // Future<Map<String, dynamic>> getMyAttendance(int id) {

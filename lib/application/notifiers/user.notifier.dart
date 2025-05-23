@@ -24,5 +24,6 @@ class UserNotifier extends StateNotifier<User?> {
        
 
     }
+    
 
 }

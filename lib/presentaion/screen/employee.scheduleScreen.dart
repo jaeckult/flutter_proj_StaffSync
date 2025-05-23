@@ -158,7 +158,7 @@ class _LeaveTabState extends ConsumerState<LeaveTab> {
             Text('From: ${request.startDate.toString().split(' ')[0]}'),
             Text('To: ${request.endDate.toString().split(' ')[0]}'),
             Text('Status: ${request.status}'),
-            Text('Approved by: ${request.approvedById}'),
+            Text('Approved by: ${request.approvedById ?? ""} '),
           ],
         ),
         trailing: Chip(
