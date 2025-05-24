@@ -254,13 +254,13 @@ class _DateSelector extends StatelessWidget {
           final isSelected = index == selectedIndex;
 
           return Container(
-            margin: const EdgeInsets.only(right: 12),
+            margin: const EdgeInsets.all(12),
             width: 60,
             decoration: BoxDecoration(
-              color: isSelected ? Colors.orange : Colors.white,
-              borderRadius: BorderRadius.circular(12),
+              color: isSelected ? Colors.deepOrange : Colors.white,
+              borderRadius: BorderRadius.circular(8),
               boxShadow: isSelected
-                  ? [BoxShadow(color: Colors.orange.withOpacity(0.5), blurRadius: 6)]
+                  ? [BoxShadow(color: Colors.deepOrange.withOpacity(0.5), blurRadius: 6)]
                   : [],
             ),
             child: Center(

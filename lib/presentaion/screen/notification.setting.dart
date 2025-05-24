@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:staffsync/application/providers/providers.dart';
 
 void main() {
   runApp(MaterialApp(
@@ -7,12 +9,12 @@ void main() {
   ));
 }
 
-class NotificationSetting extends StatefulWidget {
+class NotificationSetting extends ConsumerStatefulWidget {
   @override
   _NotificationSettingState createState() => _NotificationSettingState();
 }
 
-class _NotificationSettingState extends State<NotificationSetting> {
+class _NotificationSettingState extends ConsumerState<NotificationSetting> {
   bool isNotificationOn = true;
   bool isDropdownExpanded = false;
   String selectedOption = 'Only my activities';
@@ -34,6 +36,7 @@ class _NotificationSettingState extends State<NotificationSetting> {
 
   @override
   Widget build(BuildContext context) {
+    final isOn = ref.watch(toggleProvider);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Notification Setting', style: TextStyle(color: Colors.black)),
@@ -52,12 +55,10 @@ class _NotificationSettingState extends State<NotificationSetting> {
               children: [
                 const Text('Turn notifications on or off'),
                 Switch(
-                  value: isNotificationOn,
+                  value: isOn,
                   activeColor: Colors.deepOrange,
                   onChanged: (value) {
-                    setState(() {
-                      isNotificationOn = value;
-                    });
+                    ref.read(toggleProvider.notifier).set(value);
                   },
                 )
               ],

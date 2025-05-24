@@ -3,6 +3,7 @@ import 'package:staffsync/application/notifiers/attendance.notifier.dart';
 import 'package:staffsync/application/notifiers/bulkUser.notifier.dart';
 import 'package:staffsync/application/notifiers/leaveDashboard.notifier.dart';
 import 'package:staffsync/application/notifiers/leaveRequest.notifiers.dart';
+import 'package:staffsync/application/notifiers/setting.notifier.dart';
 import 'package:staffsync/application/notifiers/user.notifier.dart';
 import 'package:staffsync/application/states/leaveRequest.state.dart';
 import 'package:staffsync/application/states/attendance.state.dart' as states;
@@ -107,5 +108,7 @@ final leaveRequestNotifierProvider = StateNotifierProvider<LeaveRequestNotifier,
     return LeaveRequestNotifier(authRepository, leaveRequestRepository);
   },
 );
+final toggleProvider = NotifierProvider<ToggleNotifier, bool>(() => ToggleNotifier());
+
 
 
