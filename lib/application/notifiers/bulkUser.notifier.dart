@@ -5,26 +5,22 @@ import 'package:staffsync/domain/model/user.model.dart';
 import 'package:staffsync/domain/repositories/auth.repository.dart';
 import 'package:staffsync/domain/repositories/user.repository.dart';
 import 'package:staffsync/infrastructure/storage/storage.dart';
-class BulkUserNotifier extends StateNotifier<List<User>?> {
+class BulkUserNotifier extends StateNotifier<List<User>> {
   final AuthRepository authRepository;
     final UserRepository userRepository;
-    BulkUserNotifier(this.authRepository, this.userRepository) : super(null);
+    BulkUserNotifier(this.authRepository, this.userRepository) : super([]);
 
-   Future<void> getEmployees() async {
+   Future<List<User>> getEmployees() async {
     try {
       final token = await authRepository.getToken();
 
-      if (token == null) {
-        print('No token found in storage.');
-        state = null;
-        return;
-      }
-
-      final users = await userRepository.getEmployees(token);
+      final users = await userRepository.getEmployees(token!);
       state = users;
+      return users;
     } catch (e) {
       print('Error fetching employees: $e');
-      state = null;
+      return [];
+     
     }
 }
 

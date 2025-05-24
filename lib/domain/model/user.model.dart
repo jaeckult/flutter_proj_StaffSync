@@ -1,3 +1,4 @@
+import 'package:staffsync/domain/model/attendance.model.dart';
 import 'package:staffsync/domain/model/profile.mode.l.dart';
 
 class User {
@@ -9,6 +10,7 @@ class User {
   final DateTime createdAt;
   final DateTime updatedAt;
   final Profile profile;
+  final List<Attendance> attendance;
 
   User({
     required this.id,
@@ -19,6 +21,7 @@ class User {
     required this.createdAt,
     required this.updatedAt,
     required this.profile,
+    required this.attendance
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -31,6 +34,9 @@ class User {
       createdAt: DateTime.parse(json['createdAt']),
       updatedAt: DateTime.parse(json['updatedAt']),
       profile: Profile.fromJson(json['profile']),
+      attendance: (json['attendance'] as List)
+          .map((item) => Attendance.fromJson(item as Map<String, dynamic>))
+          .toList(),
     );
   }
 }

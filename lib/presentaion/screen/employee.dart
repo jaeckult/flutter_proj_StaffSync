@@ -36,7 +36,7 @@ class EmployeeNavigationManager {
       case 1:
         return const ScheduleScreen();
       case 2:
-        return const EmployeeColleguesScreen();
+        return const EmployeeListScreen();
       case 3:
         return const EmployeeHolidayScreen();
       case 4:

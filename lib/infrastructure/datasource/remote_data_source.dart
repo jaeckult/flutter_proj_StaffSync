@@ -24,15 +24,9 @@ class RemoteDataSource {
       body: json.encode({"username": username, "password": password}),
     );
     
-    print('Login Response Status: ${response.statusCode}');
-    print('Login Response Body: ${response.body}');
-    
     if (response.statusCode == 201) {
       final data = jsonDecode(response.body) as Map<String, dynamic>;
-      print('Decoded Data: $data');
-      print('Role Type: ${data["role"].runtimeType}');
-      print('UserId Type: ${data["id"].runtimeType}');
-      
+   
       if (data["role"] == null || data["token"] == null || data["id"] == null) {
         throw Exception('Invalid response from server: missing required fields');
       }
@@ -71,13 +65,10 @@ class RemoteDataSource {
       }),
     );
     
-    print('Signup Response Status: ${response.statusCode}');
-    print('Signup Response Body: ${response.body}');
     
     if (response.statusCode == 201) {
       final data = jsonDecode(response.body) as Map<String, dynamic>;
-      print('Decoded Data: $data');
-      print('Role Type: ${data["role"].runtimeType}');
+    
       
       if (data["role"] == null) {
         throw Exception('Invalid response from server: missing role field');
@@ -97,7 +88,7 @@ class RemoteDataSource {
         return data;
       }
       else {
-        print(response.statusCode);
+     
         final error = jsonDecode(response.body);
         throw Exception(error["message"] ?? 'Signup failed!');
       }
@@ -120,7 +111,7 @@ class RemoteDataSource {
 
   if (response.statusCode == 201) {
     final data = json.decode(response.body);
-    print('Checked in successfully: ${data['attendance']}');
+    
   } else {
     final error = json.decode(response.body);
     throw Exception('Check-in failed: ${error['error']}');
@@ -138,14 +129,36 @@ class RemoteDataSource {
     },
   );
 
-  if (response.statusCode == 201) {
-    final data = json.decode(response.body);
-    print('Successfully retrived');
-    return data;
+  if (response.statusCode == 200) {
+    final data = jsonDecode(response.body) as List<dynamic>;
+    
+    return data.map((json) => User.fromJson(json)).toList();
   } else {
     final error = json.decode(response.body);
     throw Exception('Failed to retrieve');
   }
-}
+}Future<void> logout(String? token) async {
+  final url = Uri.parse('http://localhost:3000/api/logout/');
 
+  try {
+    final response = await http.post(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: json.encode({
+        'token': token,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      print("Successfully logged out.");
+    } else {
+      print("Logout failed. Status: ${response.statusCode}, Body: ${response.body}");
+    }
+  } catch (e) {
+    print("Error occurred during logout: $e");
+  }
+}
 }

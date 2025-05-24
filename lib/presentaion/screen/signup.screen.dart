@@ -88,7 +88,7 @@ class _SignupScreen extends ConsumerState<SignupScreen> {
     if (_currentStep < 8) {
       setState(() => _currentStep += 1);
     } else {
-      print("I am calling the handleSignup");
+    
       _handleSignup();
     }
   }
@@ -201,7 +201,7 @@ class _SignupScreen extends ConsumerState<SignupScreen> {
                               ElevatedButton(
                                 onPressed: _isLoading ? null : () {
                                   _roleController.text="MANAGER";
-                                  print(_roleController);
+                                 
                                   _stepContinue();
 
                                 }, 
@@ -220,7 +220,7 @@ class _SignupScreen extends ConsumerState<SignupScreen> {
                               ElevatedButton(
                                 onPressed: _isLoading ? null : () {
                                   _roleController.text="EMPLOYEE";
-                                   print(_roleController);
+                                
                                   _stepContinue();
                                   
                                 }, 

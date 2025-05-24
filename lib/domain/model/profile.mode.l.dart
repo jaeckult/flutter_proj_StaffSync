@@ -6,6 +6,7 @@ class Profile {
   final String designation;
   final int userId;
   final DateTime dateOfBirth;
+  final String profilePicture;
 
   Profile({
     required this.id,
@@ -15,6 +16,7 @@ class Profile {
     required this.designation,
     required this.userId,
     required this.dateOfBirth,
+    required this.profilePicture,
   });
 
   factory Profile.fromJson(Map<String, dynamic> json) {
@@ -26,6 +28,7 @@ class Profile {
       designation: json['designation'],
       userId: json['userId'],
       dateOfBirth: DateTime.parse(json['dateOfBirth']),
+      profilePicture: json['profilePicture']
     );
   }
 }

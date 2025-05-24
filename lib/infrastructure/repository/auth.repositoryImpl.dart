@@ -126,4 +126,15 @@ class AuthRepositoryImpl implements AuthRepository {
     await secureStorage.write("role", null);
     await secureStorage.write("id", null);
   }
+  
+  @override
+  Future<void> logout() async {
+  final String? token = await getToken(); // await because it likely returns a Future
+  if (token != null) {
+    await remoteDataSource.logout(token);
+  } else {
+    print("No token found.");
+  }
+}
+
 }

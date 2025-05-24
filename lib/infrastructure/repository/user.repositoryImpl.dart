@@ -12,16 +12,13 @@ class UserRepositoryImpl implements UserRepository {
   @override
   Future<User> getCurrUser(int id) async {
     try {
-      print("getting curr User data...");
+     
       final data = await remoteDataSource.getCurrUser(id);
-      print("${data} we received");
       return User.fromJson(data);
-
-
 
     }
     catch(e) {
-      print(e);
+      
       if (e is Exception){
         rethrow;
       }
@@ -36,17 +33,18 @@ class UserRepositoryImpl implements UserRepository {
   @override
   Future<List<User>> getEmployees(String token) async {
     try {
-      print("we are trying to get access to all the users");
+      
       final data = await remoteDataSource.getUsers(token);
-      print(data);
       return data;
     }
     catch(e) {
       if (e is Exception) {
+       
         rethrow;
 
       }
       else {
+        
         throw Exception("Can't retrive user infromation");
       }
     }

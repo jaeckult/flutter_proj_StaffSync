@@ -76,7 +76,7 @@ final userNotifierProvider = StateNotifierProvider<UserNotifier, User?>(
     return UserNotifier(authRepository, userRepository);
   },
 );
-final bulkUserNotifierProvider = StateNotifierProvider<BulkUserNotifier, List<User>?>(
+final bulkUserNotifierProvider = StateNotifierProvider<BulkUserNotifier, List<User>>(
   (ref) {
     final authRepository = ref.watch(authRepositoryProvider);
     final userRepository = ref.watch(userRepositoryProvider);
