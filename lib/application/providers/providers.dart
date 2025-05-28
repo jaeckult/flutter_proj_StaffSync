@@ -1,12 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:staffsync/application/notifiers/attendance.notifier.dart';
 import 'package:staffsync/application/notifiers/bulkUser.notifier.dart';
+import 'package:staffsync/application/notifiers/holiday.notifier.dart';
 import 'package:staffsync/application/notifiers/leaveDashboard.notifier.dart';
 import 'package:staffsync/application/notifiers/leaveRequest.notifiers.dart';
 import 'package:staffsync/application/notifiers/setting.notifier.dart';
 import 'package:staffsync/application/notifiers/user.notifier.dart';
 import 'package:staffsync/application/states/leaveRequest.state.dart';
 import 'package:staffsync/application/states/attendance.state.dart' as states;
+import 'package:staffsync/domain/model/holiday.model.dart';
 import 'package:staffsync/domain/model/user.model.dart';
 import 'package:staffsync/domain/repositories/attendance.repository.dart';
 import 'package:staffsync/domain/repositories/auth.repository.dart';
@@ -14,10 +16,12 @@ import 'package:staffsync/application/notifiers/auth.notifier.dart';
 import 'package:staffsync/application/states/auth.state.dart';
 import 'package:staffsync/application/states/leaveDashboard.state.dart';
 import 'package:http/http.dart' as http;
+import 'package:staffsync/domain/repositories/holiday.repository.dart';
 import 'package:staffsync/domain/repositories/leaveDashboard.repository.dart';
 import 'package:staffsync/domain/repositories/leaveRequest.repository.dart';
 import 'package:staffsync/domain/repositories/user.repository.dart';
 import 'package:staffsync/infrastructure/datasource/attendance.remote_datasourceImpl.dart';
+import 'package:staffsync/infrastructure/datasource/holiday.repository.dart';
 import 'package:staffsync/infrastructure/datasource/leaveRequest.remote_datasource.dart';
 import 'package:staffsync/infrastructure/repository/attendance.repositoryImpl.dart';
 import 'package:staffsync/infrastructure/repository/auth.repositoryImpl.dart';
@@ -35,7 +39,8 @@ final authRepository = AuthRepositoryImpl(
   remoteDataSource,
   SecureStorage.instance,
 );
-final userRepository = UserRepositoryImpl( remoteDataSource);
+final holidayRepository = HolidayRepositoryImpl(remoteDataSource);
+final userRepository = UserRepositoryImpl(remoteDataSource);
 final userRepositoryProvider = Provider<UserRepository>((ref) {
   return userRepository;
 
@@ -43,6 +48,10 @@ final userRepositoryProvider = Provider<UserRepository>((ref) {
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return authRepository;
 });
+final holidayRepositoryProvider = Provider<HolidayRepository>((ref) {
+  return holidayRepository;
+});
+
 final attendanceRepository = AttendanceRepositoryImpl(
   AttendanceRemoteDatasourceImpl(httpClient),
   SecureStorage.instance,
@@ -99,6 +108,12 @@ final leaveNotifierProvider = StateNotifierProvider<LeaveDashboardNotifier, Leav
   },
   
 );
+final holidayNotifierProvider = StateNotifierProvider<HolidayNotifier, List<Holiday>>((
+  ref,
+) {
+  final holidayRepository = ref.watch(holidayRepositoryProvider);
+  return HolidayNotifier(holidayRepository: holidayRepository);
+});
 
 
 final leaveRequestNotifierProvider = StateNotifierProvider<LeaveRequestNotifier, LeaveRequestState>(

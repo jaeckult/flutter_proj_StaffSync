@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:staffsync/domain/model/holiday.model.dart';
 import 'package:staffsync/domain/model/user.model.dart';
 import 'package:staffsync/infrastructure/storage/storage.dart';
 
@@ -81,7 +82,7 @@ class RemoteDataSource {
   }
 
     Future<Map<String, dynamic>> getCurrUser(int id) async {
-       final response = await httpClient.get(
+      final response = await httpClient.get(
       Uri.parse('http://localhost:3000/api/users/${id}'), headers: {"Content-Type": "application/json"});
       if( response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
@@ -137,7 +138,8 @@ class RemoteDataSource {
     final error = json.decode(response.body);
     throw Exception('Failed to retrieve');
   }
-}Future<void> logout(String? token) async {
+}
+Future<void> logout(String? token) async {
   final url = Uri.parse('http://localhost:3000/api/logout/');
 
   try {
@@ -161,4 +163,24 @@ class RemoteDataSource {
     print("Error occurred during logout: $e");
   }
 }
+
+Future<List<Holiday>> getHolidayList() async {
+      final response = await httpClient.get(
+      Uri.parse('http://localhost:3000/api/holiday'), headers: {"Content-Type": "application/json"});
+      if( response.statusCode == 200) {
+        final data = jsonDecode(response.body) as List<dynamic>;
+        return data.map((json) => Holiday.fromJson(json)).toList();;
+      }
+      else {
+     
+        final error = jsonDecode(response.body);
+        throw Exception(error["message"] ?? 'fetching failed!');
+      }
+      
+
+
+    }
+    
+
+ 
 }

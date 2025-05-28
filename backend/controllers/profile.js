@@ -8,11 +8,6 @@ const { error } = require('../utils/logger');
 const { errorHandler } = require('../utils/middleware');
 
 
-// profileRouter.get('/', identifyUser, async(req, res)=>{
-//   try{
-
-//   }
-// })
 
 profileRouter.patch('/:id', identifyUser, async (req, res, next) => {
     try {

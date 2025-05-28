@@ -14,26 +14,21 @@ class AuthRepositoryImpl implements AuthRepository {
   
     
     try {
-      print("entering the remoteData...");
+     
       final data = await remoteDataSource.logIn(username, password);
-      print('Repository received data: $data');
-      
-
-      // Store token
+     
       final token = data["token"];
       if (token == null) {
         throw Exception('Access token not found in response');
       }
       await secureStorage.write("token", token.toString());
 
-      // Store role
       final role = data["role"];
       if (role == null) {
         throw Exception('Role not found in response');
       }
       await secureStorage.write("role", role.toString());
 
-      // Store userId
       final userId = data["id"];
       if (userId == null) {
         throw Exception('User ID not found in response');
