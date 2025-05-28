@@ -41,24 +41,25 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           _passwordController.text,
         );
 
-        if (mounted) {
+        if (mounted && role != null) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Successfully logged in!')),
-            
-
-
-          );
+            const SnackBar(content: Text('Successfully logged in!'), backgroundColor: Color.fromRGBO(39, 219, 7, 0.816),),);
           switch(role) {
             case "EMPLOYEE":
             Navigator.pushReplacementNamed(context, '/employee/home');
             break;
             case "MANAGER":
-            Navigator.pushReplacementNamed(context, "manager/home");
+            Navigator.pushReplacementNamed(context, "/manager/home");
     
           }
           
           
           
+        }
+        else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Invalid Credential'), backgroundColor: Color.fromRGBO(236, 19, 7, 0.815),), );
+
         }
       } catch (e) {
         if (mounted) {
