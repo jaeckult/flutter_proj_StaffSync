@@ -1,32 +1,29 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
 import 'package:staffsync/domain/model/attendance.model.dart';
 import 'package:staffsync/infrastructure/datasource/attendance.remote_datasource.dart';
-import 'package:staffsync/infrastructure/datasource/attendance.remote_datasourceImpl.dart';
 
-class AttendanceRemoteDatasourceImpl
-    implements IAttendanceRemoteDatasourceImpl {
-  final http.Client httpClient;
+class AttendanceRemoteDatasourceImpl implements IAttendanceRemoteDatasourceImpl {
+  final Dio dio;
 
-  AttendanceRemoteDatasourceImpl(this.httpClient);
+  AttendanceRemoteDatasourceImpl(this.dio);
 
   @override
-  Future<List<Attendance>> fetchAttendances(
-    String token,
-    String endpoint,
-  ) async {
-    final headers = {"Authorization": "Bearer $token"};
-    final response = await httpClient.get(
-      Uri.parse('http://localhost:3000/api/attendance'),
-      headers: headers,
-    );
+  Future<List<Attendance>> fetchAttendances(String token, String endpoint) async {
+    try {
+      final response = await dio.get(
+        'http://localhost:3000/api/attendance', 
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+          },
+        ),
+      );
 
-    if (response.statusCode == 200) {
-      final List<dynamic> data = jsonDecode(response.body) as List<dynamic>;
+      final List<dynamic> data = response.data as List<dynamic>;
       return data.map((json) => Attendance.fromJson(json)).toList();
-    } else {
-      final error = jsonDecode(response.body);
-      throw Exception(error['error'] ?? 'Error fetching attendance records');
+    } on DioException catch (e) {
+      final error = e.response?.data['error'] ?? 'Error fetching attendance records';
+      throw Exception(error);
     }
   }
 
@@ -36,15 +33,18 @@ class AttendanceRemoteDatasourceImpl
     String token,
     String endpoint,
   ) async {
-    final headers = {"Authorization": "Bearer $token"};
-    final response = await httpClient.post(
-      Uri.parse('http://localhost:3000/api/attendance/check-in'),
-      headers: headers,
-    );
-
-    if (response.statusCode != 201) {
-      final error = jsonDecode(response.body);
-      throw Exception(error['error'] ?? 'Error checking in');
+    try {
+      await dio.post(
+        'http://localhost:3000/api/attendance/check-in', // or use endpoint if dynamic
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+          },
+        ),
+      );
+    } on DioException catch (e) {
+      final error = e.response?.data['error'] ?? 'Error checking in';
+      throw Exception(error);
     }
   }
 
@@ -54,15 +54,18 @@ class AttendanceRemoteDatasourceImpl
     String token,
     String endpoint,
   ) async {
-    final headers = {"Authorization": "Bearer $token"};
-    final response = await httpClient.post(
-      Uri.parse('http://localhost:3000/api/attendance/check-out'),
-      headers: headers,
-    );
-
-    if (response.statusCode != 200) {
-      final error = jsonDecode(response.body);
-      throw Exception(error['error'] ?? 'Error checking out');
+    try {
+      await dio.post(
+        'http://localhost:3000/api/attendance/check-out', // or use endpoint if dynamic
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+          },
+        ),
+      );
+    } on DioException catch (e) {
+      final error = e.response?.data['error'] ?? 'Error checking out';
+      throw Exception(error);
     }
   }
 }

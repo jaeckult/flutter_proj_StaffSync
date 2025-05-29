@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:staffsync/application/notifiers/attendance.notifier.dart';
 import 'package:staffsync/application/notifiers/bulkUser.notifier.dart';
@@ -32,8 +33,8 @@ import 'package:staffsync/infrastructure/repository/user.repositoryImpl.dart';
 import 'package:staffsync/infrastructure/storage/storage.dart';
 import 'package:staffsync/infrastructure/datasource/leaveDashboard.remote_datasourceImpl.dart';
 
-final httpClient = http.Client();
-final remoteDataSource = RemoteDataSource(httpClient);
+final dio = Dio();
+final remoteDataSource = RemoteDataSource(dio);
 
 final authRepository = AuthRepositoryImpl(
   remoteDataSource,
@@ -53,21 +54,21 @@ final holidayRepositoryProvider = Provider<HolidayRepository>((ref) {
 });
 
 final attendanceRepository = AttendanceRepositoryImpl(
-  AttendanceRemoteDatasourceImpl(httpClient),
+  AttendanceRemoteDatasourceImpl(dio),
   SecureStorage.instance,
 );
 final attendanceRepositoryProvider = Provider<AttendanceRepository>((ref) {
   return attendanceRepository;
 });
 final leaveDashboardRepository = LeaveDashboardRepositoryImpl(
-  LeaveDashboardRemoteDatasourceimpl(httpClient),
+  LeaveDashboardRemoteDatasourceImpl(dio),
   SecureStorage.instance,
 );
 final leaveDashboardRepositoryProvider = Provider<LeaveDashboardRepository>((ref) {
   return leaveDashboardRepository;
 });
 final leaveRequestRepository = LeaveRequestRepositoryImpl(
-  LeaveRequestRemoteDatasourceImpl(httpClient),
+  LeaveRequestRemoteDatasourceImpl(dio),
   SecureStorage.instance,
 );
 final leaveRequestRepositoryProvider = Provider<LeaveRequestRepository>((ref) {
