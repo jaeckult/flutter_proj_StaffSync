@@ -1,9 +1,13 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:staffsync/application/providers/providers.dart';
 import 'package:staffsync/application/states/attendance.state.dart' as states;
 import 'package:staffsync/domain/model/attendance.model.dart';
 import 'package:intl/intl.dart';
+import 'package:staffsync/presentaion/screen/employee.collegues.Screen.dart';
 import 'package:staffsync/presentaion/screen/employee.profileScreen.dart';
 import 'package:staffsync/presentaion/screen/employee.scheduleScreen.dart';
 import 'package:staffsync/application/states/manager.state.dart';
@@ -654,7 +658,6 @@ class _ManagerHomeScreenState extends ConsumerState<ManagerHomeScreen> {
   @override
   Widget build(BuildContext context) {
     final managerDashboardState = ref.watch(managerDashboardNotifierProvider);
-    final user = ref.watch(userNotifierProvider);
 
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
@@ -679,19 +682,12 @@ class _ManagerHomeScreenState extends ConsumerState<ManagerHomeScreen> {
                     ] else if (managerDashboardState is ManagerDashboardData) ...[
                       _AttendanceSummaryCards(stats: managerDashboardState.stats),
                     ] else ...[
-                      const Center(child: Text('Load failed or initial state')),
+                       const Center(child: Text('Load failed or initial state')),
                     ],
                     const SizedBox(height: 24),
                     const Text("Employees Daily Status", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 12),
-                    const Center(child: Padding(
-                       padding: EdgeInsets.symmetric(vertical: 24.0),
-                       child: Text(
-                         'Employee daily status list data not available from current API.',
-                         textAlign: TextAlign.center,
-                         style: TextStyle(fontSize: 16, color: Colors.grey),
-                        ),
-                    )),
+                    _EmployeesDailyStatusList(),
                   ],
                 ),
               ),
@@ -801,3 +797,76 @@ class _SummaryCard extends StatelessWidget {
     );
   }
 }
+
+class _EmployeesDailyStatusList extends ConsumerWidget {
+  const _EmployeesDailyStatusList({super.key});
+
+  String getStatus(User employee) {
+    final hasAttendance = employee.attendance.isNotEmpty;
+    return hasAttendance && employee.attendance.last.checkOut == null ? "Checked in" : "Checked out";
+  }
+
+  Color getStatusColor(String status) {
+    return status == 'Checked in' ? Colors.green : Colors.red;
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final employees = ref.watch(bulkUserNotifierProvider);
+
+    if (employees.isEmpty) {
+      Future.microtask(() => ref.read(bulkUserNotifierProvider.notifier).getEmployees());
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return ListView.separated(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: employees.length,
+      separatorBuilder: (context, index) => const Divider(height: 1, indent: 72),
+      itemBuilder: (context, index) {
+        final User employee = employees[index];
+        final status = getStatus(employee);
+        Uint8List? imageBytes;
+        try {
+           if (employee.profile.profilePicture != null && employee.profile.profilePicture.isNotEmpty) {
+            imageBytes = base64Decode(employee.profile.profilePicture);
+           }
+        } catch (e) {
+           imageBytes = null;
+        }
+
+        return ListTile(
+          leading: CircleAvatar(
+            radius: 24,
+            backgroundImage: imageBytes != null ? MemoryImage(imageBytes) : const AssetImage('assets/images/profile_placeholder.png') as ImageProvider,
+            backgroundColor: Colors.grey[300],
+          ),
+          title: Text(
+            employee.profile.fullName,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
+          subtitle: Text(
+            employee.profile.designation,
+            style: const TextStyle(
+              color: Colors.grey,
+              fontSize: 14,
+            ),
+          ),
+          trailing: Text(
+            status,
+            style: TextStyle(
+              color: getStatusColor(status),
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 0),
+        );
+      },
+    );
+  }
+}
+

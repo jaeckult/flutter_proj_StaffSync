@@ -2,19 +2,21 @@ import 'package:dio/dio.dart';
 import 'package:staffsync/domain/model/leaveRequest.model.dart';
 import 'package:staffsync/infrastructure/datasource/leaveRequest.remote_datasourceImpl.dart';
 
-class LeaveRequestRemoteDatasourceImpl implements ILeaveRequestRemoteDatasource {
+class LeaveRequestRemoteDatasourceImpl
+    implements ILeaveRequestRemoteDatasource {
   final Dio dio;
 
   LeaveRequestRemoteDatasourceImpl(this.dio);
 
   @override
-  Future<List<LeaveRequest>> fetchLeaveRequests(String token, String endpoint) async {
+  Future<List<LeaveRequest>> fetchLeaveRequests(
+    String token,
+    String endpoint,
+  ) async {
     try {
       final response = await dio.get(
-        endpoint, // e.g. 'http://localhost:3000/api/leaveRequest'
-        options: Options(
-          headers: {"Authorization": "Bearer $token"},
-        ),
+        "http://localhost:3000/api/leaveRequest",
+        options: Options(headers: {"Authorization": "Bearer $token"}),
       );
 
       if (response.statusCode == 200) {
@@ -24,16 +26,21 @@ class LeaveRequestRemoteDatasourceImpl implements ILeaveRequestRemoteDatasource 
         throw Exception('Error fetching leave requests');
       }
     } on DioException catch (e) {
-      throw Exception(e.response?.data['message'] ?? 'Error fetching leave requests');
+      throw Exception(
+        e.response?.data['message'] ?? 'Error fetching leave requests',
+      );
     }
   }
 
   @override
   Future<void> createLeaveRequests(
-      LeaveRequestCreate leaveRequestCreate, String token, String endpoint) async {
+    LeaveRequestCreate leaveRequestCreate,
+    String token,
+    String endpoint,
+  ) async {
     try {
       final response = await dio.post(
-        "http://localhost:3000/api/leaveRequest", 
+        "http://localhost:3000/api/leaveRequest",
         options: Options(
           headers: {
             "Authorization": "Bearer $token",
@@ -47,7 +54,9 @@ class LeaveRequestRemoteDatasourceImpl implements ILeaveRequestRemoteDatasource 
         throw Exception('Error creating leave request');
       }
     } on DioException catch (e) {
-      throw Exception(e.response?.data['message'] ?? 'Error creating leave request');
+      throw Exception(
+        e.response?.data['message'] ?? 'Error creating leave request',
+      );
     }
   }
 }

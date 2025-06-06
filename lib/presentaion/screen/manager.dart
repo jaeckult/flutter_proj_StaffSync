@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:staffsync/presentaion/screen/employee.collegues.Screen.dart';
 import 'package:staffsync/presentaion/screen/employee.holidayScreen.dart';
+import 'package:staffsync/presentaion/screen/managerDashboard.dart';
 import 'package:staffsync/presentaion/screen/managerHome.dart';
 import 'package:staffsync/presentaion/screen/employee.profileScreen.dart';
 import 'package:staffsync/presentaion/screen/employee.scheduleScreen.dart';
-
 
 void main() {
   runApp(const MyApp());
@@ -34,7 +34,7 @@ class ManagerNavigationManager {
       case 0:
         return const ManagerHomeScreen();
       case 1:
-        return const ScheduleScreen();
+        return const ManagerScheduleScreen();
       case 2:
         return const EmployeeListScreen();
       case 3:
@@ -64,17 +64,15 @@ class _ManagerLogicState extends ConsumerState<ManagerLogic> {
       // ref.read(customerNotifierProvider.notifier).loadAllCustomers();
       // ref.read(techniciansNotifierProvider.notifier).loadPendingTechnicians();
       // ref.read(techniciansNotifierProvider.notifier).loadSuspendedTechnicians();
-
-  
     });
-    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-  
-      body: _logic
-          .getCurrentPage(), // Display the current page based on the current index
+      body:
+          _logic
+              .getCurrentPage(), // Display the current page based on the current index
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _logic.currentIndex,
         onTap: (index) {
@@ -88,17 +86,11 @@ class _ManagerLogicState extends ConsumerState<ManagerLogic> {
         type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(
-              Icons.home,
-              size: 20,
-            ),
+            icon: Icon(Icons.home, size: 20),
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(
-              Icons.schedule,
-              size: 20,
-            ),
+            icon: Icon(Icons.schedule, size: 20),
             label: 'Schedule',
           ),
           BottomNavigationBarItem(
@@ -106,17 +98,11 @@ class _ManagerLogicState extends ConsumerState<ManagerLogic> {
             label: 'Collegues',
           ),
           BottomNavigationBarItem(
-            icon: Icon(
-              Icons.holiday_village,
-              size: 20,
-            ),
+            icon: Icon(Icons.holiday_village, size: 20),
             label: 'Holiday',
           ),
           BottomNavigationBarItem(
-            icon: Icon(
-              Icons.person,
-              size: 20,
-            ),
+            icon: Icon(Icons.person, size: 20),
             label: 'Profile',
           ),
         ],

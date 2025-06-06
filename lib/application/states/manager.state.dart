@@ -16,4 +16,6 @@ class ManagerDashboardError extends ManagerDashboardState {
   final String message;
 
   ManagerDashboardError(this.message);
+
+  Object? get Managerdashboard => null;
 }
