@@ -156,6 +156,8 @@ attendanceRouter.get('/stats', identifyUser, async (req, res, next) => {
 
     let totalPresent = 0;
     let totalAbsent = 0;
+    let totalCheckedIn = 0;
+    let totalCheckedOut = 0;
 
     // Iterate through each day in the range
     const currentDate = new Date(start);
@@ -170,6 +172,8 @@ attendanceRouter.get('/stats', identifyUser, async (req, res, next) => {
         if (userRecord) {
           if (userRecord.attendance === 'PRESENT') {
             totalPresent++;
+            if (userRecord.checkIn) totalCheckedIn++;
+            if (userRecord.checkOut) totalCheckedOut++;
           } else if (userRecord.attendance === 'ABSENT') {
             totalAbsent++;
           }
@@ -190,6 +194,8 @@ attendanceRouter.get('/stats', identifyUser, async (req, res, next) => {
     res.json({
       totalPresent,  // Total number of "present employee days"
       totalAbsent,   // Total number of "absent employee days"
+      totalCheckedIn, // Total number of check-ins
+      totalCheckedOut, // Total number of check-outs
     });
   } catch (error) {
     logger.error('Attendance stats error:', error);

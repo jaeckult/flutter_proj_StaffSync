@@ -215,7 +215,7 @@ class _SignupScreen extends ConsumerState<SignupScreen> {
                                         style: TextStyle(color: Colors.white),
                                       ),
                               ),
-                              SizedBox(width: 16),
+                              const SizedBox(width: 16),
 
                               ElevatedButton(
                                 onPressed: _isLoading ? null : () {

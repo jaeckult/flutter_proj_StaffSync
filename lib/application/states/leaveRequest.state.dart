@@ -1,4 +1,3 @@
-import 'package:staffsync/domain/model/leaveDashboard.model.dart';
 import 'package:staffsync/domain/model/leaveRequest.model.dart';
 
 sealed class LeaveRequestState {

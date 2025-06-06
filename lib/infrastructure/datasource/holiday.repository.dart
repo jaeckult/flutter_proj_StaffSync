@@ -1,4 +1,3 @@
-import 'package:staffsync/domain/model/attendance.model.dart';
 import 'package:staffsync/domain/model/holiday.model.dart';
 import 'package:staffsync/domain/repositories/holiday.repository.dart';
 import 'package:staffsync/infrastructure/datasource/remote_data_source.dart';

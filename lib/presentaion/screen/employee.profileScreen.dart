@@ -12,7 +12,7 @@ class MyApp extends StatelessWidget {
   const MyApp({super.key});
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       title: 'Staff sync',
       debugShowCheckedModeBanner: false,
     );
@@ -90,12 +90,12 @@ void _handleEditProfile() {
                     bottom: 0,
                     right: 4,
                     child: Container(
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: Colors.white,
                         shape: BoxShape.circle,
                       ),
-                      padding: EdgeInsets.all(4),
-                      child: Icon(
+                      padding: const EdgeInsets.all(4),
+                      child: const Icon(
                         Icons.camera_alt,
                         color: Colors.redAccent,
                         size: 20,
@@ -108,11 +108,11 @@ void _handleEditProfile() {
             const SizedBox(height: 10),
             Text(
               user.profile.fullName,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             Text(
               user.profile.designation,
-              style: TextStyle(color: Colors.grey),
+              style: const TextStyle(color: Colors.grey),
             ),
             const SizedBox(height: 20),
             Padding(
@@ -137,8 +137,8 @@ void _handleEditProfile() {
             ProfileOption(icon: Icons.vpn_key, text: "Change Password", function: _handlePasswordChange),
             ProfileOption(icon: Icons.logout, text: "Logout", function:_handleLogout),
             ListTile(
-                leading: Icon(Icons.delete_forever, color: Colors.pinkAccent),
-                title: Text("Delete Account", style: TextStyle(color: Colors.pinkAccent)),
+                leading: const Icon(Icons.delete_forever, color: Colors.pinkAccent),
+                title: const Text("Delete Account", style: TextStyle(color: Colors.pinkAccent)),
                 onTap: () {},
               ),
            

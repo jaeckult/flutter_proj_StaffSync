@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:staffsync/application/providers/providers.dart';
 import 'package:staffsync/NetworkService.dart';
-import 'package:staffsync/domain/repositories/auth.repository.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
 

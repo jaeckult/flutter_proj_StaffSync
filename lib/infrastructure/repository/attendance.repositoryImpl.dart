@@ -25,6 +25,7 @@ Future<String> _getEndpoint() async =>
     await remoteDataSource.checkInAttendance(attendanceResponse, token, endpoint);
   }
 
+  @override
   Future<void> checkOut(AttendanceResponse attendanceResponse) async {
     final endpoint = await _getEndpoint();
     final token = await secureStorage.read("token") ?? "";

@@ -36,7 +36,7 @@ class _EditProfileState extends ConsumerState<EditProfile> {
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(userNotifierProvider);
-    final avatarRadius = 40.0;
+    const avatarRadius = 40.0;
     if (user == null) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator())
@@ -66,11 +66,11 @@ class _EditProfileState extends ConsumerState<EditProfile> {
             const SizedBox(height: 10),
             Text(
               user.profile.fullName,
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
              Text(
               user.profile.designation,
-              style: TextStyle(color: Colors.grey),
+              style: const TextStyle(color: Colors.grey),
             ),
             const SizedBox(height: 20),
             _buildTextField("Full Name", nameController),

@@ -20,9 +20,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       title: 'Employee List',
-      home: const EmployeeListScreen(),
+      home: EmployeeListScreen(),
     );
   }
 }
@@ -72,7 +72,7 @@ class _EmployeeListStateScreen extends ConsumerState<EmployeeListScreen> {
                   separatorBuilder: (context, index) =>
                       const Divider(height: 20),
                   itemBuilder: (context, index) {
-                    final User employee = employees[index];;
+                    final User employee = employees[index];
                     final hasAttendance = employee.attendance.isNotEmpty;
                     final status = hasAttendance && employee.attendance.last.checkOut == null ? "Checked in": "Checked out";
                     final photoUrl = employee.profile.profilePicture;   
@@ -95,14 +95,14 @@ class _EmployeeListStateScreen extends ConsumerState<EmployeeListScreen> {
                             children: [
                               Text(
                                  employee.profile.fullName,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
                                 ),
                               ),
                               Text(
                                 employee.profile.designation,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: Colors.grey,
                                   fontSize: 14,
                                 ),

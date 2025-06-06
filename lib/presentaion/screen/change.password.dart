@@ -8,6 +8,8 @@ void main() {
 }
 
 class ChangePassword extends StatefulWidget {
+  const ChangePassword({super.key});
+
   @override
   _ChangePasswordState createState() => _ChangePasswordState();
 }

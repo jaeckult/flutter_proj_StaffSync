@@ -5,6 +5,7 @@ import 'package:staffsync/presentaion/screen/edit.profile.dart';
 import 'package:staffsync/presentaion/screen/employee.dart';
 import 'package:staffsync/presentaion/screen/employee.home.dart';
 import 'package:staffsync/presentaion/screen/manager.dart';
+import 'package:staffsync/presentaion/screen/managerHome.dart';
 import 'package:staffsync/presentaion/screen/notification.setting.dart';
 import './presentaion/screen/login.screen.dart'; // Corrected path
 import './presentaion/screen/signup.screen.dart'; // Add this import
@@ -28,13 +29,12 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       home: const LoginPage(), // Set initial screenr to Login
       routes: {
-       
-        '/signup': (context) => const SignupScreen(), 
-        '/employee/home' : (context) =>  const EmployeeLogic(),
-        '/manager/home' : (context) => const ManagerScreen(),
-        '/setting': (context) =>  NotificationSetting(),
+        '/signup': (context) => const SignupScreen(),
+        '/employee/home': (context) => const EmployeeLogic(),
+        '/manager/home': (context) => const ManagerLogic(),
+        '/setting': (context) => NotificationSetting(),
         '/changePassword': (context) => ChangePassword(),
-        '/editProfile': (context) => EditProfile()
+        '/editProfile': (context) => const EditProfile(),
       },
     );
   }

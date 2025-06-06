@@ -8,7 +8,7 @@ import 'package:staffsync/application/states/leaveRequest.state.dart';
 import 'package:staffsync/domain/model/leaveRequest.model.dart';
 
 class ScheduleScreen extends ConsumerStatefulWidget {
-  const ScheduleScreen({Key? key}) : super(key: key);
+  const ScheduleScreen({super.key});
 
   @override
   ConsumerState<ScheduleScreen> createState() => _ScheduleScreenState();

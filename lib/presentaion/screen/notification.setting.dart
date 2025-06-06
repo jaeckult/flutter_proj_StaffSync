@@ -10,6 +10,8 @@ void main() {
 }
 
 class NotificationSetting extends ConsumerStatefulWidget {
+  const NotificationSetting({super.key});
+
   @override
   _NotificationSettingState createState() => _NotificationSettingState();
 }
@@ -70,9 +72,9 @@ class _NotificationSettingState extends ConsumerState<NotificationSetting> {
                   isDropdownExpanded = !isDropdownExpanded;
                 });
               },
-              child: Row(
+              child: const Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: const [
+                children: [
                   Text('Get notified from', style: TextStyle(color: Colors.deepOrange, fontWeight: FontWeight.bold)),
                   Icon(Icons.expand_more, color: Colors.black),
                 ],
@@ -99,7 +101,7 @@ class _NotificationSettingState extends ConsumerState<NotificationSetting> {
                         });
                       },
                       title: Text(option['title']!,
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: Colors.deepOrange,
                             fontWeight: FontWeight.bold,
                           )),
@@ -109,10 +111,10 @@ class _NotificationSettingState extends ConsumerState<NotificationSetting> {
                   }).toList(),
                 ),
               ),
-              Row(
+              const Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Clear Notifications', style: TextStyle(
+                Text('Clear Notifications', style: TextStyle(
                             color: Colors.deepOrange,
                             fontWeight: FontWeight.bold,
                           )),

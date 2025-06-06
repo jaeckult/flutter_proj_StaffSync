@@ -16,7 +16,6 @@ import 'package:staffsync/domain/repositories/auth.repository.dart';
 import 'package:staffsync/application/notifiers/auth.notifier.dart';
 import 'package:staffsync/application/states/auth.state.dart';
 import 'package:staffsync/application/states/leaveDashboard.state.dart';
-import 'package:http/http.dart' as http;
 import 'package:staffsync/domain/repositories/holiday.repository.dart';
 import 'package:staffsync/domain/repositories/leaveDashboard.repository.dart';
 import 'package:staffsync/domain/repositories/leaveRequest.repository.dart';
@@ -32,6 +31,12 @@ import 'package:staffsync/infrastructure/repository/leaveRequest.repositoryImpl.
 import 'package:staffsync/infrastructure/repository/user.repositoryImpl.dart';
 import 'package:staffsync/infrastructure/storage/storage.dart';
 import 'package:staffsync/infrastructure/datasource/leaveDashboard.remote_datasourceImpl.dart';
+import 'package:staffsync/application/notifiers/managerHome.notifier.dart';
+import 'package:staffsync/application/states/manager.state.dart';
+import 'package:staffsync/infrastructure/repository/managerDashboard.repositoryImpl.dart';
+import 'package:staffsync/infrastructure/datasource/managerDashboard.remote_datasourceImpl.dart';
+import 'package:staffsync/domain/repositories/managerDashboard.repository.dart';
+import 'package:staffsync/infrastructure/datasource/managerDashboard.remote_datasource.dart';
 
 final dio = Dio();
 final remoteDataSource = RemoteDataSource(dio);
@@ -125,6 +130,24 @@ final leaveRequestNotifierProvider = StateNotifierProvider<LeaveRequestNotifier,
   },
 );
 final toggleProvider = NotifierProvider<ToggleNotifier, bool>(() => ToggleNotifier());
+
+final managerDashboardRepositoryProvider = Provider<ManagerdashboardRepository>((ref) {
+  final remoteDataSource = ref.watch(managerDashboardRemoteDatasourceProvider);
+  // Assuming SecureStorage is needed here as seen in managerDashboard.repositoryImpl.dart
+  return ManagerDashboardRepositoryImpl(remoteDataSource, SecureStorage.instance);
+});
+
+final managerDashboardNotifierProvider = StateNotifierProvider<ManagerDashboardNotifier, ManagerDashboardState>(
+  (ref) {
+    final authRepository = ref.watch(authRepositoryProvider);
+    final managerDashboardRepository = ref.watch(managerDashboardRepositoryProvider);
+    return ManagerDashboardNotifier(authRepository, managerDashboardRepository);
+  },
+);
+
+final managerDashboardRemoteDatasourceProvider = Provider<IManagerDashboardRemoteDatasource>((ref) {
+  return ManagerDashboardRemoteDatasourceImpl(dio);
+});
 
 
 

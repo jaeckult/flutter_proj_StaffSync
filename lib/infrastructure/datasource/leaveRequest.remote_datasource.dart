@@ -23,7 +23,7 @@ class LeaveRequestRemoteDatasourceImpl implements ILeaveRequestRemoteDatasource 
       } else {
         throw Exception('Error fetching leave requests');
       }
-    } on DioError catch (e) {
+    } on DioException catch (e) {
       throw Exception(e.response?.data['message'] ?? 'Error fetching leave requests');
     }
   }

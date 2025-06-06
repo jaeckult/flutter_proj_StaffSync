@@ -25,6 +25,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     } catch (error) {
       state = AuthError(error.toString().split(":")[1]);
     }
+    return null;
   }
 
   Future<void> signup(

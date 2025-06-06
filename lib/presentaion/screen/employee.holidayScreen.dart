@@ -18,9 +18,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       title: 'Employee Holiday',
-      home: const EmployeeHolidayScreen(),
+      home: EmployeeHolidayScreen(),
     );
   }
 }
@@ -41,13 +41,13 @@ class _EmployeeHolidayStateScreen extends ConsumerState<EmployeeHolidayScreen> {
     });
   }
 
-  bool _isLoading = false;
+  final bool _isLoading = false;
 
 
   @override
   Widget build(BuildContext context) {
     final holidays = ref.watch(holidayNotifierProvider);
-    final DateFormat _dateFormatter = DateFormat('MMM d, yyyy');
+    final DateFormat dateFormatter = DateFormat('MMM d, yyyy');
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -57,7 +57,7 @@ class _EmployeeHolidayStateScreen extends ConsumerState<EmployeeHolidayScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Padding(padding: EdgeInsets.only(bottom: 12),child:
-              const Text(
+              Text(
                 'Employee Holiday',
                 style: TextStyle(
                   fontSize: 18,
@@ -115,7 +115,7 @@ class _EmployeeHolidayStateScreen extends ConsumerState<EmployeeHolidayScreen> {
                                           ),
                                 const SizedBox(height: 8),
                                 Text(
-                                  '${_dateFormatter.format(holiday.startDate)} → ${_dateFormatter.format(holiday.endDate)}',
+                                  '${dateFormatter.format(holiday.startDate)} → ${dateFormatter.format(holiday.endDate)}',
                                   style: const TextStyle(
                                     fontSize: 14,
                                     color: Colors.grey,

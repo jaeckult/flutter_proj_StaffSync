@@ -6,6 +6,9 @@ import 'package:staffsync/domain/model/attendance.model.dart';
 import 'package:intl/intl.dart';
 import 'package:staffsync/presentaion/screen/employee.profileScreen.dart';
 import 'package:staffsync/presentaion/screen/employee.scheduleScreen.dart';
+import 'package:staffsync/application/states/manager.state.dart';
+import 'package:staffsync/domain/model/managerDashboard.model.dart';
+import 'package:staffsync/domain/model/user.model.dart';
 
 void main() => runApp(const ProviderScope(child: EmployeeHomeApp()));
 
@@ -629,4 +632,172 @@ Widget _buildPastActivity(states.AttendanceState attendanceState) {
     return _buildActivityList(pastAttendance);
   }
   return const SizedBox.shrink();
+}
+
+class ManagerHomeScreen extends ConsumerStatefulWidget {
+  const ManagerHomeScreen({super.key});
+
+  @override
+  ConsumerState<ManagerHomeScreen> createState() => _ManagerHomeScreenState();
+}
+
+class _ManagerHomeScreenState extends ConsumerState<ManagerHomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      ref.read(userNotifierProvider.notifier).loadUserFromStorage();
+      ref.read(managerDashboardNotifierProvider.notifier).fetchDashboardStats();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final managerDashboardState = ref.watch(managerDashboardNotifierProvider);
+    final user = ref.watch(userNotifierProvider);
+
+    return Scaffold(
+      backgroundColor: Colors.grey.shade100,
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const _ProfileSection(),
+            const _DateSelector(),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text("Attendance Summary", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 16),
+                    if (managerDashboardState is ManagerDashboardLoading) ...[
+                      const Center(child: CircularProgressIndicator()),
+                    ] else if (managerDashboardState is ManagerDashboardError) ...[
+                      Center(child: Text('Error: ${managerDashboardState.message}', style: TextStyle(color: Colors.red))),
+                    ] else if (managerDashboardState is ManagerDashboardData) ...[
+                      _AttendanceSummaryCards(stats: managerDashboardState.stats),
+                    ] else ...[
+                      const Center(child: Text('Load failed or initial state')),
+                    ],
+                    const SizedBox(height: 24),
+                    const Text("Employees Daily Status", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 12),
+                    const Center(child: Padding(
+                       padding: EdgeInsets.symmetric(vertical: 24.0),
+                       child: Text(
+                         'Employee daily status list data not available from current API.',
+                         textAlign: TextAlign.center,
+                         style: TextStyle(fontSize: 16, color: Colors.grey),
+                        ),
+                    )),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+extension StringExtension on String {
+  String capitalize() {
+    if (isEmpty) return this;
+    return "${this[0].toUpperCase()}${substring(1).toLowerCase()}";
+  }
+}
+
+class _AttendanceSummaryCards extends StatelessWidget {
+  final Managerdashboard stats;
+
+  const _AttendanceSummaryCards({required this.stats});
+
+  @override
+  Widget build(BuildContext context) {
+    final double screenWidth = MediaQuery.of(context).size.width;
+    final double horizontalPadding = 16.0;
+    final double spacing = 16.0;
+    final double cardWidth = (screenWidth - 2 * horizontalPadding - spacing) / 2;
+
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: double.infinity),
+      child: Wrap(
+        spacing: spacing,
+        runSpacing: spacing,
+        children: [
+          _SummaryCard(
+            title: "Total Check-ins",
+            value: "${stats.totalCheckedIn}",
+            subtitle: "over selected range",
+            icon: Icons.login,
+            iconColor: Colors.green,
+          ),
+          _SummaryCard(
+            title: "Total Check-outs",
+            value: "${stats.totalCheckedOut}",
+            subtitle: "over selected range",
+            icon: Icons.logout,
+            iconColor: Colors.red,
+          ),
+          _SummaryCard(
+            title: "On leave today",
+            value: "4",
+            subtitle: "employees",
+            icon: Icons.beach_access,
+            iconColor: Colors.blue,
+          ),
+          _SummaryCard(
+            title: "On work today",
+            value: "7",
+            subtitle: "employees",
+            icon: Icons.work,
+            iconColor: Colors.orange,
+          ),
+        ].map((card) => SizedBox(width: cardWidth, child: card)).toList(),
+      ),
+    );
+  }
+}
+
+class _SummaryCard extends StatelessWidget {
+  final String title;
+  final String value;
+  final String subtitle;
+  final IconData icon;
+  final Color iconColor;
+
+  const _SummaryCard({
+    required this.title,
+    required this.value,
+    required this.subtitle,
+    required this.icon,
+    required this.iconColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 36, color: iconColor),
+            const SizedBox(height: 12),
+            Text(value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 4),
+            Text(title, style: const TextStyle(color: Colors.grey, fontSize: 14)),
+            const SizedBox(height: 2),
+            Text(subtitle, style: const TextStyle(fontSize: 12, color: Colors.black54)),
+          ],
+        ),
+      ),
+    );
+  }
 }

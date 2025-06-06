@@ -15,7 +15,7 @@ class MyApp extends StatelessWidget {
   const MyApp({super.key});
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       title: 'Staff sync',
       debugShowCheckedModeBanner: false,
     );
@@ -56,6 +56,7 @@ class EmployeeLogic extends ConsumerStatefulWidget {
 class _EmployeeLogicState extends ConsumerState<EmployeeLogic> {
   final EmployeeNavigationManager _logic = EmployeeNavigationManager();
 
+  @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {

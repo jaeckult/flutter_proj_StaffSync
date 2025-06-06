@@ -1,11 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:staffsync/application/states/attendance.state.dart' as states;
-import 'package:staffsync/application/states/leaveRequest.state.dart';
 import 'package:staffsync/domain/model/attendance.model.dart';
-import 'package:staffsync/domain/model/leaveRequest.model.dart';
 import 'package:staffsync/domain/repositories/attendance.repository.dart';
 import 'package:staffsync/domain/repositories/auth.repository.dart';
-import 'package:staffsync/domain/repositories/leaveRequest.repository.dart';
 
 class AttendanceNotifier extends StateNotifier<states.AttendanceState> {
   final AuthRepository authRepository;
