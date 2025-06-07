@@ -13,8 +13,13 @@ class ManagerDashboardRemoteDatasourceImpl implements IManagerDashboardRemoteDat
     String endpoint,
   ) async {
     try {
+      final today = DateTime.now();
       final response = await dio.get(
-        'http://localhost:3000/api/attendance/stats', // or use endpoint
+        'http://localhost:3000/api/attendance/stats',
+        queryParameters: {
+          'startDate': today.toIso8601String().split('T')[0],
+          'endDate': today.toIso8601String().split('T')[0],
+        },
         options: Options(
           headers: {
             'Authorization': 'Bearer $token',

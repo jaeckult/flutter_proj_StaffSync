@@ -6,7 +6,7 @@ const { identifyUser, rbacMiddleware, calculateLeaveDuration, isOnLeave, isOnWor
 
 // Create a leave request
 leaveRequestRouter.post('/', identifyUser, async (req, res) => {
-  console.log(req.body);
+  // console.log(req.body);
   
   const { type, startDate, endDate, reason } = req.body;
   const userId = req.user.id;
@@ -40,6 +40,8 @@ leaveRequestRouter.post('/', identifyUser, async (req, res) => {
 
 // Update a leave request (e.g., approve, reject, cancel)
 leaveRequestRouter.patch('/:id', identifyUser, rbacMiddleware(['MANAGER']), async (req, res) => {
+  console.log(req.body);
+  
   const { id } = req.params;
   const { status } = req.body;
   const userId = req.user.id;
@@ -119,6 +121,7 @@ leaveRequestRouter.patch('/:id', identifyUser, rbacMiddleware(['MANAGER']), asyn
 
       return { updatedLeaveRequest, message };
     });
+    console.log(result);
 
     res.json({
       message: result.message,
@@ -127,12 +130,14 @@ leaveRequestRouter.patch('/:id', identifyUser, rbacMiddleware(['MANAGER']), asyn
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message || 'Failed to update leave request' });
+
   }
 });
 
 // Get leave request stats for the dashboard
 leaveRequestRouter.get('/stats', identifyUser, async (req, res) => {
-  console.log(req.body);
+  // console.log("body: ", req.body);
+  // logger.info("Fetching leave stats for user:", req.user.id);
   
   const userId = req.user.id;
 
@@ -167,39 +172,32 @@ leaveRequestRouter.get('/stats', identifyUser, async (req, res) => {
   }
 });
 
+// Get all leave requests for the user
 leaveRequestRouter.get('/', identifyUser, async (req, res) => {
+  // console.log("leaveRequests");
   const userId = req.user.id;
-  const isManager = req.user.role === 'MANAGER';
+  // console.log(req.userId);
+  if (req.user.role === 'MANAGER') {
+    try{
+      const leaveRequests = await prisma.leaveRequest.findMany({});
+      console.log(leaveRequests);
+      res.json(leaveRequests);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Failed to fetch leave requests' });
+    }
+  } else {
 
   try {
     const leaveRequests = await prisma.leaveRequest.findMany({
-      where: isManager ? {} : { userId },
-      include: {
-        user: {
-          select: {
-            id: true,
-            username: true,
-            email: true,
-            role: true,
-          },
-        },
-        approvedBy: {
-          select: {
-            id: true,
-            username: true,
-          },
-        },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      where: { userId },
     });
-
     res.json(leaveRequests);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to fetch leave requests' });
   }
+}
 });
 
 module.exports = leaveRequestRouter;

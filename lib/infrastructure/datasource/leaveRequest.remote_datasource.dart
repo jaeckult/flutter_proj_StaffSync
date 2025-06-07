@@ -43,7 +43,7 @@ class LeaveRequestRemoteDatasourceImpl
         "http://localhost:3000/api/leaveRequest",
         options: Options(
           headers: {
-            "Authorization": "Bearer $token",
+            "Authorization": "Bearer \$token",
             "Content-Type": "application/json",
           },
         ),
@@ -56,6 +56,30 @@ class LeaveRequestRemoteDatasourceImpl
     } on DioException catch (e) {
       throw Exception(
         e.response?.data['message'] ?? 'Error creating leave request',
+      );
+    }
+  }
+
+  @override
+  Future<void> updateLeaveRequest(int id, String status, String token, String endpoint) async {
+    try {
+      final response = await dio.patch(
+        "http://localhost:3000/api/leaveRequest/$id",
+        options: Options(
+          headers: {
+            "Authorization": "Bearer $token",
+            "Content-Type": "application/json",
+          },
+        ),
+        data: { 'status': status },
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Error updating leave request');
+      }
+    } on DioException catch (e) {
+      throw Exception(
+        e.response?.data['message'] ?? 'Error updating leave request',
       );
     }
   }

@@ -19,6 +19,7 @@ class _ScheduleScreenState extends ConsumerState<ManagerScheduleScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      print('ManagerScheduleScreen: Fetching dashboard stats and leave requests...');
       ref.read(managerDashboardNotifierProvider.notifier).fetchDashboardStats();
       ref.read(leaveRequestNotifierProvider.notifier).getLeaveRequests();
     });
@@ -52,6 +53,8 @@ class _ScheduleScreenState extends ConsumerState<ManagerScheduleScreen> {
   Widget build(BuildContext context) {
     final dashboardState = ref.watch(managerDashboardNotifierProvider);
     final leaveRequestState = ref.watch(leaveRequestNotifierProvider);
+
+    print('ManagerScheduleScreen Build: Dashboard State: $dashboardState, Leave Request State: $leaveRequestState');
 
     return Scaffold(
       appBar: AppBar(
@@ -133,9 +136,12 @@ class _LeaveTabState extends ConsumerState<LeaveTab> {
   @override
   void initState() {
     super.initState();
+    print('LeaveTab: initState called');
   }
 
   Widget _buildLeaveRequestCard(LeaveRequest request) {
+    print('LeaveTab: Building card for leave request: ${request.id}');
+    final isPending = request.status == 'PENDING';
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
       child: ListTile(
@@ -150,15 +156,35 @@ class _LeaveTabState extends ConsumerState<LeaveTab> {
                Text('Approved by: ${request.approvedById}'),
           ],
         ),
-        trailing: Chip(
-          label: Text(request.status),
-          backgroundColor:
-              request.status == 'APPROVED'
-                  ? Colors.green
-                  : request.status == 'PENDING'
-                  ? Colors.orange
-                  : Colors.red,
-        ),
+        trailing: isPending
+            ? Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.check, color: Colors.green),
+                    onPressed: () {
+                      // Call notifier to approve
+                      ref.read(leaveRequestNotifierProvider.notifier).updateLeaveRequest(request.id, 'APPROVED');
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.red),
+                    onPressed: () {
+                      // Call notifier to reject
+                      ref.read(leaveRequestNotifierProvider.notifier).updateLeaveRequest(request.id, 'REJECTED');
+                    },
+                  ),
+                ],
+              )
+            : Chip(
+                label: Text(request.status),
+                backgroundColor:
+                    request.status == 'APPROVED'
+                        ? Colors.green
+                        : request.status == 'CANCELLED'
+                            ? Colors.red
+                            : Colors.orange, // Should not be pending here
+              ),
       ),
     );
   }
@@ -166,6 +192,8 @@ class _LeaveTabState extends ConsumerState<LeaveTab> {
   @override
   Widget build(BuildContext context) {
     final leaveRequestState = widget.leaveRequestState;
+
+    print('LeaveTab Build: Leave Request State: $leaveRequestState');
 
     return DefaultTabController(
       length: 2,
@@ -191,19 +219,19 @@ class _LeaveTabState extends ConsumerState<LeaveTab> {
                     ),
                   ),
                   LeaveRequestData(leaveRequest: final requests) =>
-                    requests.where((r) => r.status != 'PENDING').isEmpty
-                         ? const Center(child: Text('No past leave requests'))
-                         : ListView.builder(
-                            itemCount:
-                                requests.where((r) => r.status != 'PENDING').length,
-                            itemBuilder: (context, index) {
-                              final pastRequests =
-                                  requests
-                                      .where((r) => r.status != 'PENDING')
-                                      .toList();
-                              return _buildLeaveRequestCard(pastRequests[index]);
-                            },
-                          ),
+                     (() {
+                       print('LeaveTab Past: Received ${requests.length} requests. Filtering for past.');
+                       final pastRequests = requests.where((r) => r.status != 'PENDING').toList();
+                       print('LeaveTab Past: Found ${pastRequests.length} past requests.');
+                       return pastRequests.isEmpty
+                            ? const Center(child: Text('No past leave requests'))
+                            : ListView.builder(
+                                itemCount: pastRequests.length,
+                                itemBuilder: (context, index) {
+                                  return _buildLeaveRequestCard(pastRequests[index]);
+                                },
+                              );
+                     })(),
                   _ => const Center(child: Text('Loading past requests...')),
                 },
                 switch (leaveRequestState) {
@@ -217,19 +245,19 @@ class _LeaveTabState extends ConsumerState<LeaveTab> {
                     ),
                   ),
                   LeaveRequestData(leaveRequest: final requests) =>
-                    requests.where((r) => r.status == 'PENDING').isEmpty
-                        ? const Center(child: Text('No pending leave requests'))
-                        : ListView.builder(
-                            itemCount:
-                                requests.where((r) => r.status == 'PENDING').length,
-                            itemBuilder: (context, index) {
-                              final pendingRequests =
-                                  requests
-                                      .where((r) => r.status == 'PENDING')
-                                      .toList();
-                              return _buildLeaveRequestCard(pendingRequests[index]);
-                            },
-                          ),
+                    (() {
+                      print('LeaveTab Pending: Received ${requests.length} requests. Filtering for pending.');
+                      final pendingRequests = requests.where((r) => r.status == 'PENDING').toList();
+                      print('LeaveTab Pending: Found ${pendingRequests.length} pending requests.');
+                      return pendingRequests.isEmpty
+                          ? const Center(child: Text('No pending leave requests'))
+                          : ListView.builder(
+                              itemCount: pendingRequests.length,
+                              itemBuilder: (context, index) {
+                                return _buildLeaveRequestCard(pendingRequests[index]);
+                              },
+                            );
+                    })(),
                    _ => const Center(child: Text('Loading pending requests...')),
                 },
               ],

@@ -27,4 +27,10 @@ class LeaveRequestRepositoryImpl implements LeaveRequestRepository {
     }
     await remoteDataSource.createLeaveRequests(leaveRequestCreate, token, endpoint);
   }
+
+  @override
+  Future<void> updateLeaveRequest(int id, String status, String token) async {
+    final endpoint = await _getEndpoint();
+    await remoteDataSource.updateLeaveRequest(id, status, token, endpoint);
+  }
 }

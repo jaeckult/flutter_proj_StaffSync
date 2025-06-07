@@ -58,4 +58,24 @@ class LeaveRequestNotifier extends StateNotifier<LeaveRequestState> {
       rethrow; // Rethrow to handle in the UI
     }
   }
+
+  Future<void> updateLeaveRequest(int id, String status) async {
+    try {
+      // Do not change the state to loading here to avoid flickering the entire list
+      final token = await authRepository.getToken();
+
+      if (token == null || token.isEmpty) {
+        throw Exception("Token is missing");
+      }
+
+      await leaveRequestRepository.updateLeaveRequest(id, status, token);
+      // Refresh the requests list to show the updated status
+      await getLeaveRequests();
+    } catch (error) {
+      print("Leave request update error: $error");
+      // Consider how to handle errors gracefully, perhaps showing a snackbar
+      // or updating the state for just the failed item if possible.
+      // For now, we'll just print the error and let getLeaveRequests update.
+    }
+  }
 }
