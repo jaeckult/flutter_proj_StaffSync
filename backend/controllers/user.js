@@ -134,25 +134,73 @@ userRouter.patch('/:id', identifyUser, async (req, res, next) => {
     const { id } = req.params;
     const userId = req.user.id;
     const targetId = parseInt(id, 10);
+    
     if (isNaN(targetId)) {
         return res.status(400).json({ error: 'Invalid user ID' });
     }
-    if (userId !== targetId) {
-        return res.status(403).json({ error: 'Unauthorized: You can only delete your own account' });
-    }
+
     try {
-        const deletedUser = await prisma.user.delete({
+        // Get the target user to check their role
+        const targetUser = await prisma.user.findUnique({
             where: { id: targetId },
+            select: { role: true }
         });
-        res.status(200).json({ message: 'User deleted successfully', user: deletedUser });
+
+        if (!targetUser) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Get the current user's role
+        const currentUser = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { role: true }
+        });
+
+        // Allow deletion if:
+        // 1. User is deleting their own account, or
+        // 2. Current user is a manager and target is an employee
+        if (userId !== targetId && 
+            (currentUser.role !== 'MANAGER' || targetUser.role !== 'EMPLOYEE')) {
+            return res.status(403).json({ 
+                error: 'Unauthorized: You can only delete your own account or employees as a manager' 
+            });
+        }
+
+        // Delete related records first
+        await prisma.$transaction([
+            // Delete attendance records
+            prisma.attendance.deleteMany({
+                where: { userId: targetId }
+            }),
+            // Delete leave requests
+            prisma.leaveRequest.deleteMany({
+                where: { userId: targetId }
+            }),
+            // Delete leave balances
+            prisma.leaveBalance.deleteMany({
+                where: { userId: targetId }
+            }),
+            // Delete profile
+            prisma.profile.deleteMany({
+                where: { userId: targetId }
+            }),
+            // Finally delete the user
+            prisma.user.delete({
+                where: { id: targetId }
+            })
+        ]);
+
+        res.status(200).json({ message: 'User and all related records deleted successfully' });
     } catch (error) {
         console.error('Delete user error:', error);
         if (error.code === 'P2025') {
             return res.status(404).json({ error: 'User not found' });
         }
-        next(error); // Pass to errorHandler
+        if (error.code === 'P2003') {
+            return res.status(400).json({ error: 'Cannot delete user due to existing relationships' });
+        }
+        res.status(500).json({ error: 'Failed to delete user' });
     }
-
 });
 
   module.exports = userRouter;

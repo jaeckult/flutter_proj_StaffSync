@@ -45,7 +45,7 @@ final authRepository = AuthRepositoryImpl(
   remoteDataSource,
   SecureStorage.instance,
 );
-final holidayRepository = HolidayRepositoryImpl(remoteDataSource);
+final holidayRepository = HolidayRepositoryImpl(remoteDataSource, SecureStorage.instance);
 final userRepository = UserRepositoryImpl(remoteDataSource);
 final userRepositoryProvider = Provider<UserRepository>((ref) {
   return userRepository;

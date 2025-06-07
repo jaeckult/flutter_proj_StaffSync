@@ -13,10 +13,17 @@ class HolidayNotifier extends StateNotifier<List<Holiday>>{
     } catch (e) {
       print('Error fetching holidays: $e');
       return [];
-     
     }
-}
+  }
 
-
-
+  Future<void> addHoliday(Holiday holiday) async {
+    try {
+      await holidayRepository.addHoliday(holiday);
+      // Refresh the holiday list after adding
+      await getHolidayList();
+    } catch (e) {
+      print('Error adding holiday: $e');
+      rethrow;
+    }
+  }
 }

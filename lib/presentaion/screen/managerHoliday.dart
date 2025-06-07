@@ -20,19 +20,21 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       title: 'Employee Holiday',
-      home: EmployeeHolidayScreen(),
+      home: ManagerHolidayScreen(),
     );
   }
 }
 
-class EmployeeHolidayScreen extends ConsumerStatefulWidget {
-  const EmployeeHolidayScreen({super.key});
+class ManagerHolidayScreen extends ConsumerStatefulWidget {
+  const ManagerHolidayScreen({super.key});
    @override
-  ConsumerState<ConsumerStatefulWidget> createState() => _EmployeeHolidayStateScreen();
+  ConsumerState<ConsumerStatefulWidget> createState() => _ManagerHolidayStateScreen();
 
   
 }
-class _EmployeeHolidayStateScreen extends ConsumerState<EmployeeHolidayScreen> {
+class _ManagerHolidayStateScreen extends ConsumerState<ManagerHolidayScreen> {
+  final DateFormat dateFormatter = DateFormat('MMM d, yyyy');
+
   @override
   void initState() {
     super.initState();
@@ -47,9 +49,13 @@ class _EmployeeHolidayStateScreen extends ConsumerState<EmployeeHolidayScreen> {
   @override
   Widget build(BuildContext context) {
     final holidays = ref.watch(holidayNotifierProvider);
-    final DateFormat dateFormatter = DateFormat('MMM d, yyyy');
     return Scaffold(
       backgroundColor: Colors.white,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showAddHolidayDialog(context),
+        backgroundColor: Colors.deepOrange,
+        child: const Icon(Icons.add),
+      ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -138,5 +144,118 @@ class _EmployeeHolidayStateScreen extends ConsumerState<EmployeeHolidayScreen> {
     );
   }
   
- 
+  Future<void> _showAddHolidayDialog(BuildContext context) async {
+    final titleController = TextEditingController();
+    final descriptionController = TextEditingController();
+    DateTime? startDate;
+    DateTime? endDate;
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Add Holiday'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: titleController,
+                decoration: const InputDecoration(
+                  labelText: 'Holiday Title',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: descriptionController,
+                decoration: const InputDecoration(
+                  labelText: 'Description',
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 3,
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                title: const Text('Start Date'),
+                subtitle: Text(startDate == null ? 'Select date' : dateFormatter.format(startDate!)),
+                trailing: const Icon(Icons.calendar_today),
+                onTap: () async {
+                  final date = await showDatePicker(
+                    context: context,
+                    initialDate: DateTime.now(),
+                    firstDate: DateTime.now(),
+                    lastDate: DateTime.now().add(const Duration(days: 365)),
+                  );
+                  if (date != null) {
+                    startDate = date;
+                    (context as Element).markNeedsBuild();
+                  }
+                },
+              ),
+              ListTile(
+                title: const Text('End Date'),
+                subtitle: Text(endDate == null ? 'Select date' : dateFormatter.format(endDate!)),
+                trailing: const Icon(Icons.calendar_today),
+                onTap: () async {
+                  final date = await showDatePicker(
+                    context: context,
+                    initialDate: startDate ?? DateTime.now(),
+                    firstDate: startDate ?? DateTime.now(),
+                    lastDate: DateTime.now().add(const Duration(days: 365)),
+                  );
+                  if (date != null) {
+                    endDate = date;
+                    (context as Element).markNeedsBuild();
+                  }
+                },
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              if (titleController.text.isEmpty || startDate == null || endDate == null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Please fill all required fields')),
+                );
+                return;
+              }
+              Navigator.pop(context, true);
+            },
+            child: const Text('Add'),
+          ),
+        ],
+      ),
+    );
+
+    if (result == true) {
+      try {
+        final holiday = Holiday(
+          id: 0, // This will be set by the backend
+          title: titleController.text,
+          startDate: startDate!,
+          endDate: endDate!,
+          description: descriptionController.text.isEmpty ? null : descriptionController.text,
+        );
+
+        await ref.read(holidayNotifierProvider.notifier).addHoliday(holiday);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Holiday added successfully')),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to add holiday: ${e.toString()}')),
+          );
+        }
+      }
+    }
+  }
 }

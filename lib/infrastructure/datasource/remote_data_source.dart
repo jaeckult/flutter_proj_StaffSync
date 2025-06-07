@@ -147,6 +147,33 @@ class RemoteDataSource {
     }
   }
 
+  Future<void> deleteUser(int id, String token) async {
+    try {
+      final response = await dio.delete(
+        'http://localhost:3000/api/users/$id',
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },
+        ),
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to delete user: ${response.data}');
+      }
+    } on DioException catch (e) {
+      print("Error during user deletion: ${e.message}");
+      final errorMessage = e.response?.data is Map && e.response?.data["message"] != null
+          ? e.response?.data["message"]
+          : "Unknown error";
+      throw Exception('User deletion failed: $errorMessage');
+    } catch (e) {
+      print("Unexpected error: $e");
+      throw Exception('Unexpected error occurred while deleting user.');
+    }
+  }
+
   Future<List<Holiday>> getHolidayList() async {
     try {
       final response = await dio.get(
@@ -159,6 +186,30 @@ class RemoteDataSource {
     } on DioException catch (e) {
       final error = e.response?.data;
       throw Exception(error["message"] ?? 'Fetching holidays failed!');
+    }
+  }
+  Future<void> addHoliday(
+    String title,
+    String startDate,
+    String endDate,
+    String description,
+    int createdById,
+  ) async {
+    try {
+      await dio.post(
+        'http://localhost:3000/api/holiday',
+        data: {
+          "title": title,
+          "startDate": startDate,
+          "endDate": endDate,
+          "description": description,
+          "createdById": createdById,
+        },
+      );
+    } on DioException catch (e) {
+      print('DioError in addHoliday: ${e.response?.data}');
+      final error = e.response?.data;
+      throw Exception(error["message"] ?? 'Adding holiday failed!');
     }
   }
 }

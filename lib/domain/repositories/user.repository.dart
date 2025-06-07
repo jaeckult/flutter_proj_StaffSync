@@ -4,7 +4,7 @@ abstract class UserRepository {
   // Future<Map<String, dynamic>> getMyAttendance(int id);
   Future<User> getCurrUser(int id);
   Future<List<User>> getEmployees(String token);
-
+  Future<void> deleteEmployee(int id, String token);
 
 
 }

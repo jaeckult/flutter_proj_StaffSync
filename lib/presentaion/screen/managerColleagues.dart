@@ -22,19 +22,19 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       title: 'Employee List',
-      home: EmployeeListScreen(),
+      home: ManagerListScreen(),
     );
   }
 }
 
-class EmployeeListScreen extends ConsumerStatefulWidget {
-  const EmployeeListScreen({super.key});
+class ManagerListScreen extends ConsumerStatefulWidget {
+  const ManagerListScreen({super.key}); 
    @override
   ConsumerState<ConsumerStatefulWidget> createState() => _EmployeeListStateScreen();
 
   
 }
-class _EmployeeListStateScreen extends ConsumerState<EmployeeListScreen> {
+class _EmployeeListStateScreen extends ConsumerState<ManagerListScreen> {
   @override
   void initState() {
     super.initState();
@@ -82,11 +82,9 @@ class _EmployeeListStateScreen extends ConsumerState<EmployeeListScreen> {
                     return Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-      
                         CircleAvatar(
                           radius: 25,
                           backgroundImage: MemoryImage(imageBytes)
-                          
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -94,7 +92,7 @@ class _EmployeeListStateScreen extends ConsumerState<EmployeeListScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                 employee.profile.fullName,
+                                employee.profile.fullName,
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
@@ -117,6 +115,10 @@ class _EmployeeListStateScreen extends ConsumerState<EmployeeListScreen> {
                             fontWeight: FontWeight.w500,
                           ),
                         ),
+                        IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.red),
+                          onPressed: () => _showDeleteConfirmation(context, employee.id),
+                        ),
                       ],
                     );
                   },
@@ -128,6 +130,41 @@ class _EmployeeListStateScreen extends ConsumerState<EmployeeListScreen> {
       ),
     );
   }
-  
- 
+
+  Future<void> _showDeleteConfirmation(BuildContext context, int userId) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Employee'),
+        content: const Text('Are you sure you want to delete this employee? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        final token = await ref.read(authRepositoryProvider).getToken();
+        if (token != null) {
+          await ref.read(bulkUserNotifierProvider.notifier).deleteEmployee(userId, token);
+          // Refresh the employee list after deletion
+          ref.read(bulkUserNotifierProvider.notifier).getEmployees();
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to delete employee: ${e.toString()}')),
+          );
+        }
+      }
+    }
+  }
 }

@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:staffsync/presentaion/screen/employee.collegues.Screen.dart';
 import 'package:staffsync/presentaion/screen/employee.holidayScreen.dart';
+import 'package:staffsync/presentaion/screen/managerColleagues.dart';
 import 'package:staffsync/presentaion/screen/managerDashboard.dart';
+import 'package:staffsync/presentaion/screen/managerHoliday.dart';
 import 'package:staffsync/presentaion/screen/managerHome.dart';
 import 'package:staffsync/presentaion/screen/employee.profileScreen.dart';
 import 'package:staffsync/presentaion/screen/employee.scheduleScreen.dart';
@@ -36,9 +38,9 @@ class ManagerNavigationManager {
       case 1:
         return const ManagerScheduleScreen();
       case 2:
-        return const EmployeeListScreen();
+        return const ManagerListScreen();
       case 3:
-        return const EmployeeHolidayScreen();
+        return const ManagerHolidayScreen();
       case 4:
         return const ProfileScreen();
       default:

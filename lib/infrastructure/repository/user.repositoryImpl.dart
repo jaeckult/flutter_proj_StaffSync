@@ -47,6 +47,19 @@ class UserRepositoryImpl implements UserRepository {
     }
     
   }
+  Future<void> deleteEmployee(int id, String token) async {
+    try {
+      await remoteDataSource.deleteUser(id, token);
+    }
+    catch(e) {
+      if (e is Exception) {
+        rethrow;
+      }
+      else {
+        throw Exception("Can't delete user");
+      }
+    }
+  }
   
 
   // @override
