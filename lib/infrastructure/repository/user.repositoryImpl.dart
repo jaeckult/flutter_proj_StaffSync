@@ -47,6 +47,7 @@ class UserRepositoryImpl implements UserRepository {
     }
     
   }
+  @override
   Future<void> deleteEmployee(int id, String token) async {
     try {
       await remoteDataSource.deleteUser(id, token);
@@ -60,31 +61,17 @@ class UserRepositoryImpl implements UserRepository {
       }
     }
   }
-  
-
-  // @override
-  // Future<Map<String, dynamic>> getMyAttendance(int id) {
-  //    try {
-  //     print("getting curr User data...");
-  //     final data = await remoteDataSource.getCurrUser(id);
-  //     print("${data} we received");
-  //     return data;
-
-
-
-  //   }
-  //   catch(e) {
-  //     print(e);
-  //     if (e is Exception){
-  //       rethrow;
-  //     }
-  //     throw Exception(e.toString());
-  //   }
-
-
 
   
+    @override
+    Future<void> editProfile(int id, 
+    String fullName, 
+    String designation, 
+    String email, String employmentType, String? profilePicture) async {
+      final data = await remoteDataSource.editProfile(id,
+        fullName, designation, email, employmentType, profilePicture
+      );
     
-  // }
+    }
   
 }

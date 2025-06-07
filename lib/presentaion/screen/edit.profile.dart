@@ -1,14 +1,17 @@
 import 'dart:convert';
 import 'dart:typed_data';
-
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:staffsync/application/providers/providers.dart';
+
 
 final fullNameProvider = StateProvider<String>((ref) => "");
 final designationProvider = StateProvider<String>((ref) => "");
 final emailProvider = StateProvider<String>((ref) => "");
 final experienceProvider = StateProvider<String>((ref) => "");
+final profilePictureProvider = StateProvider<String>((ref) => "");
 
 class EditProfile extends ConsumerStatefulWidget {
   const EditProfile({super.key});
@@ -18,18 +21,21 @@ class EditProfile extends ConsumerStatefulWidget {
 }
 
 class _EditProfileState extends ConsumerState<EditProfile> {
+  File? _image;
+  String? _base64Image;
   late TextEditingController nameController;
   late TextEditingController designationController;
   late TextEditingController emailController;
   late TextEditingController experienceController;
+    late TextEditingController profilePictureController;
 
   @override
   void initState() {
     super.initState();
-    nameController = TextEditingController(text: ref.read(fullNameProvider));
-    designationController = TextEditingController(text: ref.read(designationProvider));
-    emailController = TextEditingController(text: ref.read(emailProvider));
-    experienceController = TextEditingController(text: ref.read(experienceProvider));
+    nameController = TextEditingController();
+    designationController = TextEditingController();
+    emailController = TextEditingController();
+    experienceController = TextEditingController();
     ref.read(userNotifierProvider.notifier).loadUserFromStorage();
   }
 
@@ -43,7 +49,10 @@ class _EditProfileState extends ConsumerState<EditProfile> {
 
       );
     }
-    final Uint8List profile = base64Decode(user.profile.profilePicture);
+  
+    final imageUrl = user.profile.profilePicture;
+    Uint8List imageBytes = base64Decode(imageUrl); 
+
     
 
     return Scaffold(
@@ -59,10 +68,41 @@ class _EditProfileState extends ConsumerState<EditProfile> {
         padding: const EdgeInsets.all(20.0),
         child: Column(
           children: [
-            CircleAvatar(
-              radius: avatarRadius,
-              backgroundImage: MemoryImage(profile),
+            GestureDetector(child:
+            Center(
+              
+              child: Stack(
+                alignment: Alignment.bottomRight,
+                children: [
+                  CircleAvatar(
+                    radius: 50,
+                    backgroundImage: MemoryImage(imageBytes), // Replace with your image URL
+                  ),
+                  Positioned(
+                    bottom: 0,
+                    right: 4,
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      padding: const EdgeInsets.all(4),
+                      child: const Icon(
+                        Icons.camera_alt,
+                        color: Colors.redAccent,
+                        size: 20,
+                      ),
+                    ),
+                  )
+                ],
+              ),
+            ), onTap: () => {
+              _showUploadModal()
+              
+             
+            }
             ),
+            
             const SizedBox(height: 10),
             Text(
               user.profile.fullName,
@@ -76,14 +116,15 @@ class _EditProfileState extends ConsumerState<EditProfile> {
             _buildTextField("Full Name", nameController),
             _buildTextField("Designation", designationController),
             _buildTextField("Email", emailController),
-            _buildTextField("Years of Experience", experienceController),
+            _buildTextField("Employeement Type", experienceController),
             const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: () {
-                ref.read(fullNameProvider.notifier).state = nameController.text;
-                ref.read(designationProvider.notifier).state = designationController.text;
-                ref.read(emailProvider.notifier).state = emailController.text;
-                ref.read(experienceProvider.notifier).state = experienceController.text;
+              onPressed: () async {
+
+                final userNotifier = ref.read(userNotifierProvider.notifier);
+                await userNotifier.editProfile(user.id, nameController.text, designationController.text, emailController.text, experienceController.text, profilePictureController.text);
+           
+
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text("Submitted Successfully")),
                 );
@@ -104,6 +145,39 @@ class _EditProfileState extends ConsumerState<EditProfile> {
       ),
     );
   }
+  Future<void> _pickImage(ImageSource source) async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: source);
+    
+    if (pickedFile != null) {
+      final imageFile = File(pickedFile.path);
+      final base64String = await _imageToBase64(imageFile);
+     
+       if (base64String != null){
+        setState(() {
+        _image = imageFile;
+        _base64Image = base64String;
+        });
+
+       }
+   
+
+
+
+    }
+  }
+
+
+Future<String?> _imageToBase64(File imageFile) async {
+  try {
+    final bytes = await imageFile.readAsBytes();
+    return base64Encode(bytes);
+  } catch (e) {
+    print('Error converting image to base64: $e');
+    return null;
+  }
+}
+
 
   Widget _buildTextField(String label, TextEditingController controller) {
     return Padding(
@@ -125,4 +199,24 @@ class _EditProfileState extends ConsumerState<EditProfile> {
       ),
     );
   }
+  
+  Future<void> _showUploadModal() async {
+  showModalBottomSheet(
+    context: context,
+    builder: (context) => Wrap(
+      children: [
+       
+        ListTile(
+          leading: Icon(Icons.photo_library),
+          title: Text('Choose from Gallery'),
+          onTap: () {
+            Navigator.pop(context);
+            _pickImage(ImageSource.gallery);
+          },
+        ),
+      ],
+    ),
+  );
+}
+
 }

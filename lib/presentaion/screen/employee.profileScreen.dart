@@ -131,6 +131,7 @@ void _handleEditProfile() {
               child: Stack(
                 alignment: Alignment.bottomRight,
                 children: [
+            
                   CircleAvatar(
                     radius: 50,
                     backgroundImage: MemoryImage(imageBytes), // Replace with your image URL
@@ -144,11 +145,7 @@ void _handleEditProfile() {
                         shape: BoxShape.circle,
                       ),
                       padding: const EdgeInsets.all(4),
-                      child: const Icon(
-                        Icons.camera_alt,
-                        color: Colors.redAccent,
-                        size: 20,
-                      ),
+                     
                     ),
                   )
                 ],

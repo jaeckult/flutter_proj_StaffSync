@@ -212,4 +212,43 @@ class RemoteDataSource {
       throw Exception(error["message"] ?? 'Adding holiday failed!');
     }
   }
+  Future<void> editProfile
+  (int id, 
+  String fullName, 
+  String designation, 
+  String email, String employmentType, String? profilePicture) async{
+    final token = await SecureStorage.instance.read("token");
+    try {
+     
+      final response = await dio.patch(
+        'http://localhost:3000/api/profile/${id}', 
+         options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },
+        ),
+       
+        data: {
+
+          "employmentType": employmentType,
+          "email": email,
+          "fullName": fullName,
+          "designation": designation,
+          "profilePicture": profilePicture ?? ''
+
+        
+        },
+       
+        );
+        
+      print('Profile updated: ${response.data}');
+    }
+    on DioException catch (e) {
+      print(e);
+      final error = e.response?.data;
+      throw Exception(error["message"] ?? 'Can not edit profile!');
+    }
+  
+  }
 }
