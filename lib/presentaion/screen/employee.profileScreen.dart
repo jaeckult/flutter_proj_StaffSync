@@ -46,10 +46,59 @@ class ProfileScreen extends ConsumerStatefulWidget {
 
 }
 
-void _handleAccountDeletion(){
-  
+void _handleAccountDeletion() async {
+  final bool? confirmDelete = await showDialog<bool>(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('Delete Account'),
+        content: const Text('Are you sure you want to delete your account? This action cannot be undone.'),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      );
+    },
+  );
 
+  if (confirmDelete == true) {
+    try {
+      final user = ref.read(userNotifierProvider);
+      final token = await ref.read(authNotifierProvider.notifier).getToken();
+
+      if (user != null && token != null) {
+        await ref.read(bulkUserNotifierProvider.notifier).deleteEmployee(user.id, token);
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Account deleted successfully.')),
+          );
+          // Navigate to login screen or home screen after deletion
+          Navigator.pushReplacementNamed(context, '/');
+        }
+      } else {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Unable to delete account: User or token not found.')),
+          );
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to delete account: ${e.toString()}')),
+        );
+      }
+    }
+  }
 }
+
 void _gotoNotification(){
   Navigator.pushNamed(context, '/setting');
 
@@ -139,7 +188,7 @@ void _handleEditProfile() {
             ListTile(
                 leading: const Icon(Icons.delete_forever, color: Colors.pinkAccent),
                 title: const Text("Delete Account", style: TextStyle(color: Colors.pinkAccent)),
-                onTap: () {},
+                onTap: _handleAccountDeletion,
               ),
            
             const SizedBox(height: 20),

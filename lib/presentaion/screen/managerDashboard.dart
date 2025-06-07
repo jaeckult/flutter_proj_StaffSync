@@ -19,7 +19,9 @@ class _ScheduleScreenState extends ConsumerState<ManagerScheduleScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      print('ManagerScheduleScreen: Fetching dashboard stats and leave requests...');
+      print(
+        'ManagerScheduleScreen: Fetching dashboard stats and leave requests...',
+      );
       ref.read(managerDashboardNotifierProvider.notifier).fetchDashboardStats();
       ref.read(leaveRequestNotifierProvider.notifier).getLeaveRequests();
     });
@@ -54,12 +56,12 @@ class _ScheduleScreenState extends ConsumerState<ManagerScheduleScreen> {
     final dashboardState = ref.watch(managerDashboardNotifierProvider);
     final leaveRequestState = ref.watch(leaveRequestNotifierProvider);
 
-    print('ManagerScheduleScreen Build: Dashboard State: $dashboardState, Leave Request State: $leaveRequestState');
+    print(
+      'ManagerScheduleScreen Build: Dashboard State: $dashboardState, Leave Request State: $leaveRequestState',
+    );
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Manager Dashboard'),
-      ),
+      appBar: AppBar(title: const Text('Manager Dashboard')),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -67,10 +69,7 @@ class _ScheduleScreenState extends ConsumerState<ManagerScheduleScreen> {
           children: [
             const Text(
               'Attendance Summary',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
             switch (dashboardState) {
@@ -97,10 +96,7 @@ class _ScheduleScreenState extends ConsumerState<ManagerScheduleScreen> {
                           'Total Present',
                           data.totalPresent.toString(),
                         ),
-                        leaveCard(
-                          'Total Absent',
-                          data.totalAbsent.toString(),
-                        ),
+                        leaveCard('Total Absent', data.totalAbsent.toString()),
                       ],
                     ),
               _ => const Center(child: Text('Loading Attendance Data...')),
@@ -110,10 +106,7 @@ class _ScheduleScreenState extends ConsumerState<ManagerScheduleScreen> {
             const SizedBox(height: 10),
             const Text(
               'Leave Requests',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
             Expanded(child: LeaveTab(leaveRequestState: leaveRequestState)),
@@ -153,38 +146,43 @@ class _LeaveTabState extends ConsumerState<LeaveTab> {
             Text('To: ${request.endDate.toString().split(' ')[0]}'),
             Text('Status: ${request.status}'),
             if (request.approvedById != null)
-               Text('Approved by: ${request.approvedById}'),
+              Text('Approved by: ${request.approvedById}'),
           ],
         ),
-        trailing: isPending
-            ? Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.check, color: Colors.green),
-                    onPressed: () {
-                      // Call notifier to approve
-                      ref.read(leaveRequestNotifierProvider.notifier).updateLeaveRequest(request.id, 'APPROVED');
-                    },
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.red),
-                    onPressed: () {
-                      // Call notifier to reject
-                      ref.read(leaveRequestNotifierProvider.notifier).updateLeaveRequest(request.id, 'REJECTED');
-                    },
-                  ),
-                ],
-              )
-            : Chip(
-                label: Text(request.status),
-                backgroundColor:
-                    request.status == 'APPROVED'
-                        ? Colors.green
-                        : request.status == 'CANCELLED'
-                            ? Colors.red
-                            : Colors.orange, // Should not be pending here
-              ),
+        trailing:
+            isPending
+                ? Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.check, color: Colors.green),
+                      onPressed: () {
+                        // Call notifier to approve
+                        ref
+                            .read(leaveRequestNotifierProvider.notifier)
+                            .updateLeaveRequest(request.id, 'APPROVED');
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.red),
+                      onPressed: () {
+                        // Call notifier to reject
+                        ref
+                            .read(leaveRequestNotifierProvider.notifier)
+                            .updateLeaveRequest(request.id, 'REJECTED');
+                      },
+                    ),
+                  ],
+                )
+                : Chip(
+                  label: Text(request.status),
+                  backgroundColor:
+                      request.status == 'APPROVED'
+                          ? Colors.green
+                          : request.status == 'CANCELLED'
+                          ? Colors.red
+                          : Colors.orange, // Should not be pending here
+                ),
       ),
     );
   }
@@ -200,10 +198,7 @@ class _LeaveTabState extends ConsumerState<LeaveTab> {
       child: Column(
         children: [
           const TabBar(
-            tabs: [
-              Tab(text: 'Past Requests'),
-              Tab(text: 'Pending Requests'),
-            ],
+            tabs: [Tab(text: 'Past Requests'), Tab(text: 'Pending Requests')],
           ),
           Expanded(
             child: TabBarView(
@@ -219,19 +214,26 @@ class _LeaveTabState extends ConsumerState<LeaveTab> {
                     ),
                   ),
                   LeaveRequestData(leaveRequest: final requests) =>
-                     (() {
-                       print('LeaveTab Past: Received ${requests.length} requests. Filtering for past.');
-                       final pastRequests = requests.where((r) => r.status != 'PENDING').toList();
-                       print('LeaveTab Past: Found ${pastRequests.length} past requests.');
-                       return pastRequests.isEmpty
-                            ? const Center(child: Text('No past leave requests'))
-                            : ListView.builder(
-                                itemCount: pastRequests.length,
-                                itemBuilder: (context, index) {
-                                  return _buildLeaveRequestCard(pastRequests[index]);
-                                },
+                    (() {
+                      print(
+                        'LeaveTab Past: Received ${requests.length} requests. Filtering for past.',
+                      );
+                      final pastRequests =
+                          requests.where((r) => r.status != 'PENDING').toList();
+                      print(
+                        'LeaveTab Past: Found ${pastRequests.length} past requests.',
+                      );
+                      return pastRequests.isEmpty
+                          ? const Center(child: Text('No past leave requests'))
+                          : ListView.builder(
+                            itemCount: pastRequests.length,
+                            itemBuilder: (context, index) {
+                              return _buildLeaveRequestCard(
+                                pastRequests[index],
                               );
-                     })(),
+                            },
+                          );
+                    })(),
                   _ => const Center(child: Text('Loading past requests...')),
                 },
                 switch (leaveRequestState) {
@@ -246,19 +248,28 @@ class _LeaveTabState extends ConsumerState<LeaveTab> {
                   ),
                   LeaveRequestData(leaveRequest: final requests) =>
                     (() {
-                      print('LeaveTab Pending: Received ${requests.length} requests. Filtering for pending.');
-                      final pendingRequests = requests.where((r) => r.status == 'PENDING').toList();
-                      print('LeaveTab Pending: Found ${pendingRequests.length} pending requests.');
+                      print(
+                        'LeaveTab Pending: Received ${requests.length} requests. Filtering for pending.',
+                      );
+                      final pendingRequests =
+                          requests.where((r) => r.status == 'PENDING').toList();
+                      print(
+                        'LeaveTab Pending: Found ${pendingRequests.length} pending requests.',
+                      );
                       return pendingRequests.isEmpty
-                          ? const Center(child: Text('No pending leave requests'))
+                          ? const Center(
+                            child: Text('No pending leave requests'),
+                          )
                           : ListView.builder(
-                              itemCount: pendingRequests.length,
-                              itemBuilder: (context, index) {
-                                return _buildLeaveRequestCard(pendingRequests[index]);
-                              },
-                            );
+                            itemCount: pendingRequests.length,
+                            itemBuilder: (context, index) {
+                              return _buildLeaveRequestCard(
+                                pendingRequests[index],
+                              );
+                            },
+                          );
                     })(),
-                   _ => const Center(child: Text('Loading pending requests...')),
+                  _ => const Center(child: Text('Loading pending requests...')),
                 },
               ],
             ),
