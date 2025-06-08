@@ -3,37 +3,20 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:staffsync/application/providers/providers.dart';
 import 'package:staffsync/domain/model/user.model.dart';
 
-
-void main() {
-  runApp(const MyApp());
-}
-  Color getStatusColor(String status) {
-    return status == 'Checked in' ? Colors.green : Colors.red;
-  }
-  
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      title: 'Employee List',
-      home: ManagerListScreen(),
-    );
-  }
+Color getStatusColor(String status) {
+  return status == 'Checked in' ? Colors.green : Colors.red;
 }
 
 class ManagerListScreen extends ConsumerStatefulWidget {
   const ManagerListScreen({super.key}); 
-   @override
+  @override
   ConsumerState<ConsumerStatefulWidget> createState() => _EmployeeListStateScreen();
-
-  
 }
+
 class _EmployeeListStateScreen extends ConsumerState<ManagerListScreen> {
   @override
   void initState() {

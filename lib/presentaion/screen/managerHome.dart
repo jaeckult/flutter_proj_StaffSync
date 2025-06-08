@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:staffsync/application/providers/providers.dart';
 import 'package:staffsync/application/states/attendance.state.dart' as states;
 import 'package:staffsync/domain/model/attendance.model.dart';
@@ -11,138 +12,32 @@ import 'package:staffsync/application/states/manager.state.dart';
 import 'package:staffsync/domain/model/managerDashboard.model.dart';
 import 'package:staffsync/domain/model/user.model.dart';
 
-void main() => runApp(const ProviderScope(child: EmployeeHomeApp()));
-
-class EmployeeHomeApp extends StatelessWidget {
-  const EmployeeHomeApp({super.key});
+class ManagerHomeScreen extends ConsumerStatefulWidget {
+  const ManagerHomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: EmployeeHomeScreen(),
-    );
-  }
+  ConsumerState<ManagerHomeScreen> createState() => _ManagerHomeScreenState();
 }
 
-class EmployeeHomeScreen extends ConsumerStatefulWidget {
-  const EmployeeHomeScreen({super.key});
-  
-  @override
-  ConsumerState<EmployeeHomeScreen> createState() => _EmployeeHomeScreenState();
-}
-
-class _EmployeeHomeScreenState extends ConsumerState<EmployeeHomeScreen> {
+class _ManagerHomeScreenState extends ConsumerState<ManagerHomeScreen> {
   @override
   void initState() {
     super.initState();
     Future.microtask(() {
       ref.read(userNotifierProvider.notifier).loadUserFromStorage();
-      ref.read(attendanceNotifierProvider.notifier).getAttendances();
+      ref.read(managerDashboardNotifierProvider.notifier).fetchDashboardStats();
     });
-  }
-
-  void _handleAttendance() async {
-    try {
-      final notifier = ref.read(attendanceNotifierProvider.notifier);
-      final hasActiveCheckIn = notifier.hasActiveCheckIn();
-      
-      if (hasActiveCheckIn) {
-        // If already checked in, perform check-out
-        await notifier.checkOut();
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Row(
-                children: [
-                  Icon(Icons.check_circle, color: Colors.white),
-                  SizedBox(width: 12),
-                  Text('Check-out successful'),
-                ],
-              ),
-              backgroundColor: Colors.green,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              margin: const EdgeInsets.all(16),
-              duration: const Duration(seconds: 2),
-            ),
-          );
-        }
-      } else {
-        // Perform check-in
-        final attendanceResponse = AttendanceResponse(
-          message: 'Checking in...',
-          attendance: AttendanceData(
-            id: 0, // This will be set by the backend
-            checkIn: DateTime.now(),
-            attendance: 'PRESENT',
-          ),
-        );
-        await notifier.checkIn(attendanceResponse);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Row(
-                children: [
-                  Icon(Icons.check_circle, color: Colors.white),
-                  SizedBox(width: 12),
-                  Text('Check-in successful'),
-                ],
-              ),
-              backgroundColor: Colors.green,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              margin: const EdgeInsets.all(16),
-              duration: const Duration(seconds: 2),
-            ),
-          );
-        }
-      }
-      // Refresh attendance data
-      await notifier.getAttendances();
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.error_outline, color: Colors.white),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Operation failed: ${e.toString()}',
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                ),
-              ],
-            ),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-            margin: const EdgeInsets.all(16),
-            duration: const Duration(seconds: 3),
-          ),
-        );
-      }
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final attendanceState = ref.watch(attendanceNotifierProvider);
-    final hasActiveCheckIn = ref.watch(attendanceNotifierProvider.notifier).hasActiveCheckIn();
-    final todayAttendance = ref.watch(attendanceNotifierProvider.notifier).getTodayAttendance();
+    final managerDashboardState = ref.watch(managerDashboardNotifierProvider);
 
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
       body: SafeArea(
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const _ProfileSection(),
             const _DateSelector(),
@@ -152,64 +47,22 @@ class _EmployeeHomeScreenState extends ConsumerState<EmployeeHomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _TodayAttendance(attendanceState: attendanceState),
+                    const Text("Attendance Summary", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 16),
-                    const Text("Today's Activity", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 8),
-                    if (todayAttendance.isNotEmpty) ...[
-                      ...todayAttendance.map((attendance) => [
-                        _ActivityItem(
-                          date: attendance.date,
-                          time: attendance.checkIn,
-                          type: 'Check In',
-                          status: attendance.attendance,
-                        ),
-                        if (attendance.checkOut != null)
-                          _ActivityItem(
-                            date: attendance.date,
-                            time: attendance.checkOut!,
-                            type: 'Check Out',
-                            status: attendance.attendance,
-                          ),
-                      ]).expand((items) => items),
-                    ] else ...[
-                      const Center(child: Text('No activity today')),
-                    ],
-                    const SizedBox(height: 16),
-                    const Text("Past Activity", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 8),
-                    if (attendanceState is states.AttendanceData) ...[
-                      ...(attendanceState).attendance
-                          .where((a) => a.date.year != DateTime.now().year || 
-                                      a.date.month != DateTime.now().month || 
-                                      a.date.day != DateTime.now().day)
-                          .map((attendance) => _ActivityItem(
-                            date: attendance.date,
-                            time: attendance.checkIn,
-                            type: 'Check In',
-                            status: attendance.attendance,
-                          )),
-                    ] else if (attendanceState is states.AttendanceError) ...[
-                      Center(child: Text('Error: ${attendanceState.message}')),
-                    ] else ...[
+                    if (managerDashboardState is ManagerDashboardLoading) ...[
                       const Center(child: CircularProgressIndicator()),
+                    ] else if (managerDashboardState is ManagerDashboardError) ...[
+                      Center(child: Text('Error: ${managerDashboardState.message}', style: TextStyle(color: Colors.red))),
+                    ] else if (managerDashboardState is ManagerDashboardData) ...[
+                      _AttendanceSummaryCards(stats: managerDashboardState.stats),
+                    ] else ...[
+                       const Center(child: Text('Load failed or initial state')),
                     ],
+                    const SizedBox(height: 24),
+                    const Text("Employees Daily Status", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 12),
+                    _EmployeesDailyStatusList(),
                   ],
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ElevatedButton(
-                onPressed: _handleAttendance,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: hasActiveCheckIn ? Colors.red : Colors.deepOrange,
-                  padding: const EdgeInsets.all(24),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                child: Text(
-                  hasActiveCheckIn ? "Check Out" : "Check In",
-                  style: const TextStyle(fontSize: 16, color: Color.fromRGBO(255, 255, 255, 1)),
                 ),
               ),
             ),
@@ -233,7 +86,10 @@ class _ProfileSection extends ConsumerWidget {
       ),
       title: Text(user?.profile.fullName ?? "Loading...", style: const TextStyle(fontWeight: FontWeight.bold)),
       subtitle: Text(user?.profile.designation ?? "Loading..."),
-      trailing: const Icon(Icons.notifications_none),
+      trailing: IconButton(
+        icon: const Icon(Icons.notifications_none),
+        onPressed: () => context.push('/notification'),
+      ),
     );
   }
 }
@@ -633,67 +489,6 @@ Widget _buildPastActivity(states.AttendanceState attendanceState) {
     return _buildActivityList(pastAttendance);
   }
   return const SizedBox.shrink();
-}
-
-class ManagerHomeScreen extends ConsumerStatefulWidget {
-  const ManagerHomeScreen({super.key});
-
-  @override
-  ConsumerState<ManagerHomeScreen> createState() => _ManagerHomeScreenState();
-}
-
-class _ManagerHomeScreenState extends ConsumerState<ManagerHomeScreen> {
-  @override
-  void initState() {
-    super.initState();
-    Future.microtask(() {
-      ref.read(userNotifierProvider.notifier).loadUserFromStorage();
-      ref.read(managerDashboardNotifierProvider.notifier).fetchDashboardStats();
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final managerDashboardState = ref.watch(managerDashboardNotifierProvider);
-
-    return Scaffold(
-      backgroundColor: Colors.grey.shade100,
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const _ProfileSection(),
-            const _DateSelector(),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text("Attendance Summary", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 16),
-                    if (managerDashboardState is ManagerDashboardLoading) ...[
-                      const Center(child: CircularProgressIndicator()),
-                    ] else if (managerDashboardState is ManagerDashboardError) ...[
-                      Center(child: Text('Error: ${managerDashboardState.message}', style: TextStyle(color: Colors.red))),
-                    ] else if (managerDashboardState is ManagerDashboardData) ...[
-                      _AttendanceSummaryCards(stats: managerDashboardState.stats),
-                    ] else ...[
-                       const Center(child: Text('Load failed or initial state')),
-                    ],
-                    const SizedBox(height: 24),
-                    const Text("Employees Daily Status", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 12),
-                    _EmployeesDailyStatusList(),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 extension StringExtension on String {

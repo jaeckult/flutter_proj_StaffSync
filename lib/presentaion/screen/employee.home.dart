@@ -6,6 +6,8 @@ import 'package:staffsync/domain/model/attendance.model.dart';
 import 'package:intl/intl.dart';
 import 'package:staffsync/presentaion/screen/employee.profileScreen.dart';
 import 'package:staffsync/presentaion/screen/employee.scheduleScreen.dart';
+import 'package:staffsync/domain/model/notification.model.dart';
+import 'package:go_router/go_router.dart';
 
 void main() => runApp(const ProviderScope(child: EmployeeHomeApp()));
 
@@ -23,7 +25,7 @@ class EmployeeHomeApp extends StatelessWidget {
 
 class EmployeeHomeScreen extends ConsumerStatefulWidget {
   const EmployeeHomeScreen({super.key});
-  
+
   @override
   ConsumerState<EmployeeHomeScreen> createState() => _EmployeeHomeScreenState();
 }
@@ -42,7 +44,7 @@ class _EmployeeHomeScreenState extends ConsumerState<EmployeeHomeScreen> {
     try {
       final notifier = ref.read(attendanceNotifierProvider.notifier);
       final hasActiveCheckIn = notifier.hasActiveCheckIn();
-      
+
       if (hasActiveCheckIn) {
         // If already checked in, perform check-out
         await notifier.checkOut();
@@ -98,7 +100,7 @@ class _EmployeeHomeScreenState extends ConsumerState<EmployeeHomeScreen> {
           );
         }
       }
-     
+
       await notifier.getAttendances();
     } catch (e) {
       if (mounted) {
@@ -132,8 +134,10 @@ class _EmployeeHomeScreenState extends ConsumerState<EmployeeHomeScreen> {
   @override
   Widget build(BuildContext context) {
     final attendanceState = ref.watch(attendanceNotifierProvider);
-    final hasActiveCheckIn = ref.watch(attendanceNotifierProvider.notifier).hasActiveCheckIn();
-    final todayAttendance = ref.watch(attendanceNotifierProvider.notifier).getTodayAttendance();
+    final hasActiveCheckIn =
+        ref.watch(attendanceNotifierProvider.notifier).hasActiveCheckIn();
+    final todayAttendance =
+        ref.watch(attendanceNotifierProvider.notifier).getTodayAttendance();
 
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
@@ -144,47 +148,71 @@ class _EmployeeHomeScreenState extends ConsumerState<EmployeeHomeScreen> {
             const _DateSelector(),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _TodayAttendance(attendanceState: attendanceState),
                     const SizedBox(height: 16),
-                    const Text("Today's Activity", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    const Text(
+                      "Today's Activity",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     const SizedBox(height: 8),
                     if (todayAttendance.isNotEmpty) ...[
-                      ...todayAttendance.map((attendance) => [
-                        _ActivityItem(
-                          date: attendance.date,
-                          time: attendance.checkIn,
-                          type: 'Check In',
-                          status: attendance.attendance,
-                        ),
-                        if (attendance.checkOut != null)
-                          _ActivityItem(
-                            date: attendance.date,
-                            time: attendance.checkOut!,
-                            type: 'Check Out',
-                            status: attendance.attendance,
-                          ),
-                      ]).expand((items) => items),
+                      ...todayAttendance
+                          .map(
+                            (attendance) => [
+                              _ActivityItem(
+                                date: attendance.date,
+                                time: attendance.checkIn,
+                                type: 'Check In',
+                                status: attendance.attendance,
+                              ),
+                              if (attendance.checkOut != null)
+                                _ActivityItem(
+                                  date: attendance.date,
+                                  time: attendance.checkOut!,
+                                  type: 'Check Out',
+                                  status: attendance.attendance,
+                                ),
+                            ],
+                          )
+                          .expand((items) => items),
                     ] else ...[
                       const Center(child: Text('No activity today')),
                     ],
                     const SizedBox(height: 16),
-                    const Text("Past Activity", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    const Text(
+                      "Past Activity",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     const SizedBox(height: 8),
                     if (attendanceState is states.AttendanceData) ...[
                       ...(attendanceState).attendance
-                          .where((a) => a.date.year != DateTime.now().year || 
-                                      a.date.month != DateTime.now().month || 
-                                      a.date.day != DateTime.now().day)
-                          .map((attendance) => _ActivityItem(
-                            date: attendance.date,
-                            time: attendance.checkIn,
-                            type: 'Check In',
-                            status: attendance.attendance,
-                          )),
+                          .where(
+                            (a) =>
+                                a.date.year != DateTime.now().year ||
+                                a.date.month != DateTime.now().month ||
+                                a.date.day != DateTime.now().day,
+                          )
+                          .map(
+                            (attendance) => _ActivityItem(
+                              date: attendance.date,
+                              time: attendance.checkIn,
+                              type: 'Check In',
+                              status: attendance.attendance,
+                            ),
+                          ),
                     ] else if (attendanceState is states.AttendanceError) ...[
                       Center(child: Text('Error: ${attendanceState.message}')),
                     ] else ...[
@@ -199,13 +227,19 @@ class _EmployeeHomeScreenState extends ConsumerState<EmployeeHomeScreen> {
               child: ElevatedButton(
                 onPressed: _handleAttendance,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: hasActiveCheckIn ? Colors.red : Colors.deepOrange,
+                  backgroundColor:
+                      hasActiveCheckIn ? Colors.red : Colors.deepOrange,
                   padding: const EdgeInsets.all(24),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 child: Text(
                   hasActiveCheckIn ? "Check Out" : "Check In",
-                  style: const TextStyle(fontSize: 16, color: Color.fromRGBO(255, 255, 255, 1)),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Color.fromRGBO(255, 255, 255, 1),
+                  ),
                 ),
               ),
             ),
@@ -222,16 +256,60 @@ class _ProfileSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(userNotifierProvider);
-    return ListTile(
-      leading: const CircleAvatar(
-        radius: 24,
-        backgroundImage: AssetImage('profile.png'),
-      ),
-      title: Text(user?.profile.fullName ?? "Loading...", style: const TextStyle(fontWeight: FontWeight.bold)),
-      subtitle: Text(user?.profile.designation ?? "Loading..."),
-      trailing: GestureDetector(child: const Icon(Icons.notifications_none), onTap: () => {
-        Navigator.pushNamed(context, "/notification")
-      },),
+    final notifier = ref.read(userNotifierProvider.notifier);
+
+    return FutureBuilder(
+      future: notifier.getNotificationMessage(),
+      builder: (context, AsyncSnapshot<List<NotificationModel>> snapshot) {
+        int notificationCount = 0;
+        if (snapshot.hasData) {
+          notificationCount = snapshot.data!.length;
+        }
+
+        return ListTile(
+          leading: const CircleAvatar(
+            radius: 24,
+            backgroundImage: AssetImage('profile.png'),
+          ),
+          title: Text(
+            user?.profile.fullName ?? "Loading...",
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          subtitle: Text(user?.profile.designation ?? "Loading..."),
+          trailing: GestureDetector(
+            onTap: () => context.push('/notification'),
+            child: Stack(
+              children: [
+                const Icon(Icons.notifications_none, size: 28),
+                if (notificationCount > 0)
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 16,
+                        minHeight: 16,
+                      ),
+                      child: Text(
+                        '$notificationCount',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -261,17 +339,25 @@ class _DateSelector extends StatelessWidget {
             decoration: BoxDecoration(
               color: isSelected ? Colors.deepOrange : Colors.white,
               borderRadius: BorderRadius.circular(8),
-              boxShadow: isSelected
-                  ? [BoxShadow(color: Colors.deepOrange.withOpacity(0.5), blurRadius: 6)]
-                  : [],
+              boxShadow:
+                  isSelected
+                      ? [
+                        BoxShadow(
+                          color: Colors.deepOrange.withOpacity(0.5),
+                          blurRadius: 6,
+                        ),
+                      ]
+                      : [],
             ),
             child: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    DateFormat('E').format(date), 
-                    style: TextStyle(color: isSelected ? Colors.white : Colors.black),
+                    DateFormat('E').format(date),
+                    style: TextStyle(
+                      color: isSelected ? Colors.white : Colors.black,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -305,37 +391,42 @@ class _TodayAttendance extends ConsumerWidget {
 
     if (attendanceState is states.AttendanceData) {
       final today = DateTime.now();
-      final todayAttendance = (attendanceState as states.AttendanceData).attendance
-          .where((a) => a.date.year == today.year && 
-                        a.date.month == today.month && 
-                        a.date.day == today.day)
-          .toList();
+      final todayAttendance =
+          (attendanceState as states.AttendanceData).attendance
+              .where(
+                (a) =>
+                    a.date.year == today.year &&
+                    a.date.month == today.month &&
+                    a.date.day == today.day,
+              )
+              .toList();
 
       if (todayAttendance.isNotEmpty) {
         // Get the latest check-in
         final latestCheckIn = todayAttendance
             .where((a) => a.checkIn != null)
             .reduce((a, b) => a.checkIn.isAfter(b.checkIn) ? a : b);
-        
+
         // Get the latest check-out
         final latestCheckOut = todayAttendance
             .where((a) => a.checkOut != null)
             .reduce((a, b) => a.checkOut!.isAfter(b.checkOut!) ? a : b);
 
         checkInTime = DateFormat('hh:mm a').format(latestCheckIn.checkIn);
-        
+
         if (latestCheckOut.checkOut != null) {
           checkOutTime = DateFormat('hh:mm a').format(latestCheckOut.checkOut!);
         }
       }
 
       // Count unique days with attendance
-      final uniqueDays = (attendanceState as states.AttendanceData).attendance
-          .where((a) => a.attendance == 'PRESENT')
-          .map((a) => DateTime(a.date.year, a.date.month, a.date.day))
-          .toSet()
-          .length;
-      
+      final uniqueDays =
+          (attendanceState as states.AttendanceData).attendance
+              .where((a) => a.attendance == 'PRESENT')
+              .map((a) => DateTime(a.date.year, a.date.month, a.date.day))
+              .toSet()
+              .length;
+
       totalDays = uniqueDays.toString();
     }
 
@@ -348,13 +439,19 @@ class _TodayAttendance extends ConsumerWidget {
             _AttendanceCard(
               title: "Check In",
               value: checkInTime,
-              status: checkInTime == "Not checked in" ? "Not Checked In" : "On Time",
+              status:
+                  checkInTime == "Not checked in"
+                      ? "Not Checked In"
+                      : "On Time",
               icon: Icons.login,
             ),
             _AttendanceCard(
               title: "Check Out",
               value: checkOutTime,
-              status: checkOutTime == "Not checked out" ? "Not Checked Out" : "Checked Out",
+              status:
+                  checkOutTime == "Not checked out"
+                      ? "Not Checked Out"
+                      : "Checked Out",
               icon: Icons.logout,
             ),
             _AttendanceCard(
@@ -402,11 +499,20 @@ class _AttendanceCard extends StatelessWidget {
             children: [
               Icon(icon, size: 28, color: Colors.deepOrange),
               const SizedBox(height: 8),
-              Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 4),
               Text(title, style: const TextStyle(color: Colors.grey)),
               const SizedBox(height: 2),
-              Text(status, style: const TextStyle(fontSize: 12, color: Colors.black54)),
+              Text(
+                status,
+                style: const TextStyle(fontSize: 12, color: Colors.black54),
+              ),
             ],
           ),
         ),
@@ -444,7 +550,6 @@ class _ActivityItem extends StatelessWidget {
         subtitle: Text(
           '${DateFormat('MMM dd, yyyy').format(date)} at ${DateFormat('hh:mm a').format(time)}',
         ),
-        
       ),
     );
   }
@@ -483,7 +588,7 @@ Widget _buildTodayActivity(List<Attendance> todayAttendance) {
     itemBuilder: (context, index) {
       final attendance = todayAttendance[index ~/ 2];
       final isCheckIn = index.isEven;
-      
+
       if (isCheckIn) {
         return _ActivityItem(
           date: attendance.date,
@@ -533,10 +638,7 @@ class _DashboardCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
-                    color: Colors.grey,
-                    fontSize: 14,
-                  ),
+                  style: const TextStyle(color: Colors.grey, fontSize: 14),
                 ),
                 Text(
                   value,
@@ -557,12 +659,17 @@ class _DashboardCard extends StatelessWidget {
 Widget _buildDashboard(states.AttendanceState attendanceState) {
   if (attendanceState is states.AttendanceData) {
     final attendances = attendanceState.attendance;
-    final totalDays = attendances.where((a) => a.attendance == 'PRESENT').length;
-    final todayAttendance = attendances.where((a) => 
-      a.date.year == DateTime.now().year && 
-      a.date.month == DateTime.now().month && 
-      a.date.day == DateTime.now().day
-    ).toList();
+    final totalDays =
+        attendances.where((a) => a.attendance == 'PRESENT').length;
+    final todayAttendance =
+        attendances
+            .where(
+              (a) =>
+                  a.date.year == DateTime.now().year &&
+                  a.date.month == DateTime.now().month &&
+                  a.date.day == DateTime.now().day,
+            )
+            .toList();
 
     return Column(
       children: [
@@ -585,20 +692,21 @@ Widget _buildDashboard(states.AttendanceState attendanceState) {
 
 Widget _buildTodayAttendance(states.AttendanceState attendanceState) {
   if (attendanceState is states.AttendanceData) {
-    final todayAttendance = attendanceState.attendance.where((a) => 
-      a.date.year == DateTime.now().year && 
-      a.date.month == DateTime.now().month && 
-      a.date.day == DateTime.now().day
-    ).toList();
+    final todayAttendance =
+        attendanceState.attendance
+            .where(
+              (a) =>
+                  a.date.year == DateTime.now().year &&
+                  a.date.month == DateTime.now().month &&
+                  a.date.day == DateTime.now().day,
+            )
+            .toList();
 
     if (todayAttendance.isEmpty) {
       return const Center(
         child: Text(
           'No activity for today',
-          style: TextStyle(
-            color: Colors.grey,
-            fontSize: 16,
-          ),
+          style: TextStyle(color: Colors.grey, fontSize: 16),
         ),
       );
     }
@@ -610,20 +718,21 @@ Widget _buildTodayAttendance(states.AttendanceState attendanceState) {
 
 Widget _buildPastActivity(states.AttendanceState attendanceState) {
   if (attendanceState is states.AttendanceData) {
-    final pastAttendance = attendanceState.attendance.where((a) => 
-      a.date.year != DateTime.now().year || 
-      a.date.month != DateTime.now().month || 
-      a.date.day != DateTime.now().day
-    ).toList();
+    final pastAttendance =
+        attendanceState.attendance
+            .where(
+              (a) =>
+                  a.date.year != DateTime.now().year ||
+                  a.date.month != DateTime.now().month ||
+                  a.date.day != DateTime.now().day,
+            )
+            .toList();
 
     if (pastAttendance.isEmpty) {
       return const Center(
         child: Text(
           'No past activity',
-          style: TextStyle(
-            color: Colors.grey,
-            fontSize: 16,
-          ),
+          style: TextStyle(color: Colors.grey, fontSize: 16),
         ),
       );
     }

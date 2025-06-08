@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:staffsync/application/providers/providers.dart';
 import 'package:staffsync/domain/model/notification.model.dart';
 import 'package:staffsync/presentaion/screen/managerHome.dart';
-
 
 void main() {
   runApp(ProviderScope(child: MaterialApp(home: NotificationList())));
@@ -29,10 +29,8 @@ class _NotificationListState extends ConsumerState<NotificationList> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.of(context).pop(true);
-          },
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
         ),
         title: const Text('Notifications'),
       ),
@@ -51,13 +49,20 @@ class _NotificationListState extends ConsumerState<NotificationList> {
           return ListView.separated(
             itemCount: notifications.length,
             itemBuilder: (context, index) {
-              return Padding(padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),child: ListTile(
-              title: Text(
-                        notifications[index].message,
-                        style: TextStyle(fontWeight: FontWeight.bold)),
-
-              ),);
-            }, separatorBuilder: (BuildContext context, int index) =>  Divider(),
+              return Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 16.0,
+                ),
+                child: ListTile(
+                  title: Text(
+                    notifications[index].message,
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              );
+            },
+            separatorBuilder: (BuildContext context, int index) => Divider(),
           );
         },
       ),

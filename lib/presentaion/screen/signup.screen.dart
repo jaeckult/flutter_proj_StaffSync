@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:staffsync/application/providers/providers.dart';
+import 'package:go_router/go_router.dart';
 
 class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});
@@ -62,7 +63,7 @@ class _SignupScreen extends ConsumerState<SignupScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Successfully signed up!')),
           );
-          Navigator.pushReplacementNamed(context, '/login');
+          context.go('/');
         }
       } catch (e) {
         if (mounted) {

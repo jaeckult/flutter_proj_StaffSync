@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:staffsync/application/notifiers/leaveRequest.notifiers.dart';
 import 'package:staffsync/application/providers/providers.dart';
 import 'package:staffsync/application/states/leaveRequest.state.dart';
@@ -19,9 +20,6 @@ class _ScheduleScreenState extends ConsumerState<ManagerScheduleScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      print(
-        'ManagerScheduleScreen: Fetching dashboard stats and leave requests...',
-      );
       ref.read(managerDashboardNotifierProvider.notifier).fetchDashboardStats();
       ref.read(leaveRequestNotifierProvider.notifier).getLeaveRequests();
     });
@@ -56,12 +54,14 @@ class _ScheduleScreenState extends ConsumerState<ManagerScheduleScreen> {
     final dashboardState = ref.watch(managerDashboardNotifierProvider);
     final leaveRequestState = ref.watch(leaveRequestNotifierProvider);
 
-    print(
-      'ManagerScheduleScreen Build: Dashboard State: $dashboardState, Leave Request State: $leaveRequestState',
-    );
-
     return Scaffold(
-      appBar: AppBar(title: const Text('Manager Dashboard')),
+      appBar: AppBar(
+        title: const Text('Manager Dashboard'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
+        ),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -127,67 +127,6 @@ class LeaveTab extends ConsumerStatefulWidget {
 
 class _LeaveTabState extends ConsumerState<LeaveTab> {
   @override
-  void initState() {
-    super.initState();
-    print('LeaveTab: initState called');
-  }
-
-  Widget _buildLeaveRequestCard(LeaveRequest request) {
-    print('LeaveTab: Building card for leave request: ${request.id}');
-    final isPending = request.status == 'PENDING';
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
-      child: ListTile(
-        title: Text('${request.type} Leave'),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('From: ${request.startDate.toString().split(' ')[0]}'),
-            Text('To: ${request.endDate.toString().split(' ')[0]}'),
-            Text('Status: ${request.status}'),
-            if (request.approvedById != null)
-              Text('Approved by: ${request.approvedById}'),
-          ],
-        ),
-        trailing:
-            isPending
-                ? Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.check, color: Colors.green),
-                      onPressed: () {
-          
-                        ref
-                            .read(leaveRequestNotifierProvider.notifier)
-                            .updateLeaveRequest(request.id, 'APPROVED');
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close, color: Colors.red),
-                      onPressed: () {
-         
-                        ref
-                            .read(leaveRequestNotifierProvider.notifier)
-                            .updateLeaveRequest(request.id, 'REJECTED');
-                      },
-                    ),
-                  ],
-                )
-                : Chip(
-                  label: Text(request.status),
-                  backgroundColor:
-                      request.status == 'APPROVED'
-                          ? Colors.green
-                          : request.status == 'CANCELLED'
-                          ? Colors.red
-                          : Colors.orange, 
-                ),
-      ),
-    );
-  }
-
-  @override
   Widget build(BuildContext context) {
     final leaveRequestState = widget.leaveRequestState;
 
@@ -213,7 +152,6 @@ class _LeaveTabState extends ConsumerState<LeaveTab> {
                   ),
                   LeaveRequestData(leaveRequest: final requests) =>
                     (() {
-                     
                       final pastRequests =
                           requests.where((r) => r.status != 'PENDING').toList();
                       
@@ -242,7 +180,6 @@ class _LeaveTabState extends ConsumerState<LeaveTab> {
                   ),
                   LeaveRequestData(leaveRequest: final requests) =>
                     (() {
-                     
                       final pendingRequests =
                           requests.where((r) => r.status == 'PENDING').toList();
                     
@@ -265,6 +202,58 @@ class _LeaveTabState extends ConsumerState<LeaveTab> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildLeaveRequestCard(LeaveRequest request) {
+    final isPending = request.status == 'PENDING';
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
+      child: ListTile(
+        title: Text('${request.type} Leave'),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('From: ${request.startDate.toString().split(' ')[0]}'),
+            Text('To: ${request.endDate.toString().split(' ')[0]}'),
+            Text('Status: ${request.status}'),
+            if (request.approvedById != null)
+              Text('Approved by: ${request.approvedById}'),
+          ],
+        ),
+        trailing:
+            isPending
+                ? Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.check, color: Colors.green),
+                      onPressed: () {
+                        ref
+                            .read(leaveRequestNotifierProvider.notifier)
+                            .updateLeaveRequest(request.id, 'APPROVED');
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.red),
+                      onPressed: () {
+                        ref
+                            .read(leaveRequestNotifierProvider.notifier)
+                            .updateLeaveRequest(request.id, 'REJECTED');
+                      },
+                    ),
+                  ],
+                )
+                : Chip(
+                  label: Text(request.status),
+                  backgroundColor:
+                      request.status == 'APPROVED'
+                          ? Colors.green
+                          : request.status == 'CANCELLED'
+                          ? Colors.red
+                          : Colors.orange, 
+                ),
       ),
     );
   }

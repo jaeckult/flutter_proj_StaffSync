@@ -3,11 +3,13 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:staffsync/application/providers/providers.dart';
 
 void main() {
   runApp(const MyApp());
 }
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
   @override
@@ -19,107 +21,119 @@ class MyApp extends StatelessWidget {
   }
 }
 
-
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
-  
-  
+
   @override
-  ConsumerState<ConsumerStatefulWidget> createState() => _ProfileScreen();}
-  class _ProfileScreen extends ConsumerState<ProfileScreen>  {
-    
-     @override
+  ConsumerState<ConsumerStatefulWidget> createState() => _ProfileScreen();
+}
+
+class _ProfileScreen extends ConsumerState<ProfileScreen> {
+  @override
   void initState() {
     super.initState();
     Future.microtask(() {
       ref.read(userNotifierProvider.notifier).loadUserFromStorage();
-      
     });
-
   }
-  
-    void _handleLogout()
-    {
-      ref.read(authNotifierProvider.notifier).logout();
-      
-      Navigator.pushReplacementNamed(context, '/');
 
-}
-
-void _handleAccountDeletion() async {
-  final bool? confirmDelete = await showDialog<bool>(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: const Text('Delete Account'),
-        content: const Text('Are you sure you want to delete your account? This action cannot be undone.'),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
-          ),
-        ],
-      );
-    },
-  );
-
-  if (confirmDelete == true) {
+  void _handleLogout() async {
     try {
-      final user = ref.read(userNotifierProvider);
-      final token = await ref.read(authNotifierProvider.notifier).getToken();
-
-      if (user != null && token != null) {
-        await ref.read(bulkUserNotifierProvider.notifier).deleteEmployee(user.id, token);
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Account deleted successfully.')),
-          );
-          Navigator.pushReplacementNamed(context, '/');
-        }
-      } else {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Unable to delete account: User or token not found.')),
-          );
-        }
+      await ref.read(authNotifierProvider.notifier).logout();
+      if (mounted) {
+        context.go('/');
       }
     } catch (e) {
-      if (context.mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to delete account: ${e.toString()}')),
+          SnackBar(content: Text('Logout failed: ${e.toString()}')),
         );
       }
     }
   }
-}
 
-void _gotoNotification(){
-  Navigator.pushNamed(context, '/setting');
+  void _handleAccountDeletion() async {
+    final bool? confirmDelete = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Delete Account'),
+          content: const Text(
+            'Are you sure you want to delete your account? This action cannot be undone.',
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => context.pop(false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => context.pop(true),
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
 
+    if (confirmDelete == true) {
+      try {
+        final user = ref.read(userNotifierProvider);
+        final token = await ref.read(authNotifierProvider.notifier).getToken();
 
-}
-void _handlePasswordChange() {
-  Navigator.pushNamed(context, '/changePassword');
+        if (user != null && token != null) {
+          await ref
+              .read(bulkUserNotifierProvider.notifier)
+              .deleteEmployee(user.id, token);
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Account deleted successfully.')),
+            );
+            context.go('/');
+          }
+        } else {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Unable to delete account: User or token not found.',
+                ),
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to delete account: ${e.toString()}'),
+            ),
+          );
+        }
+      }
+    }
+  }
 
-}
-void _handleEditProfile() {
-  Navigator.pushNamed(context, '/editProfile');
+  void _gotoNotification() {
+    context.push('/setting');
+  }
 
-}
-    @override
+  void _handlePasswordChange() {
+    context.push('/changePassword');
+  }
+
+  void _handleEditProfile() {
+    context.push('/editProfile');
+  }
+
+  @override
   Widget build(BuildContext context) {
     final user = ref.watch(userNotifierProvider);
     if (user == null) {
-  return const Center(child: CircularProgressIndicator());
+      return const Center(child: CircularProgressIndicator());
     }
     final imageUrl = user.profile.profilePicture;
-    Uint8List imageBytes = base64Decode(imageUrl); 
-
+    Uint8List imageBytes = base64Decode(imageUrl);
 
     return Scaffold(
       body: SafeArea(
@@ -130,10 +144,11 @@ void _handleEditProfile() {
               child: Stack(
                 alignment: Alignment.bottomRight,
                 children: [
-            
                   CircleAvatar(
                     radius: 50,
-                    backgroundImage: MemoryImage(imageBytes), // Replace with your image URL
+                    backgroundImage: MemoryImage(
+                      imageBytes,
+                    ), // Replace with your image URL
                   ),
                   Positioned(
                     bottom: 0,
@@ -144,9 +159,8 @@ void _handleEditProfile() {
                         shape: BoxShape.circle,
                       ),
                       padding: const EdgeInsets.all(4),
-                     
                     ),
-                  )
+                  ),
                 ],
               ),
             ),
@@ -173,46 +187,70 @@ void _handleEditProfile() {
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  child: const Text("Edit Profile", style: TextStyle(color: Color.fromRGBO(255, 255, 255, 1), fontWeight: FontWeight.bold)),
+                  child: const Text(
+                    "Edit Profile",
+                    style: TextStyle(
+                      color: Color.fromRGBO(255, 255, 255, 1),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
             ),
             const SizedBox(height: 30),
-            ProfileOption(icon: Icons.notifications, text: "Notification Settings", function: _gotoNotification,),
-            ProfileOption(icon: Icons.vpn_key, text: "Change Password", function: _handlePasswordChange),
-            ProfileOption(icon: Icons.logout, text: "Logout", function:_handleLogout),
+            ProfileOption(
+              icon: Icons.notifications,
+              text: "Notification Settings",
+              function: _gotoNotification,
+            ),
+            ProfileOption(
+              icon: Icons.vpn_key,
+              text: "Change Password",
+              function: _handlePasswordChange,
+            ),
+            ProfileOption(
+              icon: Icons.logout,
+              text: "Logout",
+              function: _handleLogout,
+            ),
             ListTile(
-                leading: const Icon(Icons.delete_forever, color: Colors.pinkAccent),
-                title: const Text("Delete Account", style: TextStyle(color: Colors.pinkAccent)),
-                onTap: _handleAccountDeletion,
+              leading: const Icon(
+                Icons.delete_forever,
+                color: Colors.pinkAccent,
               ),
-           
+              title: const Text(
+                "Delete Account",
+                style: TextStyle(color: Colors.pinkAccent),
+              ),
+              onTap: _handleAccountDeletion,
+            ),
+
             const SizedBox(height: 20),
           ],
         ),
       ),
     );
   }
-  
-  
+}
 
-
-  }
-  
 class ProfileOption extends StatelessWidget {
   final IconData icon;
   final String text;
   final VoidCallback function;
 
-  const ProfileOption({required this.icon, required this.text, required this.function, super.key});
+  const ProfileOption({
+    required this.icon,
+    required this.text,
+    required this.function,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
       leading: Icon(icon, color: Colors.black54),
       title: Text(text),
-      onTap: function
-      ,
+      onTap: function,
     );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:staffsync/presentaion/screen/employee.collegues.Screen.dart';
 import 'package:staffsync/presentaion/screen/employee.holidayScreen.dart';
 import 'package:staffsync/presentaion/screen/managerColleagues.dart';
@@ -29,22 +30,22 @@ class ManagerNavigationManager {
 
   void onItemTapped(BuildContext context, int index) {
     currentIndex = index;
-  }
-
-  Widget getCurrentPage() {
-    switch (currentIndex) {
+    switch (index) {
       case 0:
-        return const ManagerHomeScreen();
+        context.go('/manager/home');
+        break;
       case 1:
-        return const ManagerScheduleScreen();
+        context.go('/manager/schedule');
+        break;
       case 2:
-        return const ManagerListScreen();
+        context.go('/manager/colleagues');
+        break;
       case 3:
-        return const ManagerHolidayScreen();
+        context.go('/manager/holiday');
+        break;
       case 4:
-        return const ProfileScreen();
-      default:
-        return const ManagerHomeScreen();
+        context.go('/manager/profile');
+        break;
     }
   }
 }
@@ -72,9 +73,7 @@ class _ManagerLogicState extends ConsumerState<ManagerLogic> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body:
-          _logic
-              .getCurrentPage(), // Display the current page based on the current index
+      body: const ManagerHomeScreen(),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _logic.currentIndex,
         onTap: (index) {

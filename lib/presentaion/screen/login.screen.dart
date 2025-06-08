@@ -1,16 +1,16 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:staffsync/application/providers/providers.dart';
 import 'package:staffsync/NetworkService.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
-
   const LoginPage({super.key});
 
   @override
   ConsumerState<LoginPage> createState() => _LoginPageState();
 }
+
 class _LoginPageState extends ConsumerState<LoginPage> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -32,8 +32,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       });
 
       try {
-       
-
         final authNotifier = ref.read(authNotifierProvider.notifier);
         final role = await authNotifier.logIn(
           _usernameController.text,
@@ -42,32 +40,34 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
         if (mounted && role != null) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Successfully logged in!'), backgroundColor: Color.fromRGBO(39, 219, 7, 0.816),),);
-           
-          switch(role) {
-            case "EMPLOYEE":
-            Navigator.pushReplacementNamed(context, '/employee/home');
-            break;
-            case "MANAGER":
-            Navigator.pushReplacementNamed(context, "/manager/home");
-    
-          }
-          final connection = await authNotifier.connectToIO();
-          
-          
-          
-          
-        }
-        else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Invalid Credential'), backgroundColor: Color.fromRGBO(236, 19, 7, 0.815),), );
+            const SnackBar(
+              content: Text('Successfully logged in!'),
+              backgroundColor: Color.fromRGBO(123, 205, 109, 0.816),
+            ),
+          );
 
+          switch (role) {
+            case "EMPLOYEE":
+              context.go('/employee/home');
+              break;
+            case "MANAGER":
+              context.go('/manager/home');
+              break;
+          }
+
+          await authNotifier.connectToIO();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Invalid Credential'),
+              backgroundColor: Color.fromRGBO(236, 19, 7, 0.815),
+            ),
+          );
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(e.toString())));
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(e.toString())));
         }
       } finally {
         if (mounted) {
@@ -107,12 +107,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     hintText: 'Username',
                     prefixIcon: Icon(Icons.person),
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your username';
-                    }
-                    return null;
-                  },
+                  validator: (value) =>
+                      value == null || value.isEmpty ? 'Please enter your username' : null,
                 ),
                 const SizedBox(height: 20),
                 TextFormField(
@@ -123,12 +119,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     prefixIcon: Icon(Icons.lock),
                   ),
                   obscureText: true,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter your password';
-                    }
-                    return null;
-                  },
+                  validator: (value) =>
+                      value == null || value.isEmpty ? 'Please enter your password' : null,
                 ),
                 const SizedBox(height: 20),
                 SizedBox(
@@ -142,25 +134,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         borderRadius: BorderRadius.circular(15),
                       ),
                     ),
-                    child:
-                        _isLoading
-                            ? const CircularProgressIndicator(
-                              color: Colors.white,
-                            )
-                            : const Text(
-                              'Login',
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.white,
-                              ),
-                            ),
-                        
+                    child: _isLoading
+                        ? const CircularProgressIndicator(color: Colors.white)
+                        : const Text('Login', style: TextStyle(fontSize: 18, color: Colors.white)),
                   ),
                 ),
                 const SizedBox(height: 15),
                 TextButton(
                   onPressed: () {
-                    Navigator.pushReplacementNamed(context, '/signup');
+                    context.go('/signup');
                   },
                   child: RichText(
                     text: TextSpan(

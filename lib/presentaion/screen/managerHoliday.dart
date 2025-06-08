@@ -1,37 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:staffsync/application/providers/providers.dart';
 import 'package:staffsync/domain/model/holiday.model.dart';
 import 'package:staffsync/domain/model/user.model.dart';
 
-void main() {
-  runApp(const MyApp());
-}
-  Color getStatusColor(String status) {
-    return status == 'Checked in' ? Colors.green : Colors.red;
-  }
-  
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      title: 'Employee Holiday',
-      home: ManagerHolidayScreen(),
-    );
-  }
+Color getStatusColor(String status) {
+  return status == 'Checked in' ? Colors.green : Colors.red;
 }
 
 class ManagerHolidayScreen extends ConsumerStatefulWidget {
   const ManagerHolidayScreen({super.key});
    @override
   ConsumerState<ConsumerStatefulWidget> createState() => _ManagerHolidayStateScreen();
-
-  
 }
+
 class _ManagerHolidayStateScreen extends ConsumerState<ManagerHolidayScreen> {
   final DateFormat dateFormatter = DateFormat('MMM d, yyyy');
 
@@ -42,9 +26,6 @@ class _ManagerHolidayStateScreen extends ConsumerState<ManagerHolidayScreen> {
      ref.read(holidayNotifierProvider.notifier).getHolidayList();
     });
   }
-
-  final bool _isLoading = false;
-
 
   @override
   Widget build(BuildContext context) {
