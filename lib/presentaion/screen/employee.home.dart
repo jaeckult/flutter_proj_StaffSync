@@ -228,7 +228,9 @@ class _EmployeeHomeScreenState extends ConsumerState<EmployeeHomeScreen> {
                 onPressed: _handleAttendance,
                 style: ElevatedButton.styleFrom(
                   backgroundColor:
-                      hasActiveCheckIn ? Colors.red : Colors.deepOrange,
+                      hasActiveCheckIn
+                          ? Colors.red
+                          : const Color.fromARGB(255, 58, 168, 62),
                   padding: const EdgeInsets.all(24),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -540,7 +542,7 @@ class _ActivityItem extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: type == 'Check In' ? Colors.green : Colors.blue,
+          backgroundColor: type == 'Check In' ? Colors.green : const Color.fromARGB(255, 162, 93, 68),
           child: Icon(
             type == 'Check In' ? Icons.login : Icons.logout,
             color: Colors.white,
