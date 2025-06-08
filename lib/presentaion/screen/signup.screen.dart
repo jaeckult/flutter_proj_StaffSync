@@ -115,7 +115,7 @@ class _SignupScreen extends ConsumerState<SignupScreen> {
               key: _formKey,
               
               child:
-             
+            
                Stepper(
                 margin: const EdgeInsets.all(20),
                 type: StepperType.horizontal,
@@ -194,8 +194,7 @@ class _SignupScreen extends ConsumerState<SignupScreen> {
                     Column( 
                       children: [
                         Center(
-                          child: Container(
-                          child:
+                          child: Container(child:
                             Row(
                             children: [
                               ElevatedButton(
@@ -415,29 +414,6 @@ class _SignupScreen extends ConsumerState<SignupScreen> {
                             ? StepState.complete
                             : StepState.indexed,
                   ),
-                  // Step(
-                  //   title: const Text('Role'),
-                  //   stepStyle: StepStyle(color: Colors.orange[700]),
-                  //   content: TextFormField(
-                  //     controller: _roleController,
-                  //     decoration: const InputDecoration(
-                  //       border: OutlineInputBorder(),
-                  //       hintText: 'Enter your role',
-                  //       prefixIcon: Icon(Icons.assignment_ind),
-                  //     ),
-                  //     validator: (value) {
-                  //       if (value == null || value.isEmpty) {
-                  //         return 'Please enter your role';
-                  //       }
-                  //       return null;
-                  //     },
-                  //   ),
-                  //   isActive: _currentStep >= 7,
-                  //   state:
-                  //       _currentStep > 7
-                  //           ? StepState.complete
-                  //           : StepState.indexed,
-                  // ),
                   Step(
                     title: const Text('Password'),
                     stepStyle: StepStyle(color: Colors.orange[700]),

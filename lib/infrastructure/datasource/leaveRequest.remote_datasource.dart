@@ -16,7 +16,8 @@ class LeaveRequestRemoteDatasourceImpl
     try {
       final response = await dio.get(
         "http://localhost:3000/api/leaveRequest",
-        options: Options(headers: {"Authorization": "Bearer $token"}),
+        options: Options(headers: {"Authorization": "Bearer $token",  "Content-Type": "application/json",}),
+       
       );
 
       if (response.statusCode == 200) {
@@ -43,7 +44,7 @@ class LeaveRequestRemoteDatasourceImpl
         "http://localhost:3000/api/leaveRequest",
         options: Options(
           headers: {
-            "Authorization": "Bearer \$token",
+            "Authorization": "Bearer $token",
             "Content-Type": "application/json",
           },
         ),

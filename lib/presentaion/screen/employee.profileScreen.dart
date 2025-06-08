@@ -79,7 +79,6 @@ void _handleAccountDeletion() async {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Account deleted successfully.')),
           );
-          // Navigate to login screen or home screen after deletion
           Navigator.pushReplacementNamed(context, '/');
         }
       } else {

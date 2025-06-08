@@ -1,4 +1,6 @@
 
+import 'package:staffsync/application/providers/providers.dart';
+import 'package:staffsync/domain/model/notification.model.dart';
 import 'package:staffsync/domain/model/user.model.dart';
 import 'package:staffsync/domain/repositories/user.repository.dart';
 import 'package:staffsync/infrastructure/datasource/remote_data_source.dart';
@@ -72,6 +74,46 @@ class UserRepositoryImpl implements UserRepository {
         fullName, designation, email, employmentType, profilePicture
       );
     
+    }@override
+Future<List<NotificationModel>> getNotificationMessage() async {
+  try {
+    final token = await authRepository.getToken();
+    
+    if (token != null) {
+      final data = await remoteDataSource.getNotificationMessage(token);
+      return data;
+    } else {
+      throw Exception("Token is null");
     }
+
+  } catch (e) {
+    if (e is Exception) {
+      rethrow;
+    } else {
+      throw Exception("Can't retrieve notification messages");
+    }
+  }
+}
+ @override
+  Future<void> deleteNotification() async {
+  try {
+    final token = await authRepository.getToken();
+    
+    if (token != null) {
+      await remoteDataSource.deleteNotification(token);
+
+    } else {
+      throw Exception("Token is null");
+    }
+
+  } catch (e) {
+    if (e is Exception) {
+      rethrow;
+    } else {
+      throw Exception("Can't delete notification messages");
+    }
+  }
   
+}
+
 }

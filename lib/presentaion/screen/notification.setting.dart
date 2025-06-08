@@ -39,6 +39,8 @@ class _NotificationSettingState extends ConsumerState<NotificationSetting> {
   @override
   Widget build(BuildContext context) {
     final isOn = ref.watch(toggleProvider);
+    final delete =  ref.read(userNotifierProvider.notifier);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Notification Setting', style: TextStyle(color: Colors.black)),
@@ -111,16 +113,39 @@ class _NotificationSettingState extends ConsumerState<NotificationSetting> {
                   }).toList(),
                 ),
               ),
-              const Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Clear Notifications', style: TextStyle(
-                            color: Colors.deepOrange,
-                            fontWeight: FontWeight.bold,
-                          )),
-                Icon(Icons.delete, color:  Colors.deepOrange )
-              ],
-            ),
+              Row(
+  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  children: [
+    GestureDetector(
+      onTap: () {
+        delete.deleteNotification();
+         ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Cleared Notification')));
+           
+        
+      },
+      child: const Text(
+        'Clear Notifications',
+        style: TextStyle(
+          color: Colors.deepOrange,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    ),
+    GestureDetector(
+      onTap: () {
+        delete.deleteNotification();
+         ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Cleared Notification')));
+           
+        
+        
+      },
+      child: Icon(Icons.delete, color: Colors.deepOrange),
+    ),
+  ],
+),
+
               
           ],
         ),

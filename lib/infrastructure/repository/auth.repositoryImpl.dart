@@ -9,10 +9,7 @@ class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl(this.remoteDataSource, this.secureStorage);
 
   @override
-  Future<String> logIn(String username, String password) async {
-    print('logIn() method in AuthRepositoryImpl called with $username');
-  
-    
+  Future<String> logIn(String username, String password) async { 
     try {
      
       final data = await remoteDataSource.logIn(username, password);
@@ -37,7 +34,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
       final email = data["email"];
       if (email == null) {
-        print("email is null");
+  
         throw Exception("email not found in response");
     
       }
@@ -47,7 +44,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
       return role.toString();
     } catch (error) {
-      print('Login error: $error');
+    
       if (error is Exception) {
         rethrow;
       }
@@ -84,15 +81,14 @@ class AuthRepositoryImpl implements AuthRepository {
         dateOfBirth,
         role,
       );
-      print('Repository received signup data: $data');
-
+     
       final responseRole = data["role"];
       if (responseRole == null) {
         throw Exception('Role not returned from server');
       }
       return responseRole.toString();
     } catch (error) {
-      print('Signup error: $error');
+     
       if (error is Exception) {
         rethrow;
       }
@@ -121,6 +117,18 @@ class AuthRepositoryImpl implements AuthRepository {
     await secureStorage.write("role", null);
     await secureStorage.write("id", null);
   }
+   @override
+    Future<void> connectToIO() async {
+    final String? token = await getToken();
+    if (token != null){
+      final request = await remoteDataSource.connectToSocket(token);
+      
+    }
+    else {
+      throw Exception("Null token unauthorized user");
+    }
+    
+  }
   
   @override
   Future<void> logout() async {
@@ -128,7 +136,7 @@ class AuthRepositoryImpl implements AuthRepository {
   if (token != null) {
     await remoteDataSource.logout(token);
   } else {
-    print("No token found.");
+    throw Exception("No token found.");
   }
 }
 

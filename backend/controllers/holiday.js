@@ -1,10 +1,6 @@
 const express = require('express');
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
-const { identifyUser } = require('../utils/middleware');
-const { error } = require('../utils/logger');
-const { errorHandler } = require('../utils/middleware');
-
 const holidayRouter = express.Router()
 holidayRouter.get('/', async (req, res) => {
     try {

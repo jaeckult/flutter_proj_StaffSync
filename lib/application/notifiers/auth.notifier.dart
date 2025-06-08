@@ -68,6 +68,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final response = await authRepository.logout();
     }
     catch(e){
+     
+      rethrow;
+    }
+  }
+  Future<void> connectToIO() async {
+    try {
+     
+      final response = await authRepository.connectToIO();
+      print("tying to connect");
+    }
+    catch(e){
       print(e);
       rethrow;
     }

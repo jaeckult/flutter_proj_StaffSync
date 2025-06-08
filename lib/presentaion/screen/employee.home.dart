@@ -98,7 +98,7 @@ class _EmployeeHomeScreenState extends ConsumerState<EmployeeHomeScreen> {
           );
         }
       }
-      // Refresh attendance data
+     
       await notifier.getAttendances();
     } catch (e) {
       if (mounted) {
@@ -229,7 +229,9 @@ class _ProfileSection extends ConsumerWidget {
       ),
       title: Text(user?.profile.fullName ?? "Loading...", style: const TextStyle(fontWeight: FontWeight.bold)),
       subtitle: Text(user?.profile.designation ?? "Loading..."),
-      trailing: const Icon(Icons.notifications_none),
+      trailing: GestureDetector(child: const Icon(Icons.notifications_none), onTap: () => {
+        Navigator.pushNamed(context, "/notification")
+      },),
     );
   }
 }

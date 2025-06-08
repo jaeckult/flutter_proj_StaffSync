@@ -43,6 +43,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         if (mounted && role != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Successfully logged in!'), backgroundColor: Color.fromRGBO(39, 219, 7, 0.816),),);
+           
           switch(role) {
             case "EMPLOYEE":
             Navigator.pushReplacementNamed(context, '/employee/home');
@@ -51,6 +52,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             Navigator.pushReplacementNamed(context, "/manager/home");
     
           }
+          final connection = await authNotifier.connectToIO();
+          
           
           
           

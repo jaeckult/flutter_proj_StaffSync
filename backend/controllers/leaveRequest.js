@@ -3,7 +3,7 @@ const leaveRequestRouter = express.Router();
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const { identifyUser, rbacMiddleware, calculateLeaveDuration, isOnLeave, isOnWork } = require('../utils/middleware');
-
+const { notifyUser } = require('../socket_server'); 
 // Create a leave request
 leaveRequestRouter.post('/', identifyUser, async (req, res) => {
   // console.log(req.body);
@@ -32,15 +32,15 @@ leaveRequestRouter.post('/', identifyUser, async (req, res) => {
     });
 
     res.status(201).json(leaveRequest);
+    console.log(leaveRequest)
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to create leave request' });
   }
 });
 
-// Update a leave request (e.g., approve, reject, cancel)
+// Update a leave request (e.g., approve, reject, )
 leaveRequestRouter.patch('/:id', identifyUser, rbacMiddleware(['MANAGER']), async (req, res) => {
-  console.log(req.body);
   
   const { id } = req.params;
   const { status } = req.body;
@@ -57,15 +57,14 @@ leaveRequestRouter.patch('/:id', identifyUser, rbacMiddleware(['MANAGER']), asyn
       return res.status(404).json({ error: 'Leave request not found' });
     }
 
-    // Update the leave request, points, and leave balance in a transaction
+    
     const result = await prisma.$transaction(async (prisma) => {
       let message = `Leave request updated to ${status}`;
 
-      // If approving, update points and leave balance
+    
       if (status === 'APPROVED') {
         const leaveDuration = calculateLeaveDuration(leaveRequest.startDate, leaveRequest.endDate);
 
-        // Deduct points
         const updatedUser = await prisma.user.update({
           where: { id: leaveRequest.userId },
           data: {
@@ -109,19 +108,31 @@ leaveRequestRouter.patch('/:id', identifyUser, rbacMiddleware(['MANAGER']), asyn
         message = 'Leave request approved, points and balance updated';
       }
 
-      // Update the leave request status, approvedBy, and approvedAt
+      
       const updatedLeaveRequest = await prisma.leaveRequest.update({
         where: { id: parseInt(id) },
         data: {
           status,
-          approvedById: userId, // Use req.user.id instead of req.userId
+          approvedById: userId, 
           approvedAt: now,
         },
       });
+      
 
       return { updatedLeaveRequest, message };
     });
-    console.log(result);
+    await prisma.notification.create({
+  data: {
+    userId: leaveRequest.userId,
+    message: `Your leave request has been ${status.toLowerCase()}`,
+    leaveRequestId: leaveRequest.id,
+  },
+});
+    notifyUser(userId, {
+    status,
+    message: `Your leave request has been ${status}`
+});
+
 
     res.json({
       message: result.message,
@@ -134,10 +145,9 @@ leaveRequestRouter.patch('/:id', identifyUser, rbacMiddleware(['MANAGER']), asyn
   }
 });
 
-// Get leave request stats for the dashboard
 leaveRequestRouter.get('/stats', identifyUser, async (req, res) => {
-  // console.log("body: ", req.body);
-  // logger.info("Fetching leave stats for user:", req.user.id);
+
+
   
   const userId = req.user.id;
 
@@ -147,8 +157,6 @@ leaveRequestRouter.get('/stats', identifyUser, async (req, res) => {
       where: { userId },
     });
     const totalLeaveBalance = leaveBalances.reduce((sum, balance) => sum + balance.balance, 0);
-
-    // Fetch counts for approved, pending, and cancelled leave requests
     const approvedCount = await prisma.leaveRequest.count({
       where: { userId, status: 'APPROVED' },
     });
@@ -181,7 +189,7 @@ leaveRequestRouter.get('/', identifyUser, async (req, res) => {
     try{
       const leaveRequests = await prisma.leaveRequest.findMany({});
       console.log(leaveRequests);
-      res.json(leaveRequests);
+      res.status(200).json(leaveRequests);
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: 'Failed to fetch leave requests' });

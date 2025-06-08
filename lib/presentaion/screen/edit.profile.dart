@@ -41,7 +41,9 @@ class _EditProfileState extends ConsumerState<EditProfile> {
 
   @override
   Widget build(BuildContext context) {
+    
     final user = ref.watch(userNotifierProvider);
+    
     const avatarRadius = 40.0;
     if (user == null) {
       return const Scaffold(

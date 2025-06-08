@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:staffsync/domain/model/notification.model.dart';
 import 'package:staffsync/domain/model/user.model.dart';
 import 'package:staffsync/domain/repositories/auth.repository.dart';
 import 'package:staffsync/domain/repositories/user.repository.dart';
@@ -34,6 +35,25 @@ class UserNotifier extends StateNotifier<User?> {
     }
   
   }
-    
+    Future<List<NotificationModel>> getNotificationMessage() async{
+    try {
+      List<NotificationModel> list = await userRepository.getNotificationMessage();
+      return list;
+    }
+     catch (e) {
+      print('DioError in addHoliday');
+      throw Exception('Can not edit profile!');
+    }
+  
+
+  }
+  Future<void> deleteNotification() async {
+    try {
+      await userRepository.deleteNotification();
+    }catch(e) {
+      print('DioError in delete notification');
+      throw Exception('Can not delete notification!');
+    }
+  }
 
 }

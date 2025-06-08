@@ -16,4 +16,5 @@ abstract class AuthRepository {
   Future<String?> getId();
   Future<String?> getRole();
   Future<void> clearData();
+  Future<void> connectToIO();
 }

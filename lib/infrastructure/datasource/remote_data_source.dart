@@ -1,7 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:staffsync/domain/model/holiday.model.dart';
+import 'package:staffsync/domain/model/notification.model.dart';
 import 'package:staffsync/domain/model/user.model.dart';
 import 'package:staffsync/infrastructure/storage/storage.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 class RemoteDataSource {
   final Dio dio;
@@ -251,4 +253,57 @@ class RemoteDataSource {
     }
   
   }
+  Future<void> connectToSocket(String token) async{
+    IO.Socket socket = IO.io('http://localhost:9955',  IO.OptionBuilder()
+        .setTransports(<String>['websocket']) 
+        .enableAutoConnect()
+        .setAuth({'token': token})    
+        .build(),
+  );
+   socket.connect();
+   socket.on('leaveRequestUpdated', (data) {
+    print('Leave Request Notification: $data');
+    // You can trigger UI update or show notification
+  });
+  socket.onConnect((_) {
+    print('Socket connected: ${socket.id}');
+  });
+
+  }
+  Future<List<NotificationModel>> getNotificationMessage(String? token) async {
+    try {
+      final response = await dio.get(
+        'http://localhost:3000/api/notification',
+        options: Options(headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        }),
+      );
+
+      final data = response.data as List<dynamic>;
+      return data.map((json) => NotificationModel.fromJson(json)).toList();
+    } on DioException catch (e) {
+      final error = e.response?.data;
+      throw Exception('Failed to retrieve messages: ${error['message']}');
+    }
+  }
+  Future<void> deleteNotification(
+   String token
+  ) async {
+    try {
+      await dio.delete(
+        'http://localhost:3000/api/notification', options:
+        Options(headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        }), 
+       
+      );
+    } on DioException catch (e) {
+      print('Cant delete the notification: ${e.response?.data}');
+      final error = e.response?.data;
+      throw Exception(error["message"] ?? 'Deletion Failed failed!');
+    }
+  }
+  
 }

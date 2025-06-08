@@ -157,7 +157,7 @@ class _LeaveTabState extends ConsumerState<LeaveTab> {
                     IconButton(
                       icon: const Icon(Icons.check, color: Colors.green),
                       onPressed: () {
-                        // Call notifier to approve
+          
                         ref
                             .read(leaveRequestNotifierProvider.notifier)
                             .updateLeaveRequest(request.id, 'APPROVED');
@@ -166,7 +166,7 @@ class _LeaveTabState extends ConsumerState<LeaveTab> {
                     IconButton(
                       icon: const Icon(Icons.close, color: Colors.red),
                       onPressed: () {
-                        // Call notifier to reject
+         
                         ref
                             .read(leaveRequestNotifierProvider.notifier)
                             .updateLeaveRequest(request.id, 'REJECTED');
@@ -181,7 +181,7 @@ class _LeaveTabState extends ConsumerState<LeaveTab> {
                           ? Colors.green
                           : request.status == 'CANCELLED'
                           ? Colors.red
-                          : Colors.orange, // Should not be pending here
+                          : Colors.orange, 
                 ),
       ),
     );
