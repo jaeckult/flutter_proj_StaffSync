@@ -15,9 +15,13 @@ class LeaveRequestRemoteDatasourceImpl
   ) async {
     try {
       final response = await dio.get(
-        "http://localhost:3000/api/leaveRequest",
-        options: Options(headers: {"Authorization": "Bearer $token",  "Content-Type": "application/json",}),
-       
+        "http://$endpoint:3000/api/leaveRequest",
+        options: Options(
+          headers: {
+            "Authorization": "Bearer $token",
+            "Content-Type": "application/json",
+          },
+        ),
       );
 
       if (response.statusCode == 200) {
@@ -41,7 +45,7 @@ class LeaveRequestRemoteDatasourceImpl
   ) async {
     try {
       final response = await dio.post(
-        "http://localhost:3000/api/leaveRequest",
+        "http://$endpoint:3000/api/leaveRequest",
         options: Options(
           headers: {
             "Authorization": "Bearer $token",
@@ -62,17 +66,22 @@ class LeaveRequestRemoteDatasourceImpl
   }
 
   @override
-  Future<void> updateLeaveRequest(int id, String status, String token, String endpoint) async {
+  Future<void> updateLeaveRequest(
+    int id,
+    String status,
+    String token,
+    String endpoint,
+  ) async {
     try {
       final response = await dio.patch(
-        "http://localhost:3000/api/leaveRequest/$id",
+        "http://$endpoint:3000/api/leaveRequest/$id",
         options: Options(
           headers: {
             "Authorization": "Bearer $token",
             "Content-Type": "application/json",
           },
         ),
-        data: { 'status': status },
+        data: {'status': status},
       );
 
       if (response.statusCode != 200) {

@@ -1,147 +1,170 @@
-
 import 'package:staffsync/application/providers/providers.dart';
 import 'package:staffsync/domain/model/notification.model.dart';
 import 'package:staffsync/domain/model/user.model.dart';
 import 'package:staffsync/domain/repositories/user.repository.dart';
 import 'package:staffsync/infrastructure/datasource/remote_data_source.dart';
+import 'package:staffsync/infrastructure/storage/storage.dart';
+
 class UserRepositoryImpl implements UserRepository {
   final RemoteDataSource remoteDataSource;
-  UserRepositoryImpl(this.remoteDataSource);
+  final SecureStorage secureStorage;
+
+  UserRepositoryImpl(this.remoteDataSource, this.secureStorage);
 
   @override
-  Future<User> getCurrUser(int id) async {
+  Future<User> getCurrUser(int id, String endpoint) async {
     try {
-     
-      final data = await remoteDataSource.getCurrUser(id);
+      final data = await remoteDataSource.getCurrUser(id, endpoint);
       return User.fromJson(data);
-
-    }
-    catch(e) {
-      
-      if (e is Exception){
+    } catch(e) {
+      if (e is Exception) {
         rethrow;
       }
       throw Exception(e.toString());
     }
-
-
-    
-   
   }
   
   @override
   Future<List<User>> getEmployees(String token) async {
     try {
-      
-      final data = await remoteDataSource.getUsers(token);
+      final endpoint = await secureStorage.read("endpoint");
+      if (endpoint == null) {
+        throw Exception('Endpoint not configured');
+      }
+      final data = await remoteDataSource.getUsers(token, endpoint);
       return data;
-    }
-    catch(e) {
+    } catch(e) {
       if (e is Exception) {
-       
         rethrow;
-
-      }
-      else {
-        
-        throw Exception("Can't retrive user infromation");
+      } else {
+        throw Exception("Can't retrieve user information");
       }
     }
-    
   }
+
   @override
   Future<void> deleteEmployee(int id, String token) async {
     try {
-      await remoteDataSource.deleteUser(id, token);
-    }
-    catch(e) {
+      final endpoint = await secureStorage.read("endpoint");
+      if (endpoint == null) {
+        throw Exception('Endpoint not configured');
+      }
+      await remoteDataSource.deleteUser(id, token, endpoint);
+    } catch(e) {
       if (e is Exception) {
         rethrow;
-      }
-      else {
+      } else {
         throw Exception("Can't delete user");
       }
     }
   }
 
-  
-    @override
-    Future<void> editProfile(int id, 
+  @override
+  Future<void> editProfile(
+    int id, 
     String fullName, 
     String designation, 
-    String email, String employmentType, String? profilePicture) async {
-      final data = await remoteDataSource.editProfile(id,
-        fullName, designation, email, employmentType, profilePicture
+    String email, 
+    String employmentType, 
+    String? profilePicture
+  ) async {
+    try {
+      final endpoint = await secureStorage.read("endpoint");
+      if (endpoint == null) {
+        throw Exception('Endpoint not configured');
+      }
+      await remoteDataSource.editProfile(
+        id,
+        fullName,
+        designation,
+        email,
+        employmentType,
+        profilePicture,
+        endpoint
       );
-    
-    }@override
-Future<List<NotificationModel>> getNotificationMessage() async {
-  try {
-    final token = await authRepository.getToken();
-    
-    if (token != null) {
-      final data = await remoteDataSource.getNotificationMessage(token);
-      return data;
-    } else {
-      throw Exception("Token is null");
-    }
-
-  } catch (e) {
-    if (e is Exception) {
-      rethrow;
-    } else {
-      throw Exception("Can't retrieve notification messages");
+    } catch (e) {
+      if (e is Exception) {
+        rethrow;
+      }
+      throw Exception("Can't edit profile");
     }
   }
-}
- @override
-  Future<void> deleteNotification() async {
-  try {
-    final token = await authRepository.getToken();
-    
-    if (token != null) {
-      await remoteDataSource.deleteNotification(token);
-
-    } else {
-      throw Exception("Token is null");
-    }
-
-  } catch (e) {
-    if (e is Exception) {
-      rethrow;
-    } else {
-      throw Exception("Can't delete notification messages");
-    }
-  }
-  
-}
 
   @override
-  Future<void> changePassword(String oldPassword, String newPassword) async{
+  Future<List<NotificationModel>> getNotificationMessage() async {
     try {
-    final token = await authRepository.getToken();
-    final userId = await authRepository.getId();
+      final token = await secureStorage.read("token");
+      final endpoint = await secureStorage.read("endpoint");
+      if (endpoint == null) {
+        throw Exception('Endpoint not configured');
+      }
+      
+      if (token != null) {
+        final data = await remoteDataSource.getNotificationMessage(token, endpoint);
+        return data;
+      } else {
+        throw Exception("Token is null");
+      }
+    } catch (e) {
+      if (e is Exception) {
+        rethrow;
+      } else {
+        throw Exception("Can't retrieve notification messages");
+      }
+    }
+  }
+
+  @override
+  Future<void> deleteNotification() async {
+    try {
+      final token = await secureStorage.read("token");
+      final endpoint = await secureStorage.read("endpoint");
+      if (endpoint == null) {
+        throw Exception('Endpoint not configured');
+      }
+      
+      if (token != null) {
+        await remoteDataSource.deleteNotification(token, endpoint);
+      } else {
+        throw Exception("Token is null");
+      }
+    } catch (e) {
+      if (e is Exception) {
+        rethrow;
+      } else {
+        throw Exception("Can't delete notification messages");
+      }
+    }
+  }
+
+  @override
+  Future<void> changePassword(String oldPassword, String newPassword) async {
+    try {
+      final token = await secureStorage.read("token");
+      final userId = await secureStorage.read("id");
+      final endpoint = await secureStorage.read("endpoint");
+      if (endpoint == null) {
+        throw Exception('Endpoint not configured');
+      }
    
-    
-    
-    if (token != null && userId != null) {
-      final castedId = int.parse(userId);
-      await remoteDataSource.changePassword(userId: castedId, oldPassword: oldPassword, newPassword: newPassword, token: token);
-
-    } else {
-      throw Exception("Token or id is null");
-    }
-
-  } catch (e) {
-    if (e is Exception) {
-      rethrow;
-    } else {
-      throw Exception("Can't change password");
+      if (token != null && userId != null) {
+        final castedId = int.parse(userId);
+        await remoteDataSource.changePassword(
+          userId: castedId,
+          oldPassword: oldPassword,
+          newPassword: newPassword,
+          token: token,
+          endpoint: endpoint
+        );
+      } else {
+        throw Exception("Token or id is null");
+      }
+    } catch (e) {
+      if (e is Exception) {
+        rethrow;
+      } else {
+        throw Exception("Can't change password");
+      }
     }
   }
-  
-
-    
-  }
-
 }

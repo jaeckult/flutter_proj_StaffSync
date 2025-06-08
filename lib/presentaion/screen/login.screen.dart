@@ -95,7 +95,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   width: 300,
                   color: Colors.grey,
                   child: const Image(
-                    image: AssetImage('login_illustration.png'),
+                    image: AssetImage('assets/login_illustration.png'),
                     fit: BoxFit.cover,
                   ),
                 ),

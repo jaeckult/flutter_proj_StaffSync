@@ -11,7 +11,7 @@ class AttendanceRemoteDatasourceImpl implements IAttendanceRemoteDatasourceImpl 
   Future<List<Attendance>> fetchAttendances(String token, String endpoint) async {
     try {
       final response = await dio.get(
-        'http://localhost:3000/api/attendance', 
+        'http://$endpoint:3000/api/attendance', 
         options: Options(
           headers: {
             'Authorization': 'Bearer $token',
@@ -35,7 +35,7 @@ class AttendanceRemoteDatasourceImpl implements IAttendanceRemoteDatasourceImpl 
   ) async {
     try {
       await dio.post(
-        'http://localhost:3000/api/attendance/check-in', // or use endpoint if dynamic
+        'http://$endpoint:3000/api/attendance/check-in', // or use endpoint if dynamic
         options: Options(
           headers: {
             'Authorization': 'Bearer $token',
@@ -56,7 +56,7 @@ class AttendanceRemoteDatasourceImpl implements IAttendanceRemoteDatasourceImpl 
   ) async {
     try {
       await dio.post(
-        'http://localhost:3000/api/attendance/check-out', // or use endpoint if dynamic
+        'http://$endpoint:3000/api/attendance/check-out', // or use endpoint if dynamic
         options: Options(
           headers: {
             'Authorization': 'Bearer $token',

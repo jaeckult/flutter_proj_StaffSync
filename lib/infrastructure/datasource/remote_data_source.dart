@@ -17,10 +17,11 @@ class RemoteDataSource {
   Future<Map<String, dynamic>> logIn(
     String username,
     String password,
+    String endpoint,
   ) async {
     try {
       final response = await dio.post(
-        'http://localhost:3000/api/login',
+        'http://$endpoint:3000/api/login',
         data: {
           "username": username,
           "password": password,
@@ -54,7 +55,7 @@ class RemoteDataSource {
   ) async {
     try {
       final response = await dio.post(
-        'http://localhost:3000/api/signup',
+        'http://$endpoint:3000/api/signup',
         data: {
           "username": username,
           "password": password,
@@ -81,10 +82,10 @@ class RemoteDataSource {
     }
   }
 
-  Future<Map<String, dynamic>> getCurrUser(int id) async {
+  Future<Map<String, dynamic>> getCurrUser(int id, String endpoint) async {
     try {
       final response = await dio.get(
-        'http://localhost:3000/api/users/$id',
+        'http://$endpoint:3000/api/users/$id',
         options: Options(headers: {"Content-Type": "application/json"}),
       );
 
@@ -95,10 +96,10 @@ class RemoteDataSource {
     }
   }
 
-  Future<void> checkIn(String token) async {
+  Future<void> checkIn(String token, String endpoint) async {
     try {
       await dio.post(
-        'http://localhost:3000/api/attendance/check-in',
+        'http://$endpoint:3000/api/attendance/check-in',
         options: Options(headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -110,10 +111,10 @@ class RemoteDataSource {
     }
   }
 
-  Future<List<User>> getUsers(String token) async {
+  Future<List<User>> getUsers(String token, String endpoint) async {
     try {
       final response = await dio.get(
-        'http://localhost:3000/api/users/employees/',
+        'http://$endpoint:3000/api/users/employees/',
         options: Options(headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -128,10 +129,10 @@ class RemoteDataSource {
     }
   }
 
-  Future<void> logout(String? token) async {
+  Future<void> logout(String? token, String endpoint) async {
     try {
       final response = await dio.post(
-        'http://localhost:3000/api/logout/',
+        'http://$endpoint:3000/api/logout/',
         data: {'token': token},
         options: Options(headers: {
           'Authorization': 'Bearer $token',
@@ -149,49 +150,44 @@ class RemoteDataSource {
     }
   }
 
-
-Future<void> changePassword({
-  required int userId,
-  required String oldPassword,
-  required String newPassword,
-  required String token, 
-}) async {
-  final dio = Dio();
-
-  try {
-    final response = await dio.patch(
-      'http://localhost:3000/api/users/$userId', 
-      data: {
-        'oldPassword': oldPassword,
-        'newPassword': newPassword,
-      },
-      options: Options(
-        headers: {
-          'Authorization': 'Bearer $token', 
-          'Content-Type': 'application/json',
+  Future<void> changePassword({
+    required int userId,
+    required String oldPassword,
+    required String newPassword,
+    required String token,
+    required String endpoint,
+  }) async {
+    try {
+      final response = await dio.post(
+        'http://$endpoint:3000/api/change-password',
+        data: {
+          'userId': userId,
+          'oldPassword': oldPassword,
+          'newPassword': newPassword,
         },
-      ),
-    );
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },
+        ),
+      );
 
-    if (response.statusCode == 200) {
-      print('Password updated successfully: ${response.data}');
-    } else {
-      print('Failed to update password: ${response.statusMessage}');
-    }
-  } on DioException catch (e) {
-    if (e.response != null) {
-      print('Error response: ${e.response?.data}');
-    } else {
-      print('Dio error: ${e.message}');
+      if (response.statusCode == 200) {
+        print('Password changed successfully');
+      } else {
+        throw Exception('Failed to change password');
+      }
+    } on DioException catch (e) {
+      final error = e.response?.data;
+      throw Exception(error["message"] ?? 'Failed to change password');
     }
   }
-}
 
-
-  Future<void> deleteUser(int id, String token) async {
+  Future<void> deleteUser(int id, String token, String endpoint) async {
     try {
       final response = await dio.delete(
-        'http://localhost:3000/api/users/$id',
+        'http://$endpoint:3000/api/users/$id',
         options: Options(
           headers: {
             'Authorization': 'Bearer $token',
@@ -215,10 +211,10 @@ Future<void> changePassword({
     }
   }
 
-  Future<List<Holiday>> getHolidayList() async {
+  Future<List<Holiday>> getHolidays(String token, String endpoint) async {
     try {
       final response = await dio.get(
-        'http://localhost:3000/api/holiday',
+        'http://$endpoint:3000/api/holiday',
         options: Options(headers: {"Content-Type": "application/json"}),
       );
 
@@ -229,16 +225,18 @@ Future<void> changePassword({
       throw Exception(error["message"] ?? 'Fetching holidays failed!');
     }
   }
+
   Future<void> addHoliday(
     String title,
     String startDate,
     String endDate,
     String description,
     int createdById,
+    String endpoint,
   ) async {
     try {
       await dio.post(
-        'http://localhost:3000/api/holiday',
+        'http://$endpoint:3000/api/holiday',
         data: {
           "title": title,
           "startDate": startDate,
@@ -253,66 +251,65 @@ Future<void> changePassword({
       throw Exception(error["message"] ?? 'Adding holiday failed!');
     }
   }
-  Future<void> editProfile
-  (int id, 
-  String fullName, 
-  String designation, 
-  String email, String employmentType, String? profilePicture) async{
+
+  Future<void> editProfile(
+    int id,
+    String fullName,
+    String designation,
+    String email,
+    String employmentType,
+    String? profilePicture,
+    String endpoint,
+  ) async {
     final token = await SecureStorage.instance.read("token");
     try {
-     
       final response = await dio.patch(
-        'http://localhost:3000/api/profile/${id}', 
-         options: Options(
+        'http://$endpoint:3000/api/profile/${id}',
+        options: Options(
           headers: {
             'Authorization': 'Bearer $token',
             'Content-Type': 'application/json',
           },
         ),
-       
         data: {
-
           "employmentType": employmentType,
           "email": email,
           "fullName": fullName,
           "designation": designation,
           "profilePicture": profilePicture ?? ''
-
-        
         },
-       
-        );
-        
+      );
       print('Profile updated: ${response.data}');
-    }
-    on DioException catch (e) {
+    } on DioException catch (e) {
       print(e);
       final error = e.response?.data;
       throw Exception(error["message"] ?? 'Can not edit profile!');
     }
-  
   }
-  Future<void> connectToSocket(String token) async{
-    IO.Socket socket = IO.io('http://localhost:9955',  IO.OptionBuilder()
-        .setTransports(<String>['websocket']) 
-        .enableAutoConnect()
-        .setAuth({'token': token})    
-        .build(),
-  );
-   socket.connect();
-   socket.on('leaveRequestUpdated', (data) {
-    print('Leave Request Notification: $data');
-    // You can trigger UI update or show notification
-  });
-  socket.onConnect((_) {
-    print('Socket connected: ${socket.id}');
-  });
 
+  Future<void> connectToSocket(String token, String endpoint) async {
+    IO.Socket socket = IO.io(
+      'http://$endpoint:9955',
+      IO.OptionBuilder()
+          .setTransports(<String>['websocket'])
+          .enableAutoConnect()
+          .setAuth({'token': token})
+          .build(),
+    );
+    socket.connect();
+    socket.on('leaveRequestUpdated', (data) {
+      print('Leave Request Notification: $data');
+      // You can trigger UI update or show notification
+    });
+    socket.onConnect((_) {
+      print('Socket connected: ${socket.id}');
+    });
   }
-  Future<List<NotificationModel>> getNotificationMessage(String? token) async {
+
+  Future<List<NotificationModel>> getNotificationMessage(String? token, String endpoint) async {
     try {
       final response = await dio.get(
-        'http://localhost:3000/api/notification',
+        'http://$endpoint:3000/api/notification',
         options: Options(headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -326,17 +323,15 @@ Future<void> changePassword({
       throw Exception('Failed to retrieve messages: ${error['message']}');
     }
   }
-  Future<void> deleteNotification(
-   String token
-  ) async {
+
+  Future<void> deleteNotification(String token, String endpoint) async {
     try {
       await dio.delete(
-        'http://localhost:3000/api/notification', options:
-        Options(headers: {
+        'http://$endpoint:3000/api/notification',
+        options: Options(headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
-        }), 
-       
+        }),
       );
     } on DioException catch (e) {
       print('Cant delete the notification: ${e.response?.data}');
@@ -344,5 +339,4 @@ Future<void> changePassword({
       throw Exception(error["message"] ?? 'Deletion Failed failed!');
     }
   }
-  
 }

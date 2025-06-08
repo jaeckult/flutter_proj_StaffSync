@@ -1,69 +1,103 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:staffsync/application/providers/providers.dart';
 import 'package:go_router/go_router.dart';
+import 'package:staffsync/application/providers/providers.dart';
+import 'package:intl/intl.dart';
+
+enum UserRole { MANAGER, EMPLOYEE }
 
 class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});
 
   @override
-  ConsumerState<SignupScreen> createState() => _SignupScreen();
+  ConsumerState<SignupScreen> createState() => _SignupScreenState();
 }
 
-class _SignupScreen extends ConsumerState<SignupScreen> {
+class _SignupScreenState extends ConsumerState<SignupScreen> {
   final _formKey = GlobalKey<FormState>();
+  int _currentStep = 0;
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _emailController = TextEditingController();
-  final _fullNameController = TextEditingController();
+  final _fullnameController = TextEditingController();
   final _genderController = TextEditingController();
   final _employmentTypeController = TextEditingController();
   final _designationController = TextEditingController();
-  final _dateOfBirthController = TextEditingController();
-  final _roleController = TextEditingController();
-  bool _isLoading = false;
-  bool _obscurePassword = true;
-  int _currentStep = 0;
+  DateTime? _dateOfBirth;
+  UserRole _selectedRole = UserRole.EMPLOYEE;
 
   @override
   void dispose() {
     _usernameController.dispose();
     _passwordController.dispose();
     _emailController.dispose();
-    _fullNameController.dispose();
+    _fullnameController.dispose();
     _genderController.dispose();
     _employmentTypeController.dispose();
     _designationController.dispose();
-    _dateOfBirthController.dispose();
-    _roleController.dispose();
     super.dispose();
   }
 
-  Future<void> _handleSignup() async {
-    if (_formKey.currentState!.validate()) {
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _dateOfBirth ?? DateTime.now(),
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null && picked != _dateOfBirth) {
       setState(() {
-        _isLoading = true;
+        _dateOfBirth = picked;
       });
+    }
+  }
+
+  String? _validateEmail(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Email is required';
+    }
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegex.hasMatch(value)) {
+      return 'Please enter a valid email';
+    }
+    return null;
+  }
+
+  String? _validatePassword(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Password is required';
+    }
+    if (value.length < 6) {
+      return 'Password must be at least 6 characters';
+    }
+    return null;
+  }
+
+  void _handleSignup() async {
+    if (_formKey.currentState!.validate()) {
+      if (_dateOfBirth == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please select a date of birth')),
+        );
+        return;
+      }
 
       try {
-        final authNotifier = ref.read(authNotifierProvider.notifier);
-        await authNotifier.signup(
-          _usernameController.text,
-          _passwordController.text,
-          _emailController.text,
-          _fullNameController.text,
-          _genderController.text,
-          _employmentTypeController.text,
-          _designationController.text,
-          _dateOfBirthController.text,
-          _roleController.text,
-        );
-
+        await ref
+            .read(authNotifierProvider.notifier)
+            .signup(
+              _usernameController.text,
+              _passwordController.text,
+              _emailController.text,
+              _fullnameController.text,
+              _genderController.text,
+              _employmentTypeController.text,
+              _designationController.text,
+              _dateOfBirth!.toIso8601String(),
+              _selectedRole.name,
+            );
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Successfully signed up!')),
-          );
-          context.go('/');
+          context.go('/login');
         }
       } catch (e) {
         if (mounted) {
@@ -71,32 +105,7 @@ class _SignupScreen extends ConsumerState<SignupScreen> {
             context,
           ).showSnackBar(SnackBar(content: Text(e.toString())));
         }
-      } finally {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-        }
       }
-    }
-  }
-
-  void _stepTapped(int step) {
-    setState(() => _currentStep = step);
-  }
-
-  void _stepContinue() {
-    if (_currentStep < 8) {
-      setState(() => _currentStep += 1);
-    } else {
-    
-      _handleSignup();
-    }
-  }
-
-  void _stepCancel() {
-    if (_currentStep > 0) {
-      setState(() => _currentStep -= 1);
     }
   }
 
@@ -107,355 +116,361 @@ class _SignupScreen extends ConsumerState<SignupScreen> {
         children: [
           const Expanded(
             child: Image(
-              image: AssetImage('signup_illustration.png'),
+              image: AssetImage('assets/signup_illustration.png'),
               fit: BoxFit.cover,
             ),
           ),
           Expanded(
             child: Form(
               key: _formKey,
-              
-              child:
-            
-               Stepper(
-                margin: const EdgeInsets.all(20),
-                type: StepperType.horizontal,
-                controlsBuilder:
-                    (context, details) => Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-
-                      children: [
-                        if (_currentStep != 0 )
-                          Container(
-                          alignment: Alignment.center,
-                          margin: const EdgeInsets.symmetric(vertical: 20),
-                          child: ElevatedButton(
-                            onPressed:
-                                _isLoading ? null : details.onStepContinue,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color.fromARGB(
-                                255,
-                                232,
-                                117,
-                                35,
-                              ),
-                            ),
-                            child:
-                                _isLoading
-                                    ? const CircularProgressIndicator(
-                                      color: Colors.white,
-                                    )
-                                    : Text(
-                                      _currentStep == 8
-                                          ? 'Sign Up'
-                                          : 'Continue',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        if (_currentStep != 0 )
- 
+              child: Theme(
+                data: Theme.of(context).copyWith(
+                  colorScheme: ColorScheme.light(
+                    primary: Colors.deepOrange,
+                    secondary: Colors.deepOrange,
+                  ),
+                ),
+                child: Stepper(
+                  margin: const EdgeInsets.all(20),
+                  type: StepperType.horizontal,
+                  controlsBuilder: (context, details) => Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      if (_currentStep != 0)
                         Container(
                           alignment: Alignment.center,
                           margin: const EdgeInsets.symmetric(vertical: 20),
                           child: ElevatedButton(
-                            onPressed: _isLoading ? null : details.onStepCancel,
+                            onPressed: details.onStepCancel,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color.fromARGB(
-                                255,
-                                232,
-                                117,
-                                35,
+                              backgroundColor: Colors.grey[300],
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 12,
                               ),
                             ),
                             child: const Text(
                               'Back',
-                              style: TextStyle(color: Colors.white),
+                              style: TextStyle(color: Color.fromARGB(255, 88, 84, 84)),
                             ),
                           ),
                         ),
-                        
-                        
-                      ],
-                    ),
-                physics: const ScrollPhysics(),
-                currentStep: _currentStep,
-                onStepTapped: _stepTapped,
-                onStepContinue: _stepContinue,
-                onStepCancel: _stepCancel,
-                steps: [
-                  Step(
-                    stepStyle: StepStyle(color: Colors.orange[700]),
-                    title: const Text("Role"),
-                  
-                    content: 
-                    Column( 
-                      children: [
-                        Center(
-                          child: Container(child:
-                            Row(
-                            children: [
-                              ElevatedButton(
-                                onPressed: _isLoading ? null : () {
-                                  _roleController.text="MANAGER";
-                                 
-                                  _stepContinue();
-
-                                }, 
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color.fromARGB(255, 232, 117, 35),
-                                ),
-                                child: _isLoading
-                                    ? const CircularProgressIndicator(color: Colors.white)
-                                    : const Text(
-                                        'Manager',
-                                        style: TextStyle(color: Colors.white),
-                                      ),
-                              ),
-                              const SizedBox(width: 16),
-
-                              ElevatedButton(
-                                onPressed: _isLoading ? null : () {
-                                  _roleController.text="EMPLOYEE";
-                                
-                                  _stepContinue();
-                                  
-                                }, 
-                                  style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color.fromARGB(255, 232, 117, 35),
-                                ),
-                                child: _isLoading
-                                    ? const CircularProgressIndicator(color: Colors.white)
-                                    : const Text(
-                                        'Employee',
-                                        style: TextStyle(color: Colors.white),
-                                      ),
-                              ),
-                            ],
-                          )
-                        ))
-                    
-                  ],
-
-                      
-                  ),
-                   isActive: _currentStep >= 0,
-                    state:
-                        _currentStep > 0
-                            ? StepState.complete
-                            : StepState.indexed,
-                  ),
-                  Step(
-
-                    stepStyle: StepStyle(color: Colors.orange[700]),
-                    title: const Text('Username'),
-                    content: TextFormField(
-                      controller: _usernameController,
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(gapPadding: 4.0),
-                        hintText: 'Enter your username',
-                        prefixIcon: Icon(Icons.person),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your username';
-                        }
-                        return null;
-                      },
-                    ),
-
-                    isActive: _currentStep >= 1,
-                    state:
-                        _currentStep > 1
-                            ? StepState.complete
-                            : StepState.indexed,
-                  ),
-                  Step(
-                    title: const Text('Email'),
-                    stepStyle: StepStyle(color: Colors.orange[700]),
-                    content: TextFormField(
-                      controller: _emailController,
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        hintText: 'Enter your email',
-                        prefixIcon: Icon(Icons.email),
-                      ),
-                      keyboardType: TextInputType.emailAddress,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your email';
-                        }
-                        if (!value.contains('@')) {
-                          return 'Please enter a valid email';
-                        }
-                        return null;
-                      },
-                    ),
-                    isActive: _currentStep >= 1,
-                    state:
-                        _currentStep > 1
-                            ? StepState.complete
-                            : StepState.indexed,
-                  ),
-                  Step(
-                    title: const Text('Full Name'),
-                    stepStyle: StepStyle(color: Colors.orange[700]),
-                    content: TextFormField(
-                      controller: _fullNameController,
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        hintText: 'Enter your full name',
-                        prefixIcon: Icon(Icons.person_outline),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your full name';
-                        }
-                        return null;
-                      },
-                    ),
-                    isActive: _currentStep >= 3,
-                    state:
-                        _currentStep > 3
-                            ? StepState.complete
-                            : StepState.indexed,
-                  ),
-                  Step(
-                    title: const Text('Gender'),
-                    stepStyle: StepStyle(color: Colors.orange[700]),
-                    content: TextFormField(
-                      controller: _genderController,
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        hintText: 'Enter your gender',
-                        prefixIcon: Icon(Icons.people),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your gender';
-                        }
-                        return null;
-                      },
-                    ),
-                    isActive: _currentStep >= 4,
-                    state:
-                        _currentStep > 4
-                            ? StepState.complete
-                            : StepState.indexed,
-                  ),
-                  Step(
-                    title: const Text('Employment Type'),
-                    stepStyle: StepStyle(color: Colors.orange[700]),
-                    content: TextFormField(
-                      controller: _employmentTypeController,
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        hintText: 'Enter your employment type',
-                        prefixIcon: Icon(Icons.work),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your employment type';
-                        }
-                        return null;
-                      },
-                    ),
-                    isActive: _currentStep >= 5,
-                    state:
-                        _currentStep > 5
-                            ? StepState.complete
-                            : StepState.indexed,
-                  ),
-                  Step(
-                    title: const Text('Designation'),
-                    stepStyle: StepStyle(color: Colors.orange[700]),
-                    content: TextFormField(
-                      controller: _designationController,
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        hintText: 'Enter your designation',
-                        prefixIcon: Icon(Icons.badge),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your designation';
-                        }
-                        return null;
-                      },
-                    ),
-                    isActive: _currentStep >= 6,
-                    state:
-                        _currentStep > 6
-                            ? StepState.complete
-                            : StepState.indexed,
-                  ),
-                  Step(
-                    title: const Text('Date of Birth'),
-                    stepStyle: StepStyle(color: Colors.orange[700]),
-                    content: TextFormField(
-                      controller: _dateOfBirthController,
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        hintText: 'Enter your date of birth',
-                        prefixIcon: Icon(Icons.calendar_today),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter your date of birth';
-                        }
-                        return null;
-                      },
-                    ),
-                    isActive: _currentStep >= 7,
-                    state:
-                        _currentStep > 7
-                            ? StepState.complete
-                            : StepState.indexed,
-                  ),
-                  Step(
-                    title: const Text('Password'),
-                    stepStyle: StepStyle(color: Colors.orange[700]),
-                    content: TextFormField(
-                      controller: _passwordController,
-                      decoration: InputDecoration(
-                        border: const OutlineInputBorder(),
-                        hintText: 'Enter your password',
-                        prefixIcon: const Icon(Icons.lock),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePassword
-                                ? Icons.visibility
-                                : Icons.visibility_off,
+                      Container(
+                        alignment: Alignment.center,
+                        margin: const EdgeInsets.symmetric(vertical: 20),
+                        child: ElevatedButton(
+                          onPressed: _currentStep == 2 ? _handleSignup : details.onStepContinue,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.deepOrange,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 12,
+                            ),
                           ),
-                          onPressed: () {
-                            setState(() {
-                              _obscurePassword = !_obscurePassword;
-                            });
-                          },
+                          child: Text(
+                            _currentStep == 2 ? 'Sign Up' : 'Next',
+                            style: const TextStyle(color: Colors.white),
+                          ),
                         ),
                       ),
-                      obscureText: _obscurePassword,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter a password';
-                        }
-                        if (value.length < 6) {
-                          return 'Password must be at least 6 characters';
-                        }
-                        return null;
-                      },
-                    ),
-                    isActive: _currentStep >= 8,
-                    state:
-                        _currentStep > 8
-                            ? StepState.complete
-                            : StepState.indexed,
+                    ],
                   ),
-                ],
+                  currentStep: _currentStep,
+                  onStepContinue: () {
+                    if (_currentStep < 2) {
+                      setState(() {
+                        _currentStep += 1;
+                      });
+                    }
+                  },
+                  onStepCancel: () {
+                    if (_currentStep > 0) {
+                      setState(() {
+                        _currentStep -= 1;
+                      });
+                    }
+                  },
+                  steps: [
+                    Step(
+                      title: const Text('Account'),
+                      content: Column(
+                        children: [
+                          const Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'Username',
+                              style: TextStyle(fontSize: 14, color: Colors.grey),
+                            ),
+                          ),
+                          TextFormField(
+                            controller: _usernameController,
+                            decoration: InputDecoration(
+                              border: const OutlineInputBorder(),
+                              hintText: 'Enter your username',
+                              prefixIcon: const Icon(Icons.person),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.deepOrange),
+                              ),
+                              focusColor: Colors.deepOrange,
+                            ),
+                            validator:
+                                (value) =>
+                                    value == null || value.isEmpty
+                                        ? 'Username is required'
+                                        : null,
+                          ),
+                          const SizedBox(height: 10),
+                          const Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'Password',
+                              style: TextStyle(fontSize: 14, color: Colors.grey),
+                            ),
+                          ),
+                          TextFormField(
+                            controller: _passwordController,
+                            decoration: InputDecoration(
+                              border: const OutlineInputBorder(),
+                              hintText: 'Enter your password',
+                              prefixIcon: const Icon(Icons.lock),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.deepOrange),
+                              ),
+                              focusColor: Colors.deepOrange,
+                            ),
+                            obscureText: true,
+                            validator: _validatePassword,
+                          ),
+                          const SizedBox(height: 10),
+                          const Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'Email',
+                              style: TextStyle(fontSize: 14, color: Colors.grey),
+                            ),
+                          ),
+                          TextFormField(
+                            controller: _emailController,
+                            decoration: InputDecoration(
+                              border: const OutlineInputBorder(),
+                              hintText: 'Enter your email',
+                              prefixIcon: const Icon(Icons.email),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.deepOrange),
+                              ),
+                              focusColor: Colors.deepOrange,
+                            ),
+                            validator: _validateEmail,
+                          ),
+                        ],
+                      ),
+                      isActive: _currentStep >= 0,
+                    ),
+                    Step(
+                      title: const Text('Personal'),
+                      content: Column(
+                        children: [
+                          const Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'Full Name',
+                              style: TextStyle(fontSize: 14, color: Colors.grey),
+                            ),
+                          ),
+                          TextFormField(
+                            controller: _fullnameController,
+                            decoration: InputDecoration(
+                              border: const OutlineInputBorder(),
+                              hintText: 'Enter your full name',
+                              prefixIcon: const Icon(Icons.person_outline),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.deepOrange),
+                              ),
+                              focusColor: Colors.deepOrange,
+                            ),
+                            validator:
+                                (value) =>
+                                    value == null || value.isEmpty
+                                        ? 'Full name is required'
+                                        : null,
+                          ),
+                          const SizedBox(height: 10),
+                          const Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'Gender',
+                              style: TextStyle(fontSize: 14, color: Colors.grey),
+                            ),
+                          ),
+                          TextFormField(
+                            controller: _genderController,
+                            decoration: InputDecoration(
+                              border: const OutlineInputBorder(),
+                              hintText: 'Enter your gender',
+                              prefixIcon: const Icon(Icons.people),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.deepOrange),
+                              ),
+                              focusColor: Colors.deepOrange,
+                            ),
+                            validator:
+                                (value) =>
+                                    value == null || value.isEmpty
+                                        ? 'Gender is required'
+                                        : null,
+                          ),
+                          const SizedBox(height: 10),
+                          const Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'Date of Birth',
+                              style: TextStyle(fontSize: 14, color: Colors.grey),
+                            ),
+                          ),
+                          InkWell(
+                            onTap: () => _selectDate(context),
+                            child: InputDecorator(
+                              decoration: InputDecoration(
+                                border: const OutlineInputBorder(),
+                                prefixIcon: const Icon(Icons.calendar_today),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(
+                                    color: Colors.deepOrange,
+                                  ),
+                                ),
+                                focusColor: Colors.deepOrange,
+                              ),
+                              child: Text(
+                                _dateOfBirth == null
+                                    ? 'Select date of birth'
+                                    : DateFormat(
+                                      'yyyy-MM-dd',
+                                    ).format(_dateOfBirth!),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      isActive: _currentStep >= 1,
+                    ),
+                    Step(
+                      title: const Text('Work'),
+                      content: Column(
+                        children: [
+                          const Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'Employment Type',
+                              style: TextStyle(fontSize: 14, color: Colors.grey),
+                            ),
+                          ),
+                          TextFormField(
+                            controller: _employmentTypeController,
+                            decoration: InputDecoration(
+                              border: const OutlineInputBorder(),
+                              hintText: 'Enter your employment type',
+                              prefixIcon: const Icon(Icons.work),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.deepOrange),
+                              ),
+                              focusColor: Colors.deepOrange,
+                            ),
+                            validator:
+                                (value) =>
+                                    value == null || value.isEmpty
+                                        ? 'Employment type is required'
+                                        : null,
+                          ),
+                          const SizedBox(height: 10),
+                          const Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'Designation',
+                              style: TextStyle(fontSize: 14, color: Colors.grey),
+                            ),
+                          ),
+                          TextFormField(
+                            controller: _designationController,
+                            decoration: InputDecoration(
+                              border: const OutlineInputBorder(),
+                              hintText: 'Enter your designation',
+                              prefixIcon: const Icon(Icons.badge),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.deepOrange),
+                              ),
+                              focusColor: Colors.deepOrange,
+                            ),
+                            validator:
+                                (value) =>
+                                    value == null || value.isEmpty
+                                        ? 'Designation is required'
+                                        : null,
+                          ),
+                          const SizedBox(height: 10),
+                          const Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'Role',
+                              style: TextStyle(fontSize: 14, color: Colors.grey),
+                            ),
+                          ),
+                          DropdownButtonFormField<UserRole>(
+                            value: _selectedRole,
+                            decoration: InputDecoration(
+                              border: const OutlineInputBorder(),
+                              prefixIcon: const Icon(Icons.admin_panel_settings),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: Colors.deepOrange),
+                              ),
+                              focusColor: Colors.deepOrange,
+                            ),
+                            items:
+                                UserRole.values.map((role) {
+                                  return DropdownMenuItem(
+                                    value: role,
+                                    child: Text(role.name.toUpperCase()),
+                                  );
+                                }).toList(),
+                            onChanged: (UserRole? newValue) {
+                              if (newValue != null) {
+                                setState(() {
+                                  _selectedRole = newValue;
+                                });
+                              }
+                            },
+                            validator:
+                                (value) =>
+                                    value == null ? 'Please select a role' : null,
+                          ),
+                        ],
+                      ),
+                      isActive: _currentStep >= 2,
+                    ),
+                  ],
+                ),
               ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text("Already have an account?"),
+                TextButton(
+                  onPressed: () => context.go('/login'),
+                  child: const Text(
+                    'Login',
+                    style: TextStyle(color: Colors.deepOrange),
+                  ),
+                ),
+              ],
             ),
           ),
         ],

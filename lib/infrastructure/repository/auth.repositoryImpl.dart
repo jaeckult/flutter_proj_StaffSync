@@ -11,8 +11,12 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<String> logIn(String username, String password) async { 
     try {
+      final endpoint = await secureStorage.read("endpoint");
+      if (endpoint == null) {
+        throw Exception('Endpoint not configured');
+      }
      
-      final data = await remoteDataSource.logIn(username, password);
+      final data = await remoteDataSource.logIn(username, password, endpoint);
      
       final token = data["token"];
       if (token == null) {
@@ -34,17 +38,12 @@ class AuthRepositoryImpl implements AuthRepository {
 
       final email = data["email"];
       if (email == null) {
-  
         throw Exception("email not found in response");
-    
       }
       await secureStorage.write("email", email);
-     
-
 
       return role.toString();
     } catch (error) {
-    
       if (error is Exception) {
         rethrow;
       }
@@ -88,7 +87,6 @@ class AuthRepositoryImpl implements AuthRepository {
       }
       return responseRole.toString();
     } catch (error) {
-     
       if (error is Exception) {
         rethrow;
       }
@@ -100,11 +98,11 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<String?> getToken() async {
     return await secureStorage.read("token");
   } 
+
   @override
   Future<String?> getId() async {
     return await secureStorage.read("id");
   } 
- 
 
   @override
   Future<String?> getRole() async {
@@ -117,27 +115,32 @@ class AuthRepositoryImpl implements AuthRepository {
     await secureStorage.write("role", null);
     await secureStorage.write("id", null);
   }
-   @override
-    Future<void> connectToIO() async {
+
+  @override
+  Future<void> connectToIO() async {
     final String? token = await getToken();
-    if (token != null){
-      final request = await remoteDataSource.connectToSocket(token);
-      
+    final endpoint = await secureStorage.read("endpoint");
+    if (endpoint == null) {
+      throw Exception('Endpoint not configured');
     }
-    else {
+    if (token != null) {
+      await remoteDataSource.connectToSocket(token, endpoint);
+    } else {
       throw Exception("Null token unauthorized user");
     }
-    
   }
   
   @override
   Future<void> logout() async {
-  final String? token = await getToken(); // await because it likely returns a Future
-  if (token != null) {
-    await remoteDataSource.logout(token);
-  } else {
-    throw Exception("No token found.");
+    final String? token = await getToken();
+    final endpoint = await secureStorage.read("endpoint");
+    if (endpoint == null) {
+      throw Exception('Endpoint not configured');
+    }
+    if (token != null) {
+      await remoteDataSource.logout(token, endpoint);
+    } else {
+      throw Exception("No token found.");
+    }
   }
-}
-
 }

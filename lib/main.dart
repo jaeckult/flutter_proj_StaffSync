@@ -28,6 +28,10 @@ class MyApp extends StatelessWidget {
         builder: (context, state) => const LoginPage(),
       ),
       GoRoute(
+        path: '/login', 
+        builder: (context, state) => const LoginPage()
+      ),
+      GoRoute(
         path: '/signup',
         builder: (context, state) => const SignupScreen(),
       ),

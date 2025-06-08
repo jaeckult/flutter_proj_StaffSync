@@ -10,27 +10,36 @@ class HolidayRepositoryImpl implements HolidayRepository {
   HolidayRepositoryImpl(this.remoteDataSource, this.secureStorage);
   
   @override
-  Future<List<Holiday>> getHolidayList() {
+  Future<List<Holiday>> getHolidayList() async {
     try {
-       final data = remoteDataSource.getHolidayList();
-       return data;
-
-    }
-    catch(e) {
+      final token = await secureStorage.read("token");
+      final endpoint = await secureStorage.read("endpoint");
+      if (endpoint == null) {
+        throw Exception('Endpoint not configured');
+      }
+      if (token == null) {
+        throw Exception('Token not found');
+      }
+      final data = await remoteDataSource.getHolidays(token, endpoint);
+      return data;
+    } catch(e) {
       if (e is Exception) {
         rethrow;
-      }
-      else{
+      } else {
         print(e);
-         throw Exception("Can't retrive user infromation");
+        throw Exception("Can't retrieve holiday information");
       }
     }
-   
   }
+
   @override
   Future<void> addHoliday(Holiday holiday) async {
     try {
       final userIdString = await secureStorage.read('id');
+      final endpoint = await secureStorage.read("endpoint");
+      if (endpoint == null) {
+        throw Exception('Endpoint not configured');
+      }
       final createdById = int.tryParse(userIdString ?? '');
 
       if (createdById == null) {
@@ -43,6 +52,7 @@ class HolidayRepositoryImpl implements HolidayRepository {
         holiday.endDate.toIso8601String(),
         holiday.description ?? '',
         createdById,
+        endpoint,
       );
     } catch (e) {
       if (e is Exception) {
@@ -53,5 +63,4 @@ class HolidayRepositoryImpl implements HolidayRepository {
       }
     }
   }
-
- }
+}

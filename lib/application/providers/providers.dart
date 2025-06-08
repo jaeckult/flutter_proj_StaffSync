@@ -45,15 +45,25 @@ final authRepository = AuthRepositoryImpl(
   remoteDataSource,
   SecureStorage.instance,
 );
-final holidayRepository = HolidayRepositoryImpl(remoteDataSource, SecureStorage.instance);
-final userRepository = UserRepositoryImpl(remoteDataSource);
+
+final holidayRepository = HolidayRepositoryImpl(
+  remoteDataSource,
+  SecureStorage.instance,
+);
+
+final userRepository = UserRepositoryImpl(
+  remoteDataSource,
+  SecureStorage.instance,
+);
+
 final userRepositoryProvider = Provider<UserRepository>((ref) {
   return userRepository;
-
 });
+
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return authRepository;
 });
+
 final holidayRepositoryProvider = Provider<HolidayRepository>((ref) {
   return holidayRepository;
 });
@@ -62,88 +72,81 @@ final attendanceRepository = AttendanceRepositoryImpl(
   AttendanceRemoteDatasourceImpl(dio),
   SecureStorage.instance,
 );
+
 final attendanceRepositoryProvider = Provider<AttendanceRepository>((ref) {
   return attendanceRepository;
 });
+
 final leaveDashboardRepository = LeaveDashboardRepositoryImpl(
   LeaveDashboardRemoteDatasourceImpl(dio),
   SecureStorage.instance,
 );
+
 final leaveDashboardRepositoryProvider = Provider<LeaveDashboardRepository>((ref) {
   return leaveDashboardRepository;
 });
+
 final leaveRequestRepository = LeaveRequestRepositoryImpl(
   LeaveRequestRemoteDatasourceImpl(dio),
   SecureStorage.instance,
 );
+
 final leaveRequestRepositoryProvider = Provider<LeaveRequestRepository>((ref) {
   return leaveRequestRepository;
 });
-final authNotifierProvider = StateNotifierProvider<AuthNotifier, AuthState>((
-  ref,
-) {
+
+final authNotifierProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final authRepository = ref.watch(authRepositoryProvider);
   return AuthNotifier(authRepository: authRepository);
 });
-final userNotifierProvider = StateNotifierProvider<UserNotifier, User?>(
-  (ref) {
-    final authRepository = ref.watch(authRepositoryProvider);
-    final userRepository = ref.watch(userRepositoryProvider);
-    return UserNotifier(authRepository, userRepository);
-  },
-);
-final bulkUserNotifierProvider = StateNotifierProvider<BulkUserNotifier, List<User>>(
-  (ref) {
-    final authRepository = ref.watch(authRepositoryProvider);
-    final userRepository = ref.watch(userRepositoryProvider);
-    return BulkUserNotifier(authRepository, userRepository);
-  },
-);
-final attendanceNotifierProvider = StateNotifierProvider<AttendanceNotifier, states.AttendanceState>(
-  (ref) {
-    final authRepository = ref.watch(authRepositoryProvider);
-    final attendanceRepository = ref.watch(attendanceRepositoryProvider);
-    return AttendanceNotifier(authRepository, attendanceRepository);
-  },
-);
-final leaveNotifierProvider = StateNotifierProvider<LeaveDashboardNotifier, LeaveDashboardState>(
-  (ref) {
-    final authRepository = ref.watch(authRepositoryProvider);
-    final leaveDashboardRepository = ref.watch(leaveDashboardRepositoryProvider);
-    return LeaveDashboardNotifier(authRepository, leaveDashboardRepository);
-  },
-  
-);
-final holidayNotifierProvider = StateNotifierProvider<HolidayNotifier, List<Holiday>>((
-  ref,
-) {
+
+final userNotifierProvider = StateNotifierProvider<UserNotifier, User?>((ref) {
+  final authRepository = ref.watch(authRepositoryProvider);
+  final userRepository = ref.watch(userRepositoryProvider);
+  return UserNotifier(authRepository, userRepository);
+});
+
+final bulkUserNotifierProvider = StateNotifierProvider<BulkUserNotifier, List<User>>((ref) {
+  final authRepository = ref.watch(authRepositoryProvider);
+  final userRepository = ref.watch(userRepositoryProvider);
+  return BulkUserNotifier(authRepository, userRepository);
+});
+
+final attendanceNotifierProvider = StateNotifierProvider<AttendanceNotifier, states.AttendanceState>((ref) {
+  final authRepository = ref.watch(authRepositoryProvider);
+  final attendanceRepository = ref.watch(attendanceRepositoryProvider);
+  return AttendanceNotifier(authRepository, attendanceRepository);
+});
+
+final leaveNotifierProvider = StateNotifierProvider<LeaveDashboardNotifier, LeaveDashboardState>((ref) {
+  final authRepository = ref.watch(authRepositoryProvider);
+  final leaveDashboardRepository = ref.watch(leaveDashboardRepositoryProvider);
+  return LeaveDashboardNotifier(authRepository, leaveDashboardRepository);
+});
+
+final holidayNotifierProvider = StateNotifierProvider<HolidayNotifier, List<Holiday>>((ref) {
   final holidayRepository = ref.watch(holidayRepositoryProvider);
   return HolidayNotifier(holidayRepository: holidayRepository);
 });
 
+final leaveRequestNotifierProvider = StateNotifierProvider<LeaveRequestNotifier, LeaveRequestState>((ref) {
+  final authRepository = ref.watch(authRepositoryProvider);
+  final leaveRequestRepository = ref.watch(leaveRequestRepositoryProvider);
+  return LeaveRequestNotifier(authRepository, leaveRequestRepository);
+});
 
-final leaveRequestNotifierProvider = StateNotifierProvider<LeaveRequestNotifier, LeaveRequestState>(
-  (ref) {
-    final authRepository = ref.watch(authRepositoryProvider);
-    final leaveRequestRepository = ref.watch(leaveRequestRepositoryProvider);
-    return LeaveRequestNotifier(authRepository, leaveRequestRepository);
-  },
-);
 final toggleProvider = NotifierProvider<ToggleNotifier, bool>(() => ToggleNotifier());
 
 final managerDashboardRepositoryProvider = Provider<ManagerdashboardRepository>((ref) {
   final remoteDataSource = ref.watch(managerDashboardRemoteDatasourceProvider);
-  // Assuming SecureStorage is needed here as seen in managerDashboard.repositoryImpl.dart
   return ManagerDashboardRepositoryImpl(remoteDataSource, SecureStorage.instance);
 });
 
-final managerDashboardNotifierProvider = StateNotifierProvider<ManagerDashboardNotifier, ManagerDashboardState>(
-  (ref) {
-    final authRepository = ref.watch(authRepositoryProvider);
-    final managerDashboardRepository = ref.watch(managerDashboardRepositoryProvider);
-    return ManagerDashboardNotifier(authRepository, managerDashboardRepository);
-  },
-);
+final managerDashboardNotifierProvider = StateNotifierProvider<ManagerDashboardNotifier, ManagerDashboardState>((ref) {
+  final authRepository = ref.watch(authRepositoryProvider);
+  final managerDashboardRepository = ref.watch(managerDashboardRepositoryProvider);
+  return ManagerDashboardNotifier(authRepository, managerDashboardRepository);
+});
 
 final managerDashboardRemoteDatasourceProvider = Provider<IManagerDashboardRemoteDatasource>((ref) {
   return ManagerDashboardRemoteDatasourceImpl(dio);

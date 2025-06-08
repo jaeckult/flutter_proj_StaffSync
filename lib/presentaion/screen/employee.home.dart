@@ -269,7 +269,7 @@ class _ProfileSection extends ConsumerWidget {
         return ListTile(
           leading: const CircleAvatar(
             radius: 24,
-            backgroundImage: AssetImage('profile.png'),
+            backgroundImage: AssetImage('assets/profile.png'),
           ),
           title: Text(
             user?.profile.fullName ?? "Loading...",
