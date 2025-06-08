@@ -191,8 +191,6 @@ class _LeaveTabState extends ConsumerState<LeaveTab> {
   Widget build(BuildContext context) {
     final leaveRequestState = widget.leaveRequestState;
 
-    print('LeaveTab Build: Leave Request State: $leaveRequestState');
-
     return DefaultTabController(
       length: 2,
       child: Column(
@@ -215,14 +213,10 @@ class _LeaveTabState extends ConsumerState<LeaveTab> {
                   ),
                   LeaveRequestData(leaveRequest: final requests) =>
                     (() {
-                      print(
-                        'LeaveTab Past: Received ${requests.length} requests. Filtering for past.',
-                      );
+                     
                       final pastRequests =
                           requests.where((r) => r.status != 'PENDING').toList();
-                      print(
-                        'LeaveTab Past: Found ${pastRequests.length} past requests.',
-                      );
+                      
                       return pastRequests.isEmpty
                           ? const Center(child: Text('No past leave requests'))
                           : ListView.builder(
@@ -248,14 +242,10 @@ class _LeaveTabState extends ConsumerState<LeaveTab> {
                   ),
                   LeaveRequestData(leaveRequest: final requests) =>
                     (() {
-                      print(
-                        'LeaveTab Pending: Received ${requests.length} requests. Filtering for pending.',
-                      );
+                     
                       final pendingRequests =
                           requests.where((r) => r.status == 'PENDING').toList();
-                      print(
-                        'LeaveTab Pending: Found ${pendingRequests.length} pending requests.',
-                      );
+                    
                       return pendingRequests.isEmpty
                           ? const Center(
                             child: Text('No pending leave requests'),
