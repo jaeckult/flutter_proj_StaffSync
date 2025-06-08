@@ -116,4 +116,32 @@ Future<List<NotificationModel>> getNotificationMessage() async {
   
 }
 
+  @override
+  Future<void> changePassword(String oldPassword, String newPassword) async{
+    try {
+    final token = await authRepository.getToken();
+    final userId = await authRepository.getId();
+   
+    
+    
+    if (token != null && userId != null) {
+      final castedId = int.parse(userId);
+      await remoteDataSource.changePassword(userId: castedId, oldPassword: oldPassword, newPassword: newPassword, token: token);
+
+    } else {
+      throw Exception("Token or id is null");
+    }
+
+  } catch (e) {
+    if (e is Exception) {
+      rethrow;
+    } else {
+      throw Exception("Can't change password");
+    }
+  }
+  
+
+    
+  }
+
 }

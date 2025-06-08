@@ -149,6 +149,45 @@ class RemoteDataSource {
     }
   }
 
+
+Future<void> changePassword({
+  required int userId,
+  required String oldPassword,
+  required String newPassword,
+  required String token, 
+}) async {
+  final dio = Dio();
+
+  try {
+    final response = await dio.patch(
+      'http://localhost:3000/api/users/$userId', 
+      data: {
+        'oldPassword': oldPassword,
+        'newPassword': newPassword,
+      },
+      options: Options(
+        headers: {
+          'Authorization': 'Bearer $token', 
+          'Content-Type': 'application/json',
+        },
+      ),
+    );
+
+    if (response.statusCode == 200) {
+      print('Password updated successfully: ${response.data}');
+    } else {
+      print('Failed to update password: ${response.statusMessage}');
+    }
+  } on DioException catch (e) {
+    if (e.response != null) {
+      print('Error response: ${e.response?.data}');
+    } else {
+      print('Dio error: ${e.message}');
+    }
+  }
+}
+
+
   Future<void> deleteUser(int id, String token) async {
     try {
       final response = await dio.delete(

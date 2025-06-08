@@ -55,5 +55,14 @@ class UserNotifier extends StateNotifier<User?> {
       throw Exception('Can not delete notification!');
     }
   }
+  Future<void> changePassword(String oldPassword, String newPassword) async {
+    try{
+      await userRepository.changePassword(oldPassword, newPassword);
+    }
+    catch(e) {
+      print('DioError in change password');
+      throw Exception('Can not change password!');
+    }
+  }
 
 }

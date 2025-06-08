@@ -1,20 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:staffsync/application/providers/providers.dart';
 
 void main() {
-  runApp(MaterialApp(
+  runApp(const MaterialApp(
     home: ChangePassword(),
     debugShowCheckedModeBanner: false,
   ));
 }
 
-class ChangePassword extends StatefulWidget {
+class ChangePassword extends ConsumerStatefulWidget {
   const ChangePassword({super.key});
 
   @override
   _ChangePasswordState createState() => _ChangePasswordState();
 }
 
-class _ChangePasswordState extends State<ChangePassword> {
+class _ChangePasswordState extends ConsumerState<ChangePassword> {
   bool oldPasswordVisible = false;
   bool newPasswordVisible = false;
 
@@ -23,6 +26,8 @@ class _ChangePasswordState extends State<ChangePassword> {
 
   @override
   Widget build(BuildContext context) {
+    final change =  ref.read(userNotifierProvider.notifier);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Password Change', style: TextStyle(color: Colors.black)),
@@ -83,6 +88,7 @@ class _ChangePasswordState extends State<ChangePassword> {
                 onPressed: () {
                   // Add password change logic here
                   print("Changing password...");
+                  change.changePassword(oldPasswordController.text, newPasswordController.text);
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.deepOrangeAccent,
