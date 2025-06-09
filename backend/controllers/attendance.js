@@ -123,17 +123,13 @@ attendanceRouter.get('/', identifyUser, async (req, res, next) => {
   }
 });
 
-
-// GET /api/attendance/stats - Get attendance stats for all users (managers only)
 attendanceRouter.get('/stats', identifyUser, async (req, res, next) => {
   try {
     const { startDate, endDate } = req.query;
 
-    // Default to last 30 days if no range provided
     const end = endDate ? new Date(endDate) : new Date();
     const start = startDate ? new Date(startDate) : new Date(end.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-    // Validate date range
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
       return res.status(400).json({ error: 'Invalid date format' });
     }
@@ -141,10 +137,8 @@ attendanceRouter.get('/stats', identifyUser, async (req, res, next) => {
       return res.status(400).json({ error: 'startDate must be before endDate' });
     }
 
-    // Fetch all users
     const users = await prisma.user.findMany();
 
-    // Fetch all attendance records in the date range
     const attendanceRecords = await prisma.attendance.findMany({
       where: {
         date: {
@@ -159,47 +153,96 @@ attendanceRouter.get('/stats', identifyUser, async (req, res, next) => {
     let totalCheckedIn = 0;
     let totalCheckedOut = 0;
 
-    // Iterate through each day in the range
     const currentDate = new Date(start);
     while (currentDate <= end) {
       const dateStr = currentDate.toISOString().split('T')[0];
       const recordsForDay = attendanceRecords.filter(r => r.date.toISOString().split('T')[0] === dateStr);
 
-      // Count present and absent for the day
       for (const user of users) {
         const userRecord = recordsForDay.find(r => r.userId === user.id);
 
         if (userRecord) {
+          // ✅ Count check-ins and check-outs regardless of attendance status
+          if (userRecord.checkIn) totalCheckedIn++;
+          if (userRecord.checkOut) totalCheckedOut++;
+
+          // Still count attendance (optional, if you need it)
           if (userRecord.attendance === 'PRESENT') {
             totalPresent++;
-            if (userRecord.checkIn) totalCheckedIn++;
-            if (userRecord.checkOut) totalCheckedOut++;
           } else if (userRecord.attendance === 'ABSENT') {
             totalAbsent++;
           }
-          // If attendance is null (on leave), we skip counting as present or absent
         } else {
-          // No record exists, check if on leave
           const onLeave = await isOnLeave(user.id, dateStr);
-          if (!onLeave) {
-            totalAbsent++; // No record and not on leave = absent
-          }
+          if (!onLeave) totalAbsent++;
         }
       }
 
-      // Move to the next day
       currentDate.setDate(currentDate.getDate() + 1);
     }
 
     res.json({
-      totalPresent,  // Total number of "present employee days"
-      totalAbsent,   // Total number of "absent employee days"
-      totalCheckedIn, // Total number of check-ins
-      totalCheckedOut, // Total number of check-outs
+      totalPresent,
+      totalAbsent,
+      totalCheckedIn,  // ✅ Now counts every checkIn, regardless of attendance status
+      totalCheckedOut, // ✅ Same here
     });
   } catch (error) {
     logger.error('Attendance stats error:', error);
     res.status(500).json({ error: 'Failed to fetch attendance stats' });
+  } finally {
+    await prisma.$disconnect();
+  }
+});
+
+attendanceRouter.delete('/clear', async (req, res) => {
+  const { token } = req.headers;
+  const { userId } = req.body;
+  try {
+    const user = await prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const attendance = await prisma.attendance.deleteMany({
+      where: {
+        userId: userId,
+      },
+    });
+
+    res.status(200).json({
+      attendance,
+    });
+  } catch (error) {
+    logger.error('Attendance clear error:', error);
+    res.status(500).json({ error: 'Failed to clear attendance' });
+  } finally {
+    await prisma.$disconnect();
+  }
+});
+
+attendanceRouter.delete('/:id', identifyUser, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const attendance = await prisma.attendance.delete({
+      where: {
+        id: parseInt(id),
+      },
+    });
+
+    res.status(200).json({
+      message: 'Attendance record deleted successfully',
+      attendance,
+    });
+  } catch (error) {
+    logger.error('Attendance delete error:', error);
+    res.status(500).json({ error: 'Failed to delete attendance record' });
   } finally {
     await prisma.$disconnect();
   }

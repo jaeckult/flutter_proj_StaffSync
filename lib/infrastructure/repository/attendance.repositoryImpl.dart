@@ -40,5 +40,14 @@ Future<String> _getEndpoint() async =>
     final endpoint = await _getEndpoint();
     return await remoteDataSource.fetchAttendances(token, endpoint);
   }
-  
+
+  @override
+  Future<void> deleteAttendance(int id) async {
+    final endpoint = await _getEndpoint();
+    final token = await secureStorage.read("token") ?? "";
+    if (token.isEmpty) {
+      throw Exception("Token is missing");
+    }
+    await remoteDataSource.deleteAttendance(id, token, endpoint);
+  }
 }

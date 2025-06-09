@@ -68,4 +68,41 @@ class AttendanceRemoteDatasourceImpl implements IAttendanceRemoteDatasourceImpl 
       throw Exception(error);
     }
   }
+  @override
+  Future<void> clearAttendance(
+    AttendanceResponse attendanceResponse,
+    String token,
+    String endpoint,
+  ) async {
+    try {
+      await dio.delete(
+        'http://$endpoint:3000/api/attendance/clear', 
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+          },
+        ),
+      );
+    } on DioException catch (e) {
+      final error = e.response?.data['error'] ?? 'Error clearing attendance';
+      throw Exception(error);
+    }
+  }
+
+  @override
+  Future<void> deleteAttendance(int id, String token, String endpoint) async {
+    try {
+      await dio.delete(
+        'http://$endpoint:3000/api/attendance/$id',
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+          },
+        ),
+      );
+    } on DioException catch (e) {
+      final error = e.response?.data['error'] ?? 'Error deleting attendance record';
+      throw Exception(error);
+    }
+  }
 }

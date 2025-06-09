@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:staffsync/application/providers/providers.dart';
 import 'package:staffsync/domain/model/notification.model.dart';
-import 'package:staffsync/presentaion/screen/managerHome.dart';
 
 void main() {
   runApp(ProviderScope(child: MaterialApp(home: NotificationList())));
@@ -49,20 +48,36 @@ class _NotificationListState extends ConsumerState<NotificationList> {
           return ListView.separated(
             itemCount: notifications.length,
             itemBuilder: (context, index) {
+              final notification = notifications[index];
               return Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16.0,
-                  vertical: 16.0,
-                ),
-                child: ListTile(
-                  title: Text(
-                    notifications[index].message,
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                child: Card(
+                  elevation: 3,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16.0,
+                      vertical: 12.0,
+                    ),
+                    leading: const Icon(Icons.notifications, color: Colors.blue),
+                    title: Text(
+                      notification.message,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    ),
+                    // subtitle: Text(
+                    //   notification.createdAt ?? '',
+                    //   style: const TextStyle(color: Colors.grey),
+                    // ),
                   ),
                 ),
               );
             },
-            separatorBuilder: (BuildContext context, int index) => Divider(),
+            separatorBuilder: (BuildContext context, int index) => const SizedBox(height: 4),
           );
         },
       ),

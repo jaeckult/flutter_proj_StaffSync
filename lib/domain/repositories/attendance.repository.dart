@@ -4,4 +4,5 @@ abstract class AttendanceRepository {
   Future<List<Attendance>> getAttendances(String token);
   Future<void> checkIn(AttendanceResponse attendanceResponse);
   Future<void> checkOut(AttendanceResponse attendanceResponse);
+  Future<void> deleteAttendance(int id);
 }

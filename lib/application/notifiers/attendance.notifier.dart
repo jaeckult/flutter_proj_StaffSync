@@ -60,6 +60,18 @@ class AttendanceNotifier extends StateNotifier<states.AttendanceState> {
     }
   }
 
+  Future<void> deleteAttendance(int id) async {
+    try {
+      state = const states.AttendanceLoading();
+      await attendanceRepository.deleteAttendance(id);
+      await getAttendances(); // Refresh the attendance list
+    } catch (error) {
+      print("Delete attendance error: $error");
+      state = states.AttendanceError(error.toString());
+      rethrow;
+    }
+  }
+
   bool hasActiveCheckIn() {
     if (state is states.AttendanceData) {
       final today = DateTime.now();

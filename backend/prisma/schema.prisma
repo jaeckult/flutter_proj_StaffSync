@@ -131,6 +131,7 @@ model Notification {
   user         User         @relation(fields: [userId], references: [id])
   message      String
   createdAt    DateTime     @default(now())
+  read         Boolean      @default(false)
   leaveRequest LeaveRequest? @relation(fields: [leaveRequestId], references: [id])
   leaveRequestId Int?
 }

@@ -47,6 +47,7 @@ dependencies:
   freezed_annotation: ^2.4.1
   json_annotation: ^4.8.1
   image_picker: ^1.0.0
+  another_flushbar: ^1.10.30
 
 dev_dependencies:
   flutter_test:

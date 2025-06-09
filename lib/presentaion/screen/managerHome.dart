@@ -11,6 +11,7 @@ import 'package:intl/intl.dart';
 import 'package:staffsync/application/states/manager.state.dart';
 import 'package:staffsync/domain/model/managerDashboard.model.dart';
 import 'package:staffsync/domain/model/user.model.dart';
+import 'package:staffsync/application/states/leaveDashboard.state.dart';
 
 class ManagerHomeScreen extends ConsumerStatefulWidget {
   const ManagerHomeScreen({super.key});
@@ -26,6 +27,7 @@ class _ManagerHomeScreenState extends ConsumerState<ManagerHomeScreen> {
     Future.microtask(() {
       ref.read(userNotifierProvider.notifier).loadUserFromStorage();
       ref.read(managerDashboardNotifierProvider.notifier).fetchDashboardStats();
+      ref.read(leaveNotifierProvider.notifier).getLeaveDashboardStats();
     });
   }
 
@@ -498,17 +500,26 @@ extension StringExtension on String {
   }
 }
 
-class _AttendanceSummaryCards extends StatelessWidget {
+class _AttendanceSummaryCards extends ConsumerWidget {
   final Managerdashboard stats;
 
   const _AttendanceSummaryCards({required this.stats});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final double screenWidth = MediaQuery.of(context).size.width;
     final double horizontalPadding = 16.0;
     final double spacing = 16.0;
     final double cardWidth = (screenWidth - 2 * horizontalPadding - spacing) / 2;
+
+    final leaveDashboardState = ref.watch(leaveNotifierProvider);
+    int onLeaveToday = 0;
+    int onWorkToday = stats.totalCheckedIn - stats.totalCheckedOut;
+
+    if (leaveDashboardState is LeaveDashboardData) {
+      // Get the total approved leaves
+      onLeaveToday = leaveDashboardState.leaveDashboard.fold(0, (sum, dashboard) => sum + dashboard.approved);
+    }
 
     return ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: double.infinity),
@@ -519,28 +530,24 @@ class _AttendanceSummaryCards extends StatelessWidget {
           _SummaryCard(
             title: "Total Check-ins",
             value: "${stats.totalCheckedIn}",
-            subtitle: "over selected range",
             icon: Icons.login,
             iconColor: Colors.green,
           ),
           _SummaryCard(
             title: "Total Check-outs",
             value: "${stats.totalCheckedOut}",
-            subtitle: "over selected range",
             icon: Icons.logout,
             iconColor: Colors.red,
           ),
           _SummaryCard(
             title: "On leave today",
-            value: "4",
-            subtitle: "employees",
+            value: "$onLeaveToday",
             icon: Icons.beach_access,
             iconColor: Colors.blue,
           ),
           _SummaryCard(
             title: "On work today",
-            value: "7",
-            subtitle: "employees",
+            value: "$onWorkToday",
             icon: Icons.work,
             iconColor: Colors.orange,
           ),
@@ -553,14 +560,12 @@ class _AttendanceSummaryCards extends StatelessWidget {
 class _SummaryCard extends StatelessWidget {
   final String title;
   final String value;
-  final String subtitle;
   final IconData icon;
   final Color iconColor;
 
   const _SummaryCard({
     required this.title,
     required this.value,
-    required this.subtitle,
     required this.icon,
     required this.iconColor,
   });
@@ -580,9 +585,8 @@ class _SummaryCard extends StatelessWidget {
             const SizedBox(height: 12),
             Text(value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
             const SizedBox(height: 4),
-            Text(title, style: const TextStyle(color: Colors.grey, fontSize: 14)),
+            Text(title, style: const TextStyle(color: Colors.grey, fontSize: 12)),
             const SizedBox(height: 2),
-            Text(subtitle, style: const TextStyle(fontSize: 12, color: Colors.black54)),
           ],
         ),
       ),

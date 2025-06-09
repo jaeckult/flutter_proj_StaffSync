@@ -70,6 +70,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
+      
       title: 'StaffSync',
       theme: ThemeData(
         primarySwatch: Colors.orange,

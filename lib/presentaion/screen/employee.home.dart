@@ -8,6 +8,8 @@ import 'package:staffsync/presentaion/screen/employee.profileScreen.dart';
 import 'package:staffsync/presentaion/screen/employee.scheduleScreen.dart';
 import 'package:staffsync/domain/model/notification.model.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' show ref;
+import 'package:another_flushbar/flushbar.dart';
 
 void main() => runApp(const ProviderScope(child: EmployeeHomeApp()));
 
@@ -49,24 +51,16 @@ class _EmployeeHomeScreenState extends ConsumerState<EmployeeHomeScreen> {
         // If already checked in, perform check-out
         await notifier.checkOut();
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Row(
-                children: [
-                  Icon(Icons.check_circle, color: Colors.white),
-                  SizedBox(width: 12),
-                  Text('Check-out successful'),
-                ],
-              ),
-              backgroundColor: Colors.green,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              margin: const EdgeInsets.all(16),
-              duration: const Duration(seconds: 2),
-            ),
-          );
+          Flushbar(
+            message: "Check-out successful",
+            icon: const Icon(Icons.check_circle, color: Colors.white),
+            backgroundColor: const Color.fromARGB(255, 203, 88, 40),
+            duration: const Duration(seconds: 2),
+            margin: const EdgeInsets.all(16),
+            borderRadius: BorderRadius.circular(10),
+            flushbarPosition: FlushbarPosition.TOP,
+            flushbarStyle: FlushbarStyle.FLOATING,
+          ).show(context);
         }
       } else {
         // Perform check-in
@@ -80,24 +74,16 @@ class _EmployeeHomeScreenState extends ConsumerState<EmployeeHomeScreen> {
         );
         await notifier.checkIn(attendanceResponse);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Row(
-                children: [
-                  Icon(Icons.check_circle, color: Colors.white),
-                  SizedBox(width: 12),
-                  Text('Check-in successful'),
-                ],
-              ),
-              backgroundColor: Colors.green,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              margin: const EdgeInsets.all(16),
-              duration: const Duration(seconds: 2),
-            ),
-          );
+          Flushbar(
+            message: "Check-in successful",
+            icon: const Icon(Icons.check_circle, color: Colors.white),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+            margin: const EdgeInsets.all(16),
+            borderRadius: BorderRadius.circular(10),
+            flushbarPosition: FlushbarPosition.TOP,
+            flushbarStyle: FlushbarStyle.FLOATING,
+          ).show(context);
         }
       }
 
@@ -174,6 +160,7 @@ class _EmployeeHomeScreenState extends ConsumerState<EmployeeHomeScreen> {
                                 time: attendance.checkIn,
                                 type: 'Check In',
                                 status: attendance.attendance,
+                                id: attendance.id,
                               ),
                               if (attendance.checkOut != null)
                                 _ActivityItem(
@@ -181,6 +168,7 @@ class _EmployeeHomeScreenState extends ConsumerState<EmployeeHomeScreen> {
                                   time: attendance.checkOut!,
                                   type: 'Check Out',
                                   status: attendance.attendance,
+                                  id: attendance.id,
                                 ),
                             ],
                           )
@@ -211,6 +199,7 @@ class _EmployeeHomeScreenState extends ConsumerState<EmployeeHomeScreen> {
                               time: attendance.checkIn,
                               type: 'Check In',
                               status: attendance.attendance,
+                              id: attendance.id,
                             ),
                           ),
                     ] else if (attendanceState is states.AttendanceError) ...[
@@ -223,24 +212,27 @@ class _EmployeeHomeScreenState extends ConsumerState<EmployeeHomeScreen> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: ElevatedButton(
-                onPressed: _handleAttendance,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor:
-                      hasActiveCheckIn
-                          ? Colors.red
-                          : const Color.fromARGB(255, 58, 168, 62),
-                  padding: const EdgeInsets.all(24),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 8.0,
+              ),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _handleAttendance,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor:
+                        hasActiveCheckIn
+                            ? Colors.red
+                            : const Color.fromARGB(255, 58, 168, 62),
+                    padding: const EdgeInsets.all(18),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                ),
-                child: Text(
-                  hasActiveCheckIn ? "Check Out" : "Check In",
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Color.fromRGBO(255, 255, 255, 1),
+                  child: Text(
+                    hasActiveCheckIn ? "Check Out" : "Check In",
+                    style: const TextStyle(fontSize: 16, color: Colors.white),
                   ),
                 ),
               ),
@@ -523,26 +515,31 @@ class _AttendanceCard extends StatelessWidget {
   }
 }
 
-class _ActivityItem extends StatelessWidget {
+class _ActivityItem extends ConsumerWidget {
   final DateTime date;
   final DateTime time;
   final String type;
   final String status;
+  final int id;
 
   const _ActivityItem({
     required this.date,
     required this.time,
     required this.type,
     required this.status,
+    required this.id,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: type == 'Check In' ? Colors.green : const Color.fromARGB(255, 162, 93, 68),
+          backgroundColor:
+              type == 'Check In'
+                  ? Colors.green
+                  : const Color.fromARGB(255, 162, 93, 68),
           child: Icon(
             type == 'Check In' ? Icons.login : Icons.logout,
             color: Colors.white,
@@ -552,7 +549,38 @@ class _ActivityItem extends StatelessWidget {
         subtitle: Text(
           '${DateFormat('MMM dd, yyyy').format(date)} at ${DateFormat('hh:mm a').format(time)}',
         ),
+        trailing: IconButton(
+          icon: const Icon(Icons.delete_outline, color: Colors.red),
+          onPressed: () => _showDeleteConfirmation(context, ref),
+        ),
       ),
+    );
+  }
+
+  void _showDeleteConfirmation(BuildContext context, WidgetRef ref) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Delete Attendance Record'),
+          content: Text('Are you sure you want to delete this $type record?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                ref
+                    .read(attendanceNotifierProvider.notifier)
+                    .deleteAttendance(id);
+              },
+              child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -569,6 +597,7 @@ Widget _buildActivityList(List<Attendance> attendances) {
         time: attendance.checkIn,
         type: 'Check In',
         status: attendance.attendance,
+        id: attendance.id,
       );
       if (attendance.checkOut != null) {
         return _ActivityItem(
@@ -576,6 +605,7 @@ Widget _buildActivityList(List<Attendance> attendances) {
           time: attendance.checkOut!,
           type: 'Check Out',
           status: attendance.attendance,
+          id: attendance.id,
         );
       }
     },
@@ -597,6 +627,7 @@ Widget _buildTodayActivity(List<Attendance> todayAttendance) {
           time: attendance.checkIn,
           type: 'Check In',
           status: attendance.attendance,
+          id: attendance.id,
         );
       } else if (attendance.checkOut != null) {
         return _ActivityItem(
@@ -604,6 +635,7 @@ Widget _buildTodayActivity(List<Attendance> todayAttendance) {
           time: attendance.checkOut!,
           type: 'Check Out',
           status: attendance.attendance,
+          id: attendance.id,
         );
       }
       return const SizedBox.shrink();

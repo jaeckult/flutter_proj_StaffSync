@@ -83,6 +83,7 @@ class _EmployeeLogicState extends ConsumerState<EmployeeLogic> {
           });
         },
         iconSize: 24,
+        selectedItemColor: Colors.deepOrange,
         selectedFontSize: 12,
         unselectedFontSize: 11,
         type: BottomNavigationBarType.fixed,
