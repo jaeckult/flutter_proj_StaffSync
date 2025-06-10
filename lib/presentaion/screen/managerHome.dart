@@ -31,6 +31,14 @@ class _ManagerHomeScreenState extends ConsumerState<ManagerHomeScreen> {
     });
   }
 
+  Future<void> _refreshData() async {
+    await Future.wait([
+      ref.read(userNotifierProvider.notifier).loadUserFromStorage(),
+      ref.read(managerDashboardNotifierProvider.notifier).fetchDashboardStats(),
+      ref.read(leaveNotifierProvider.notifier).getLeaveDashboardStats(),
+    ]);
+  }
+
   @override
   Widget build(BuildContext context) {
     final managerDashboardState = ref.watch(managerDashboardNotifierProvider);
@@ -38,37 +46,63 @@ class _ManagerHomeScreenState extends ConsumerState<ManagerHomeScreen> {
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
       body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const _ProfileSection(),
-            const _DateSelector(),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text("Attendance Summary", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 16),
-                    if (managerDashboardState is ManagerDashboardLoading) ...[
-                      const Center(child: CircularProgressIndicator()),
-                    ] else if (managerDashboardState is ManagerDashboardError) ...[
-                      Center(child: Text('Error: ${managerDashboardState.message}', style: TextStyle(color: Colors.red))),
-                    ] else if (managerDashboardState is ManagerDashboardData) ...[
-                      _AttendanceSummaryCards(stats: managerDashboardState.stats),
-                    ] else ...[
-                       const Center(child: Text('Load failed or initial state')),
+        child: RefreshIndicator(
+          onRefresh: _refreshData,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const _ProfileSection(),
+              const _DateSelector(),
+              Expanded(
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        "Attendance Summary",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      if (managerDashboardState is ManagerDashboardLoading) ...[
+                        const Center(child: CircularProgressIndicator()),
+                      ] else if (managerDashboardState is ManagerDashboardError) ...[
+                        Center(
+                          child: Text(
+                            'Error: ${managerDashboardState.message}',
+                            style: const TextStyle(color: Colors.red),
+                          ),
+                        ),
+                      ] else if (managerDashboardState is ManagerDashboardData) ...[
+                        _AttendanceSummaryCards(
+                          stats: managerDashboardState.stats,
+                        ),
+                      ] else ...[
+                        const Center(child: Text('Load failed or initial state')),
+                      ],
+                      const SizedBox(height: 24),
+                      const Text(
+                        "Employees Daily Status",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      _EmployeesDailyStatusList(),
                     ],
-                    const SizedBox(height: 24),
-                    const Text("Employees Daily Status", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 12),
-                    _EmployeesDailyStatusList(),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -86,7 +120,10 @@ class _ProfileSection extends ConsumerWidget {
         radius: 24,
         backgroundImage: AssetImage('assets/profile.png'),
       ),
-      title: Text(user?.profile.fullName ?? "Loading...", style: const TextStyle(fontWeight: FontWeight.bold)),
+      title: Text(
+        user?.profile.fullName ?? "Loading...",
+        style: const TextStyle(fontWeight: FontWeight.bold),
+      ),
       subtitle: Text(user?.profile.designation ?? "Loading..."),
       trailing: IconButton(
         icon: const Icon(Icons.notifications_none),
@@ -121,17 +158,25 @@ class _DateSelector extends StatelessWidget {
             decoration: BoxDecoration(
               color: isSelected ? Colors.deepOrange : Colors.white,
               borderRadius: BorderRadius.circular(8),
-              boxShadow: isSelected
-                  ? [BoxShadow(color: Colors.deepOrange.withOpacity(0.5), blurRadius: 6)]
-                  : [],
+              boxShadow:
+                  isSelected
+                      ? [
+                        BoxShadow(
+                          color: Colors.deepOrange.withOpacity(0.5),
+                          blurRadius: 6,
+                        ),
+                      ]
+                      : [],
             ),
             child: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    DateFormat('E').format(date), 
-                    style: TextStyle(color: isSelected ? Colors.white : Colors.black),
+                    DateFormat('E').format(date),
+                    style: TextStyle(
+                      color: isSelected ? Colors.white : Colors.black,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -165,37 +210,42 @@ class _TodayAttendance extends ConsumerWidget {
 
     if (attendanceState is states.AttendanceData) {
       final today = DateTime.now();
-      final todayAttendance = (attendanceState as states.AttendanceData).attendance
-          .where((a) => a.date.year == today.year && 
-                        a.date.month == today.month && 
-                        a.date.day == today.day)
-          .toList();
+      final todayAttendance =
+          (attendanceState as states.AttendanceData).attendance
+              .where(
+                (a) =>
+                    a.date.year == today.year &&
+                    a.date.month == today.month &&
+                    a.date.day == today.day,
+              )
+              .toList();
 
       if (todayAttendance.isNotEmpty) {
         // Get the latest check-in
         final latestCheckIn = todayAttendance
             .where((a) => a.checkIn != null)
             .reduce((a, b) => a.checkIn.isAfter(b.checkIn) ? a : b);
-        
+
         // Get the latest check-out
         final latestCheckOut = todayAttendance
             .where((a) => a.checkOut != null)
             .reduce((a, b) => a.checkOut!.isAfter(b.checkOut!) ? a : b);
 
         checkInTime = DateFormat('hh:mm a').format(latestCheckIn.checkIn);
-        
+
         if (latestCheckOut.checkOut != null) {
           checkOutTime = DateFormat('hh:mm a').format(latestCheckOut.checkOut!);
         }
       }
 
       // Count unique days with attendance
-      final uniqueDays = (attendanceState as states.AttendanceData).attendance
-          .where((a) => a.attendance == 'PRESENT')
-          .map((a) => DateTime(a.date.year, a.date.month, a.date.day))
-          .toSet()
-          .length;
-      
+      final uniqueDays =
+          (attendanceState as states.AttendanceData).attendance
+              .where((a) => a.attendance == 'PRESENT')
+              .map((a) => DateTime(a.date.year, a.date.month, a.date.day))
+              .toSet()
+              .length;
+
       totalDays = uniqueDays.toString();
     }
 
@@ -208,13 +258,19 @@ class _TodayAttendance extends ConsumerWidget {
             _AttendanceCard(
               title: "Check In",
               value: checkInTime,
-              status: checkInTime == "Not checked in" ? "Not Checked In" : "On Time",
+              status:
+                  checkInTime == "Not checked in"
+                      ? "Not Checked In"
+                      : "On Time",
               icon: Icons.login,
             ),
             _AttendanceCard(
               title: "Check Out",
               value: checkOutTime,
-              status: checkOutTime == "Not checked out" ? "Not Checked Out" : "Checked Out",
+              status:
+                  checkOutTime == "Not checked out"
+                      ? "Not Checked Out"
+                      : "Checked Out",
               icon: Icons.logout,
             ),
             _AttendanceCard(
@@ -262,11 +318,20 @@ class _AttendanceCard extends StatelessWidget {
             children: [
               Icon(icon, size: 28, color: Colors.deepOrange),
               const SizedBox(height: 8),
-              Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               const SizedBox(height: 4),
               Text(title, style: const TextStyle(color: Colors.grey)),
               const SizedBox(height: 2),
-              Text(status, style: const TextStyle(fontSize: 12, color: Colors.black54)),
+              Text(
+                status,
+                style: const TextStyle(fontSize: 12, color: Colors.black54),
+              ),
             ],
           ),
         ),
@@ -304,7 +369,6 @@ class _ActivityItem extends StatelessWidget {
         subtitle: Text(
           '${DateFormat('MMM dd, yyyy').format(date)} at ${DateFormat('hh:mm a').format(time)}',
         ),
-        
       ),
     );
   }
@@ -343,7 +407,7 @@ Widget _buildTodayActivity(List<Attendance> todayAttendance) {
     itemBuilder: (context, index) {
       final attendance = todayAttendance[index ~/ 2];
       final isCheckIn = index.isEven;
-      
+
       if (isCheckIn) {
         return _ActivityItem(
           date: attendance.date,
@@ -393,10 +457,7 @@ class _DashboardCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
-                    color: Colors.grey,
-                    fontSize: 14,
-                  ),
+                  style: const TextStyle(color: Colors.grey, fontSize: 14),
                 ),
                 Text(
                   value,
@@ -417,12 +478,17 @@ class _DashboardCard extends StatelessWidget {
 Widget _buildDashboard(states.AttendanceState attendanceState) {
   if (attendanceState is states.AttendanceData) {
     final attendances = attendanceState.attendance;
-    final totalDays = attendances.where((a) => a.attendance == 'PRESENT').length;
-    final todayAttendance = attendances.where((a) => 
-      a.date.year == DateTime.now().year && 
-      a.date.month == DateTime.now().month && 
-      a.date.day == DateTime.now().day
-    ).toList();
+    final totalDays =
+        attendances.where((a) => a.attendance == 'PRESENT').length;
+    final todayAttendance =
+        attendances
+            .where(
+              (a) =>
+                  a.date.year == DateTime.now().year &&
+                  a.date.month == DateTime.now().month &&
+                  a.date.day == DateTime.now().day,
+            )
+            .toList();
 
     return Column(
       children: [
@@ -445,20 +511,21 @@ Widget _buildDashboard(states.AttendanceState attendanceState) {
 
 Widget _buildTodayAttendance(states.AttendanceState attendanceState) {
   if (attendanceState is states.AttendanceData) {
-    final todayAttendance = attendanceState.attendance.where((a) => 
-      a.date.year == DateTime.now().year && 
-      a.date.month == DateTime.now().month && 
-      a.date.day == DateTime.now().day
-    ).toList();
+    final todayAttendance =
+        attendanceState.attendance
+            .where(
+              (a) =>
+                  a.date.year == DateTime.now().year &&
+                  a.date.month == DateTime.now().month &&
+                  a.date.day == DateTime.now().day,
+            )
+            .toList();
 
     if (todayAttendance.isEmpty) {
       return const Center(
         child: Text(
           'No activity for today',
-          style: TextStyle(
-            color: Colors.grey,
-            fontSize: 16,
-          ),
+          style: TextStyle(color: Colors.grey, fontSize: 16),
         ),
       );
     }
@@ -470,20 +537,21 @@ Widget _buildTodayAttendance(states.AttendanceState attendanceState) {
 
 Widget _buildPastActivity(states.AttendanceState attendanceState) {
   if (attendanceState is states.AttendanceData) {
-    final pastAttendance = attendanceState.attendance.where((a) => 
-      a.date.year != DateTime.now().year || 
-      a.date.month != DateTime.now().month || 
-      a.date.day != DateTime.now().day
-    ).toList();
+    final pastAttendance =
+        attendanceState.attendance
+            .where(
+              (a) =>
+                  a.date.year != DateTime.now().year ||
+                  a.date.month != DateTime.now().month ||
+                  a.date.day != DateTime.now().day,
+            )
+            .toList();
 
     if (pastAttendance.isEmpty) {
       return const Center(
         child: Text(
           'No past activity',
-          style: TextStyle(
-            color: Colors.grey,
-            fontSize: 16,
-          ),
+          style: TextStyle(color: Colors.grey, fontSize: 16),
         ),
       );
     }
@@ -510,15 +578,18 @@ class _AttendanceSummaryCards extends ConsumerWidget {
     final double screenWidth = MediaQuery.of(context).size.width;
     final double horizontalPadding = 16.0;
     final double spacing = 16.0;
-    final double cardWidth = (screenWidth - 2 * horizontalPadding - spacing) / 2;
+    final double cardWidth =
+        (screenWidth - 2 * horizontalPadding - spacing) / 2;
 
     final leaveDashboardState = ref.watch(leaveNotifierProvider);
     int onLeaveToday = 0;
-    int onWorkToday = stats.totalCheckedIn - stats.totalCheckedOut;
 
     if (leaveDashboardState is LeaveDashboardData) {
-      // Get the total approved leaves
-      onLeaveToday = leaveDashboardState.leaveDashboard.fold(0, (sum, dashboard) => sum + dashboard.approved);
+      // Get the total approved leaves from the first dashboard entry
+      // Since the API returns a single dashboard entry for all users
+      if (leaveDashboardState.leaveDashboard.isNotEmpty) {
+        onLeaveToday = leaveDashboardState.leaveDashboard.first.approved;
+      }
     }
 
     return ConstrainedBox(
@@ -526,32 +597,33 @@ class _AttendanceSummaryCards extends ConsumerWidget {
       child: Wrap(
         spacing: spacing,
         runSpacing: spacing,
-        children: [
-          _SummaryCard(
-            title: "Total Check-ins",
-            value: "${stats.totalCheckedIn}",
-            icon: Icons.login,
-            iconColor: Colors.green,
-          ),
-          _SummaryCard(
-            title: "Total Check-outs",
-            value: "${stats.totalCheckedOut}",
-            icon: Icons.logout,
-            iconColor: Colors.red,
-          ),
-          _SummaryCard(
-            title: "On leave today",
-            value: "$onLeaveToday",
-            icon: Icons.beach_access,
-            iconColor: Colors.blue,
-          ),
-          _SummaryCard(
-            title: "On work today",
-            value: "$onWorkToday",
-            icon: Icons.work,
-            iconColor: Colors.orange,
-          ),
-        ].map((card) => SizedBox(width: cardWidth, child: card)).toList(),
+        children:
+            [
+              _SummaryCard(
+                title: "Total Check-ins",
+                value: "${stats.totalCheckedIn}",
+                icon: Icons.login,
+                iconColor: Colors.green,
+              ),
+              _SummaryCard(
+                title: "Total Check-outs",
+                value: "${stats.totalCheckedOut}",
+                icon: Icons.logout,
+                iconColor: Colors.red,
+              ),
+              _SummaryCard(
+                title: "On leave today",
+                value: "$onLeaveToday",
+                icon: Icons.beach_access,
+                iconColor: Colors.blue,
+              ),
+              _SummaryCard(
+                title: "On work today",
+                value: "${stats.totalPresent}",
+                icon: Icons.work,
+                iconColor: Colors.orange,
+              ),
+            ].map((card) => SizedBox(width: cardWidth, child: card)).toList(),
       ),
     );
   }
@@ -583,9 +655,15 @@ class _SummaryCard extends StatelessWidget {
           children: [
             Icon(icon, size: 36, color: iconColor),
             const SizedBox(height: 12),
-            Text(value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            Text(
+              value,
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 4),
-            Text(title, style: const TextStyle(color: Colors.grey, fontSize: 12)),
+            Text(
+              title,
+              style: const TextStyle(color: Colors.grey, fontSize: 12),
+            ),
             const SizedBox(height: 2),
           ],
         ),
@@ -599,7 +677,9 @@ class _EmployeesDailyStatusList extends ConsumerWidget {
 
   String getStatus(User employee) {
     final hasAttendance = employee.attendance.isNotEmpty;
-    return hasAttendance && employee.attendance.last.checkOut == null ? "Checked in" : "Checked out";
+    return hasAttendance && employee.attendance.last.checkOut == null
+        ? "Checked in"
+        : "Checked out";
   }
 
   Color getStatusColor(String status) {
@@ -611,7 +691,9 @@ class _EmployeesDailyStatusList extends ConsumerWidget {
     final employees = ref.watch(bulkUserNotifierProvider);
 
     if (employees.isEmpty) {
-      Future.microtask(() => ref.read(bulkUserNotifierProvider.notifier).getEmployees());
+      Future.microtask(
+        () => ref.read(bulkUserNotifierProvider.notifier).getEmployees(),
+      );
       return const Center(child: CircularProgressIndicator());
     }
 
@@ -619,38 +701,38 @@ class _EmployeesDailyStatusList extends ConsumerWidget {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       itemCount: employees.length,
-      separatorBuilder: (context, index) => const Divider(height: 1, indent: 72),
+      separatorBuilder:
+          (context, index) => const Divider(height: 1, indent: 72),
       itemBuilder: (context, index) {
         final User employee = employees[index];
         final status = getStatus(employee);
         Uint8List? imageBytes;
         try {
-           if (employee.profile.profilePicture != null && employee.profile.profilePicture.isNotEmpty) {
+          if (employee.profile.profilePicture != null &&
+              employee.profile.profilePicture.isNotEmpty) {
             imageBytes = base64Decode(employee.profile.profilePicture);
-           }
+          }
         } catch (e) {
-           imageBytes = null;
+          imageBytes = null;
         }
 
         return ListTile(
           leading: CircleAvatar(
             radius: 24,
-            backgroundImage: imageBytes != null ? MemoryImage(imageBytes) : const AssetImage('assets/images/profile_placeholder.png') as ImageProvider,
+            backgroundImage:
+                imageBytes != null
+                    ? MemoryImage(imageBytes)
+                    : const AssetImage('assets/images/profile_placeholder.png')
+                        as ImageProvider,
             backgroundColor: Colors.grey[300],
           ),
           title: Text(
             employee.profile.fullName,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
           subtitle: Text(
             employee.profile.designation,
-            style: const TextStyle(
-              color: Colors.grey,
-              fontSize: 14,
-            ),
+            style: const TextStyle(color: Colors.grey, fontSize: 14),
           ),
           trailing: Text(
             status,
@@ -665,4 +747,3 @@ class _EmployeesDailyStatusList extends ConsumerWidget {
     );
   }
 }
-

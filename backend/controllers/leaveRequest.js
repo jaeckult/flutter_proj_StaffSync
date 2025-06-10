@@ -146,34 +146,62 @@ leaveRequestRouter.patch('/:id', identifyUser, rbacMiddleware(['MANAGER']), asyn
 });
 
 leaveRequestRouter.get('/stats', identifyUser, async (req, res) => {
-
-
-  
-  const userId = req.user.id;
-
   try {
-    // Fetch leave balance (sum across all types or per type)
-    const leaveBalances = await prisma.leaveBalance.findMany({
-      where: { userId },
-    });
-    const totalLeaveBalance = leaveBalances.reduce((sum, balance) => sum + balance.balance, 0);
-    const approvedCount = await prisma.leaveRequest.count({
-      where: { userId, status: 'APPROVED' },
-    });
-    const pendingCount = await prisma.leaveRequest.count({
-      where: { userId, status: 'PENDING' },
-    });
-    const cancelledCount = await prisma.leaveRequest.count({
-      where: { userId, status: 'CANCELLED' },
-    });
+    if (req.user.role === 'MANAGER') {
+      // For managers, get stats for all users
+      const approvedCount = await prisma.leaveRequest.count({
+        where: { 
+          status: 'APPROVED',
+          startDate: {
+            lte: new Date(), // Leave has started
+          },
+          endDate: {
+            gte: new Date(), // Leave hasn't ended
+          }
+        },
+      });
 
-    res.json({
-      leaveBalance: totalLeaveBalance,
-      leaveApproved: approvedCount,
-      leavePending: pendingCount,
-      leaveCancelled: cancelledCount,
-    });
-    
+      const pendingCount = await prisma.leaveRequest.count({
+        where: { status: 'PENDING' },
+      });
+
+      const cancelledCount = await prisma.leaveRequest.count({
+        where: { status: 'CANCELLED' },
+      });
+
+      res.json({
+        leaveBalance: 0, // Not relevant for manager view
+        leaveApproved: approvedCount,
+        leavePending: pendingCount,
+        leaveCancelled: cancelledCount,
+      });
+    } else {
+      // For regular users, get their personal stats
+      const userId = req.user.id;
+      const leaveBalances = await prisma.leaveBalance.findMany({
+        where: { userId },
+      });
+      const totalLeaveBalance = leaveBalances.reduce((sum, balance) => sum + balance.balance, 0);
+      
+      const approvedCount = await prisma.leaveRequest.count({
+        where: { userId, status: 'APPROVED' },
+      });
+      
+      const pendingCount = await prisma.leaveRequest.count({
+        where: { userId, status: 'PENDING' },
+      });
+      
+      const cancelledCount = await prisma.leaveRequest.count({
+        where: { userId, status: 'CANCELLED' },
+      });
+
+      res.json({
+        leaveBalance: totalLeaveBalance,
+        leaveApproved: approvedCount,
+        leavePending: pendingCount,
+        leaveCancelled: cancelledCount,
+      });
+    }
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to fetch leave stats' });

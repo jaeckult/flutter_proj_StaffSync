@@ -137,21 +137,33 @@ attendanceRouter.get('/stats', identifyUser, async (req, res, next) => {
       return res.status(400).json({ error: 'startDate must be before endDate' });
     }
 
-    const users = await prisma.user.findMany();
+    // Get all users except managers
+    const users = await prisma.user.findMany({
+      where: {
+        role: {
+          not: 'MANAGER'
+        }
+      }
+    });
 
+    // Get all attendance records without date filter
     const attendanceRecords = await prisma.attendance.findMany({
       where: {
-        date: {
-          gte: new Date(start.toISOString().split('T')[0]),
-          lte: new Date(end.toISOString().split('T')[0]),
-        },
-      },
+        user: {
+          role: {
+            not: 'MANAGER'
+          }
+        }
+      }
     });
+    console.log(attendanceRecords);
 
     let totalPresent = 0;
     let totalAbsent = 0;
-    let totalCheckedIn = 0;
-    let totalCheckedOut = 0;
+    // Count all check-in actions (every attendance record)
+    let totalCheckedIn = attendanceRecords.length;
+    // Count all check-out actions (records with checkOut time)
+    let totalCheckedOut = attendanceRecords.filter(record => record.checkOut !== null).length;
 
     const currentDate = new Date(start);
     while (currentDate <= end) {
@@ -162,11 +174,7 @@ attendanceRouter.get('/stats', identifyUser, async (req, res, next) => {
         const userRecord = recordsForDay.find(r => r.userId === user.id);
 
         if (userRecord) {
-          // ✅ Count check-ins and check-outs regardless of attendance status
-          if (userRecord.checkIn) totalCheckedIn++;
-          if (userRecord.checkOut) totalCheckedOut++;
-
-          // Still count attendance (optional, if you need it)
+          // Count attendance status
           if (userRecord.attendance === 'PRESENT') {
             totalPresent++;
           } else if (userRecord.attendance === 'ABSENT') {
@@ -184,8 +192,8 @@ attendanceRouter.get('/stats', identifyUser, async (req, res, next) => {
     res.json({
       totalPresent,
       totalAbsent,
-      totalCheckedIn,  // ✅ Now counts every checkIn, regardless of attendance status
-      totalCheckedOut, // ✅ Same here
+      totalCheckedIn,
+      totalCheckedOut,
     });
   } catch (error) {
     logger.error('Attendance stats error:', error);

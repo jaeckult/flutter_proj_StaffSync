@@ -7,7 +7,13 @@ abstract class UserRepository {
   Future<List<User>> getEmployees(String token);
   Future<void> deleteEmployee(int id, String token);
   Future<void> deleteNotification();
-  Future<void> changePassword(String oldPassword, String newPassword);
+  Future<void> changePassword({
+    required int userId,
+    required String oldPassword,
+    required String newPassword,
+    required String token,
+    required String endpoint,
+  });
 
   Future<List<NotificationModel>> getNotificationMessage();
   Future<void> editProfile(int id, 

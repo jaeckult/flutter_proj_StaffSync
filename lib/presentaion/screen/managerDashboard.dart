@@ -25,7 +25,7 @@ class _ScheduleScreenState extends ConsumerState<ManagerScheduleScreen> {
     });
   }
 
-  Widget leaveCard(String title, String value) {
+  Widget _buildLeaveStatsCard(String title, String value, Color color) {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 3,
@@ -36,12 +36,20 @@ class _ScheduleScreenState extends ConsumerState<ManagerScheduleScreen> {
           children: [
             Text(
               title,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey,
+              ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
             Text(
               value,
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w500),
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
             ),
           ],
         ),
@@ -54,63 +62,80 @@ class _ScheduleScreenState extends ConsumerState<ManagerScheduleScreen> {
     final dashboardState = ref.watch(managerDashboardNotifierProvider);
     final leaveRequestState = ref.watch(leaveRequestNotifierProvider);
 
+    int approvedCount = 0;
+    int pendingCount = 0;
+    int rejectedCount = 0;
+
+    if (leaveRequestState is LeaveRequestData) {
+      final requests = leaveRequestState.leaveRequest;
+      approvedCount = requests.where((r) => r.status == 'APPROVED').length;
+      pendingCount = requests.where((r) => r.status == 'PENDING').length;
+      rejectedCount = requests.where((r) => r.status == 'REJECTED').length;
+    }
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Manager Dashboard'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Attendance Summary',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            switch (dashboardState) {
-              ManagerDashboardLoading() => const Center(
-                child: CircularProgressIndicator(),
-              ),
-              ManagerDashboardError(message: final error) => Center(
-                child: Text(
-                  'Error fetching attendance stats: $error',
-                  style: const TextStyle(color: Colors.red),
+      appBar: AppBar(title: const Text('Manager Dashboard')),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Leave Request Summary',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                 ),
-              ),
-              ManagerDashboardData(stats: final data) =>
-                data == null
-                    ? const Center(child: Text('No attendance data available'))
-                    : GridView.count(
-                      crossAxisCount: 2,
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
+                const SizedBox(height: 20),
+                Column(
+                  children: [
+                    Row(
                       children: [
-                        leaveCard(
-                          'Total Present',
-                          data.totalPresent.toString(),
+                        Expanded(
+                          child: _buildLeaveStatsCard(
+                            'Approved',
+                            approvedCount.toString(),
+                            Colors.green,
+                          ),
                         ),
-                        leaveCard('Total Absent', data.totalAbsent.toString()),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _buildLeaveStatsCard(
+                            'Pending',
+                            pendingCount.toString(),
+                            Colors.orange,
+                          ),
+                        ),
                       ],
                     ),
-              _ => const Center(child: Text('Loading Attendance Data...')),
-            },
-            const SizedBox(height: 30),
-            const Divider(),
-            const SizedBox(height: 10),
-            const Text(
-              'Leave Requests',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                    const SizedBox(height: 12),
+                    Center(
+                      child: SizedBox(
+                        width: MediaQuery.of(context).size.width * 0.5,
+                        child: _buildLeaveStatsCard(
+                          'Rejected',
+                          rejectedCount.toString(),
+                          Colors.red,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 30),
+                const Divider(),
+                const SizedBox(height: 10),
+                const Text(
+                  'Leave Requests',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  height: MediaQuery.of(context).size.height * 0.5,
+                  child: LeaveTab(leaveRequestState: leaveRequestState),
+                ),
+              ],
             ),
-            const SizedBox(height: 10),
-            Expanded(child: LeaveTab(leaveRequestState: leaveRequestState)),
-          ],
+          ),
         ),
       ),
     );
@@ -154,7 +179,7 @@ class _LeaveTabState extends ConsumerState<LeaveTab> {
                     (() {
                       final pastRequests =
                           requests.where((r) => r.status != 'PENDING').toList();
-                      
+
                       return pastRequests.isEmpty
                           ? const Center(child: Text('No past leave requests'))
                           : ListView.builder(
@@ -182,7 +207,7 @@ class _LeaveTabState extends ConsumerState<LeaveTab> {
                     (() {
                       final pendingRequests =
                           requests.where((r) => r.status == 'PENDING').toList();
-                    
+
                       return pendingRequests.isEmpty
                           ? const Center(
                             child: Text('No pending leave requests'),
@@ -252,7 +277,7 @@ class _LeaveTabState extends ConsumerState<LeaveTab> {
                           ? Colors.green
                           : request.status == 'CANCELLED'
                           ? Colors.red
-                          : Colors.orange, 
+                          : Colors.orange,
                 ),
       ),
     );

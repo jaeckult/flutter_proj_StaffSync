@@ -158,10 +158,9 @@ class RemoteDataSource {
     required String endpoint,
   }) async {
     try {
-      final response = await dio.post(
-        'http://$endpoint:3000/api/change-password',
+      final response = await dio.patch(
+        'http://$endpoint:3000/api/profile/change-password/$userId',
         data: {
-          'userId': userId,
           'oldPassword': oldPassword,
           'newPassword': newPassword,
         },
@@ -173,14 +172,17 @@ class RemoteDataSource {
         ),
       );
 
-      if (response.statusCode == 200) {
-        print('Password changed successfully');
-      } else {
-        throw Exception('Failed to change password');
+      if (response.statusCode != 200) {
+        final error = response.data['error'] ?? 'Failed to change password';
+        throw Exception(error);
       }
     } on DioException catch (e) {
-      final error = e.response?.data;
-      throw Exception(error["message"] ?? 'Failed to change password');
+      if (e.response?.data is Map && e.response?.data['error'] != null) {
+        throw Exception(e.response?.data['error']);
+      }
+      throw Exception('Failed to change password. Please check your connection and try again.');
+    } catch (e) {
+      throw Exception('An unexpected error occurred while changing password.');
     }
   }
 

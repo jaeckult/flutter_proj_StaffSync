@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:staffsync/application/providers/providers.dart';
 import 'package:staffsync/domain/model/user.model.dart';
+import 'package:staffsync/presentaion/widgets/profile_picture_widget.dart';
 
 Color getStatusColor(String status) {
   return status == 'Checked in' ? Colors.green : Colors.red;
@@ -65,9 +66,9 @@ class _EmployeeListStateScreen extends ConsumerState<ManagerListScreen> {
                     return Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        CircleAvatar(
+                        ProfilePictureWidget(
+                          profilePicture: employee.profile.profilePicture,
                           radius: 25,
-                          backgroundImage: MemoryImage(imageBytes)
                         ),
                         const SizedBox(width: 12),
                         Expanded(

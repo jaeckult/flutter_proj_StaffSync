@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:staffsync/application/providers/providers.dart';
+import 'package:staffsync/presentaion/widgets/profile_picture_widget.dart';
 
 
 final fullNameProvider = StateProvider<String>((ref) => "");
@@ -27,7 +28,7 @@ class _EditProfileState extends ConsumerState<EditProfile> {
   late TextEditingController designationController;
   late TextEditingController emailController;
   late TextEditingController experienceController;
-    late TextEditingController profilePictureController;
+  late TextEditingController profilePictureController;
 
   @override
   void initState() {
@@ -36,26 +37,51 @@ class _EditProfileState extends ConsumerState<EditProfile> {
     designationController = TextEditingController();
     emailController = TextEditingController();
     experienceController = TextEditingController();
-    ref.read(userNotifierProvider.notifier).loadUserFromStorage();
+    profilePictureController = TextEditingController();
+    
+    // Load user data and initialize controllers
+    Future.microtask(() async {
+      await ref.read(userNotifierProvider.notifier).loadUserFromStorage();
+      final user = ref.read(userNotifierProvider);
+      if (user != null) {
+        nameController.text = user.profile.fullName;
+        designationController.text = user.profile.designation;
+        emailController.text = user.email;
+        experienceController.text = user.profile.employmentType;
+        profilePictureController.text = user.profile.profilePicture;
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    designationController.dispose();
+    emailController.dispose();
+    experienceController.dispose();
+    profilePictureController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    
     final user = ref.watch(userNotifierProvider);
     
-    const avatarRadius = 40.0;
     if (user == null) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator())
-
       );
     }
-  
-    final imageUrl = user.profile.profilePicture;
-    Uint8List imageBytes = base64Decode(imageUrl); 
 
-    
+    final imageUrl = user.profile.profilePicture;
+    Uint8List? imageBytes;
+    try {
+      if (imageUrl.isNotEmpty) {
+        imageBytes = base64Decode(imageUrl);
+      }
+    } catch (e) {
+      print('Error decoding image: $e');
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -63,90 +89,92 @@ class _EditProfileState extends ConsumerState<EditProfile> {
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      body: 
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: EdgeInsets.only(
+            left: 20.0,
+            right: 20.0,
+            top: 20.0,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 20.0,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              GestureDetector(
+                onTap: _showUploadModal,
+                child: ProfilePictureWidget(
+                  profilePicture: user.profile.profilePicture,
+                  onTap: _showUploadModal,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                user.profile.fullName,
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              Text(
+                user.profile.designation,
+                style: const TextStyle(color: Colors.grey),
+              ),
+              const SizedBox(height: 20),
+              _buildTextField("Full Name", nameController),
+              _buildTextField("Designation", designationController),
+              _buildTextField("Email", emailController),
+              _buildTextField("Employment Type", experienceController),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () async {
+                  try {
+                    final userNotifier = ref.read(userNotifierProvider.notifier);
+                    await userNotifier.editProfile(
+                      user.id,
+                      nameController.text,
+                      designationController.text,
+                      emailController.text,
+                      experienceController.text,
+                      _base64Image ?? user.profile.profilePicture,
+                    );
 
-      Padding(
-        
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          children: [
-            GestureDetector(child:
-            Center(
-              
-              child: Stack(
-                alignment: Alignment.bottomRight,
-                children: [
-                  CircleAvatar(
-                    radius: 50,
-                    backgroundImage: MemoryImage(imageBytes), // Replace with your image URL
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Profile updated successfully"),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                      Navigator.pop(context);
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text("Error updating profile: ${e.toString()}"),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.deepOrange,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  Positioned(
-                    bottom: 0,
-                    right: 4,
-                    child: Container(
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                      ),
-                      padding: const EdgeInsets.all(4),
-                      child: const Icon(
-                        Icons.camera_alt,
-                        color: Colors.redAccent,
-                        size: 20,
-                      ),
-                    ),
-                  )
-                ],
+                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                ),
+                child: const Text(
+                  "Submit",
+                  style: TextStyle(fontSize: 16, color: Colors.white),
+                ),
               ),
-            ), onTap: () => {
-              _showUploadModal()
-              
-             
-            }
-            ),
-            
-            const SizedBox(height: 10),
-            Text(
-              user.profile.fullName,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-             Text(
-              user.profile.designation,
-              style: const TextStyle(color: Colors.grey),
-            ),
-            const SizedBox(height: 20),
-            _buildTextField("Full Name", nameController),
-            _buildTextField("Designation", designationController),
-            _buildTextField("Email", emailController),
-            _buildTextField("Employeement Type", experienceController),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () async {
-
-                final userNotifier = ref.read(userNotifierProvider.notifier);
-                await userNotifier.editProfile(user.id, nameController.text, designationController.text, emailController.text, experienceController.text, profilePictureController.text);
-           
-
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Submitted Successfully")),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.deepOrange,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-              ),
-             child: const Text(
-                 "Submit",
-                  style: TextStyle(fontSize: 16, color: Color.fromRGBO(255, 255, 255, 1)),
-                )
-            ),
-          ],
+              const SizedBox(height: 20), // Add extra padding at bottom
+            ],
+          ),
         ),
       ),
     );
   }
+
   Future<void> _pickImage(ImageSource source) async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: source);

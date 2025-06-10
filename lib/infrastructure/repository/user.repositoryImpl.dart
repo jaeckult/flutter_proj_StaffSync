@@ -138,27 +138,21 @@ class UserRepositoryImpl implements UserRepository {
   }
 
   @override
-  Future<void> changePassword(String oldPassword, String newPassword) async {
+  Future<void> changePassword({
+    required int userId,
+    required String oldPassword,
+    required String newPassword,
+    required String token,
+    required String endpoint,
+  }) async {
     try {
-      final token = await secureStorage.read("token");
-      final userId = await secureStorage.read("id");
-      final endpoint = await secureStorage.read("endpoint");
-      if (endpoint == null) {
-        throw Exception('Endpoint not configured');
-      }
-   
-      if (token != null && userId != null) {
-        final castedId = int.parse(userId);
-        await remoteDataSource.changePassword(
-          userId: castedId,
-          oldPassword: oldPassword,
-          newPassword: newPassword,
-          token: token,
-          endpoint: endpoint
-        );
-      } else {
-        throw Exception("Token or id is null");
-      }
+      await remoteDataSource.changePassword(
+        userId: userId,
+        oldPassword: oldPassword,
+        newPassword: newPassword,
+        token: token,
+        endpoint: endpoint,
+      );
     } catch (e) {
       if (e is Exception) {
         rethrow;

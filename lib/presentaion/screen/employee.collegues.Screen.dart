@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:staffsync/application/providers/providers.dart';
 import 'package:staffsync/domain/model/user.model.dart';
+import 'package:staffsync/presentaion/widgets/profile_picture_widget.dart';
 
 void main() {
   runApp(const MyApp());
@@ -99,9 +100,9 @@ class _EmployeeListStateScreen extends ConsumerState<EmployeeListScreen> {
                               return Row(
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  CircleAvatar(
+                                  ProfilePictureWidget(
+                                    profilePicture: employee.profile.profilePicture,
                                     radius: 25,
-                                    backgroundImage: MemoryImage(imageBytes),
                                   ),
                                   const SizedBox(width: 12),
                                   Expanded(

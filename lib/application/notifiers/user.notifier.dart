@@ -13,20 +13,24 @@ class UserNotifier extends StateNotifier<User?> {
       : secureStorage = SecureStorage.instance,
         super(null);
     Future<void> loadUserFromStorage() async {
-      if (state != null) return;
-      final id = await authRepository.getId(); 
-      final endpoint = await secureStorage.read("endpoint");
-      if (id == null) {
-        print('No user ID found in storage.');
+      try {
+        final id = await authRepository.getId(); 
+        final endpoint = await secureStorage.read("endpoint");
+        if (id == null) {
+          print('No user ID found in storage.');
+          state = null;
+          return;
+        }
+        if (endpoint == null) {
+          throw Exception('Endpoint not configured');
+        }
+        final newId = int.parse(id);
+        final user = await userRepository.getCurrUser(newId, endpoint);
+        state = user;
+      } catch (e) {
+        print('Error loading user from storage: $e');
         state = null;
-        return;
       }
-      if (endpoint == null) {
-        throw Exception('Endpoint not configured');
-      }
-      final newId = int.parse(id);
-      final user = await userRepository.getCurrUser(newId, endpoint);
-      state = user;
     }
      Future<void> editProfile
   (int id, 
@@ -67,12 +71,31 @@ class UserNotifier extends StateNotifier<User?> {
     }
   }
   Future<void> changePassword(String oldPassword, String newPassword) async {
-    try{
-      await userRepository.changePassword(oldPassword, newPassword);
-    }
-    catch(e) {
+    try {
+      final userId = await authRepository.getId();
+      final token = await secureStorage.read("token");
+      final endpoint = await secureStorage.read("endpoint");
+
+      if (userId == null) {
+        throw Exception('User ID not found');
+      }
+      if (token == null) {
+        throw Exception('Authentication token not found');
+      }
+      if (endpoint == null) {
+        throw Exception('Endpoint not configured');
+      }
+
+      await userRepository.changePassword(
+        userId: int.parse(userId),
+        oldPassword: oldPassword,
+        newPassword: newPassword,
+        token: token,
+        endpoint: endpoint,
+      );
+    } catch (e) {
       print('Error changing password: $e');
-      throw Exception('Cannot change password: ${e.toString()}');
+      throw Exception('Failed to change password: ${e.toString()}');
     }
   }
 

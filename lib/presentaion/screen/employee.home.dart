@@ -10,6 +10,7 @@ import 'package:staffsync/domain/model/notification.model.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' show ref;
 import 'package:another_flushbar/flushbar.dart';
+import 'package:staffsync/presentaion/widgets/profile_picture_widget.dart';
 
 void main() => runApp(const ProviderScope(child: EmployeeHomeApp()));
 
@@ -40,6 +41,13 @@ class _EmployeeHomeScreenState extends ConsumerState<EmployeeHomeScreen> {
       ref.read(userNotifierProvider.notifier).loadUserFromStorage();
       ref.read(attendanceNotifierProvider.notifier).getAttendances();
     });
+  }
+
+  Future<void> _refreshData() async {
+    await Future.wait([
+      ref.read(userNotifierProvider.notifier).loadUserFromStorage(),
+      ref.read(attendanceNotifierProvider.notifier).getAttendances(),
+    ]);
   }
 
   void _handleAttendance() async {
@@ -128,116 +136,120 @@ class _EmployeeHomeScreenState extends ConsumerState<EmployeeHomeScreen> {
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
       body: SafeArea(
-        child: Column(
-          children: [
-            const _ProfileSection(),
-            const _DateSelector(),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _TodayAttendance(attendanceState: attendanceState),
-                    const SizedBox(height: 16),
-                    const Text(
-                      "Today's Activity",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+        child: RefreshIndicator(
+          onRefresh: _refreshData,
+          child: Column(
+            children: [
+              const _ProfileSection(),
+              const _DateSelector(),
+              Expanded(
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _TodayAttendance(attendanceState: attendanceState),
+                      const SizedBox(height: 16),
+                      const Text(
+                        "Today's Activity",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    if (todayAttendance.isNotEmpty) ...[
-                      ...todayAttendance
-                          .map(
-                            (attendance) => [
-                              _ActivityItem(
+                      const SizedBox(height: 8),
+                      if (todayAttendance.isNotEmpty) ...[
+                        ...todayAttendance
+                            .map(
+                              (attendance) => [
+                                _ActivityItem(
+                                  date: attendance.date,
+                                  time: attendance.checkIn,
+                                  type: 'Check In',
+                                  status: attendance.attendance,
+                                  id: attendance.id,
+                                ),
+                                if (attendance.checkOut != null)
+                                  _ActivityItem(
+                                    date: attendance.date,
+                                    time: attendance.checkOut!,
+                                    type: 'Check Out',
+                                    status: attendance.attendance,
+                                    id: attendance.id,
+                                  ),
+                              ],
+                            )
+                            .expand((items) => items),
+                      ] else ...[
+                        const Center(child: Text('No activity today')),
+                      ],
+                      const SizedBox(height: 16),
+                      const Text(
+                        "Past Activity",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      if (attendanceState is states.AttendanceData) ...[
+                        ...(attendanceState).attendance
+                            .where(
+                              (a) =>
+                                  a.date.year != DateTime.now().year ||
+                                  a.date.month != DateTime.now().month ||
+                                  a.date.day != DateTime.now().day,
+                            )
+                            .map(
+                              (attendance) => _ActivityItem(
                                 date: attendance.date,
                                 time: attendance.checkIn,
                                 type: 'Check In',
                                 status: attendance.attendance,
                                 id: attendance.id,
                               ),
-                              if (attendance.checkOut != null)
-                                _ActivityItem(
-                                  date: attendance.date,
-                                  time: attendance.checkOut!,
-                                  type: 'Check Out',
-                                  status: attendance.attendance,
-                                  id: attendance.id,
-                                ),
-                            ],
-                          )
-                          .expand((items) => items),
-                    ] else ...[
-                      const Center(child: Text('No activity today')),
+                            ),
+                      ] else if (attendanceState is states.AttendanceError) ...[
+                        Center(child: Text('Error: ${attendanceState.message}')),
+                      ] else ...[
+                        const Center(child: CircularProgressIndicator()),
+                      ],
                     ],
-                    const SizedBox(height: 16),
-                    const Text(
-                      "Past Activity",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 8.0,
+                ),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _handleAttendance,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor:
+                          hasActiveCheckIn
+                              ? Colors.red
+                              : const Color.fromARGB(255, 58, 168, 62),
+                      padding: const EdgeInsets.all(18),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    if (attendanceState is states.AttendanceData) ...[
-                      ...(attendanceState).attendance
-                          .where(
-                            (a) =>
-                                a.date.year != DateTime.now().year ||
-                                a.date.month != DateTime.now().month ||
-                                a.date.day != DateTime.now().day,
-                          )
-                          .map(
-                            (attendance) => _ActivityItem(
-                              date: attendance.date,
-                              time: attendance.checkIn,
-                              type: 'Check In',
-                              status: attendance.attendance,
-                              id: attendance.id,
-                            ),
-                          ),
-                    ] else if (attendanceState is states.AttendanceError) ...[
-                      Center(child: Text('Error: ${attendanceState.message}')),
-                    ] else ...[
-                      const Center(child: CircularProgressIndicator()),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-                vertical: 8.0,
-              ),
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _handleAttendance,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        hasActiveCheckIn
-                            ? Colors.red
-                            : const Color.fromARGB(255, 58, 168, 62),
-                    padding: const EdgeInsets.all(18),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                    child: Text(
+                      hasActiveCheckIn ? "Check Out" : "Check In",
+                      style: const TextStyle(fontSize: 16, color: Colors.white),
                     ),
                   ),
-                  child: Text(
-                    hasActiveCheckIn ? "Check Out" : "Check In",
-                    style: const TextStyle(fontSize: 16, color: Colors.white),
-                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -261,9 +273,9 @@ class _ProfileSection extends ConsumerWidget {
         }
 
         return ListTile(
-          leading: const CircleAvatar(
+          leading: ProfilePictureWidget(
+            profilePicture: user?.profile.profilePicture,
             radius: 24,
-            backgroundImage: AssetImage('assets/profile.png'),
           ),
           title: Text(
             user?.profile.fullName ?? "Loading...",

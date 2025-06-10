@@ -3,6 +3,7 @@ const profileRouter = express.Router();
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const { identifyUser } = require('../utils/middleware');
+const bcrypt = require('bcryptjs');
 // const { passwordChangeAlertMail } = require('../utils/mail'); // Make sure this is correct
 
 // PATCH /profile/:id — Update profile
@@ -26,7 +27,7 @@ profileRouter.patch('/:id', identifyUser, async (req, res, next) => {
     } = req.body;
 
     // Validate at least one field is provided
-    if (!fullName && !email && !employmentType && !designation && !gender && !dateOfBirth) {
+    if (!fullName && !email && !employmentType && !designation && !gender && !dateOfBirth && !profilePicture) {
       return res.status(400).json({ error: 'At least one field must be provided for update' });
     }
 
@@ -69,6 +70,14 @@ profileRouter.patch('/:id', identifyUser, async (req, res, next) => {
         return res.status(400).json({ error: 'Invalid date of birth' });
       }
       updateData.dateOfBirth = date;
+    }
+
+    // Handle profile picture update
+    if (profilePicture) {
+      if (typeof profilePicture !== 'string') {
+        return res.status(400).json({ error: 'Profile picture must be a valid base64 string' });
+      }
+      updateData.profilePicture = profilePicture;
     }
 
     // Fetch profile and check authorization
@@ -137,6 +146,64 @@ profileRouter.patch('/:id', identifyUser, async (req, res, next) => {
     if (error.code === 'P2025') {
       return res.status(404).json({ error: 'Profile not found' });
     }
+    next(error);
+  }
+});
+
+profileRouter.patch('/change-password/:id', identifyUser, async (req, res, next) => {
+  try {
+    const userId = parseInt(req.params.id, 10);
+    const { oldPassword, newPassword } = req.body;
+
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({ error: 'Both old and new passwords are required' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'New password must be at least 6 characters long' });
+    }
+
+    // Get user with password
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        password: true,
+        email: true,
+        profile: {
+          select: {
+            fullName: true
+          }
+        }
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Verify old password
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ error: 'Current password is incorrect' });
+    }
+
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+    // Update password
+    await prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword }
+    });
+
+    // Send password change email
+    
+
+    res.status(200).json({ message: 'Password changed successfully' });
+  } catch (error) {
+    console.error('Password change error:', error);
     next(error);
   }
 });
