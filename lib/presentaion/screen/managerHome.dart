@@ -673,7 +673,7 @@ class _SummaryCard extends StatelessWidget {
 }
 
 class _EmployeesDailyStatusList extends ConsumerWidget {
-  const _EmployeesDailyStatusList({super.key});
+  const _EmployeesDailyStatusList();
 
   String getStatus(User employee) {
     final hasAttendance = employee.attendance.isNotEmpty;
