@@ -23,10 +23,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = LoggedIn(role: loggedInRole);
       return loggedInRole;
     } catch (error) {
-      final errorMessage = error.toString().split(":").length > 1
-        ? error.toString().split(":")[1].trim()
-        : error.toString();
-      state = AuthError(error.toString().split(":")[1]);
+      final errorMessage = error.toString().contains(":")
+      ? error.toString().split(":")[1].trim()
+      : error.toString();
+      state = AuthError(errorMessage);
       throw Exception(errorMessage);
     }
     
