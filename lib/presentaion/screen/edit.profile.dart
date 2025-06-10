@@ -39,7 +39,7 @@ class _EditProfileState extends ConsumerState<EditProfile> {
     experienceController = TextEditingController();
     profilePictureController = TextEditingController();
     
-    // Load user data and initialize controllers
+    
     Future.microtask(() async {
       await ref.read(userNotifierProvider.notifier).loadUserFromStorage();
       final user = ref.read(userNotifierProvider);
@@ -167,7 +167,7 @@ class _EditProfileState extends ConsumerState<EditProfile> {
                   style: TextStyle(fontSize: 16, color: Colors.white),
                 ),
               ),
-              const SizedBox(height: 20), // Add extra padding at bottom
+              const SizedBox(height: 20),
             ],
           ),
         ),
