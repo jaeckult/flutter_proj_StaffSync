@@ -6,7 +6,7 @@ const { identifyUser } = require('../utils/middleware');
 const bcrypt = require('bcryptjs');
 // const { passwordChangeAlertMail } = require('../utils/mail'); // Make sure this is correct
 
-// PATCH /profile/:id — Update profile
+
 profileRouter.patch('/:id', identifyUser, async (req, res, next) => {
   try {
     const profileId = parseInt(req.params.id, 10);
@@ -130,6 +130,8 @@ profileRouter.patch('/:id', identifyUser, async (req, res, next) => {
 
     // Send profile update email
     try {
+      // This is actually optional
+    
       await passwordChangeAlertMail({
         email: updatedProfile.user.email,
         name: updatedProfile.fullName || updatedProfile.user.email,

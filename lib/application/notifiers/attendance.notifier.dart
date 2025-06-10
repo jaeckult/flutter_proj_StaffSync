@@ -32,7 +32,8 @@ class AttendanceNotifier extends StateNotifier<states.AttendanceState> {
     try {
       state = const states.AttendanceLoading();
       await attendanceRepository.checkIn(attendanceResponse);
-      await getAttendances(); // Refresh the attendance list
+     
+      await getAttendances(); 
     } catch (error) {
       print("Check-in error: $error");
       state = states.AttendanceError(error.toString());

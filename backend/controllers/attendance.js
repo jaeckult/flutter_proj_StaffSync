@@ -34,13 +34,13 @@ attendanceRouter.post('/check-in', identifyUser, async (req, res, next) => {
     });
   } catch (error) {
     logger.error('Check-in error:', error);
+    console.log(error)
     next(error);
   } finally {
     await prisma.$disconnect();
   }
 });
 
-// POST /api/attendance/check-out - Record check-out (all authenticated users)
 attendanceRouter.post('/check-out', identifyUser, async (req, res, next) => {
   try {
     const now = new Date();
@@ -60,10 +60,11 @@ attendanceRouter.post('/check-out', identifyUser, async (req, res, next) => {
     });
 
     if (!activeAttendance) {
+      print("responded with 400")
       return res.status(400).json({ error: 'No active check-in found for today' });
     }
 
-    // Update attendance record with check-out time
+    
     const attendance = await prisma.attendance.update({
       where: { id: activeAttendance.id },
       data: { checkOut: now },

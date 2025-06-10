@@ -56,7 +56,7 @@ class _EmployeeHomeScreenState extends ConsumerState<EmployeeHomeScreen> {
       final hasActiveCheckIn = notifier.hasActiveCheckIn();
 
       if (hasActiveCheckIn) {
-        // If already checked in, perform check-out
+       
         await notifier.checkOut();
         if (mounted) {
           Flushbar(
@@ -152,7 +152,7 @@ class _EmployeeHomeScreenState extends ConsumerState<EmployeeHomeScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _TodayAttendance(attendanceState: attendanceState),
+                      // _TodayAttendance(attendanceState: attendanceState),
                       const SizedBox(height: 16),
                       const Text(
                         "Today's Activity",
@@ -407,25 +407,45 @@ class _TodayAttendance extends ConsumerWidget {
               )
               .toList();
 
+      // if (todayAttendance.isNotEmpty) {
+      //   final checkIns = todayAttendance.where((a) => a.checkIn != null).toList();
+      
+      //   final latestCheckIn = todayAttendance
+      //       .where((a) => a.checkIn != null)
+      //       .reduce((a, b) => a.checkIn.isAfter(b.checkIn) ? a : b);
+
+       
+      //   final latestCheckOut = todayAttendance
+      //       .where((a) => a.checkOut != null)
+      //       .reduce((a, b) => a.checkOut!.isAfter(b.checkOut!) ? a : b);
+
+      //   checkInTime = DateFormat('hh:mm a').format(latestCheckIn.checkIn);
+
+      //   if (latestCheckOut.checkOut != null) {
+      //     checkOutTime = DateFormat('hh:mm a').format(latestCheckOut.checkOut!);
+      //   }
+      // } 
       if (todayAttendance.isNotEmpty) {
-        // Get the latest check-in
-        final latestCheckIn = todayAttendance
-            .where((a) => a.checkIn != null)
-            .reduce((a, b) => a.checkIn.isAfter(b.checkIn) ? a : b);
+  final checkIns = todayAttendance.where((a) => a.checkIn != null).toList();
+  if (checkIns.isNotEmpty) {
+    final latestCheckIn = checkIns.reduce(
+      (a, b) => a.checkIn.isAfter(b.checkIn) ? a : b,
+    );
+    checkInTime = DateFormat('hh:mm a').format(latestCheckIn.checkIn);
+  }
 
-        // Get the latest check-out
-        final latestCheckOut = todayAttendance
-            .where((a) => a.checkOut != null)
-            .reduce((a, b) => a.checkOut!.isAfter(b.checkOut!) ? a : b);
+  final checkOuts = todayAttendance.where((a) => a.checkOut != null).toList();
+  if (checkOuts.isNotEmpty) {
+    final latestCheckOut = checkOuts.reduce(
+      (a, b) => a.checkOut!.isAfter(b.checkOut!) ? a : b,
+    );
+    checkOutTime = DateFormat('hh:mm a').format(latestCheckOut.checkOut!);
+  }
+}
 
-        checkInTime = DateFormat('hh:mm a').format(latestCheckIn.checkIn);
+      
 
-        if (latestCheckOut.checkOut != null) {
-          checkOutTime = DateFormat('hh:mm a').format(latestCheckOut.checkOut!);
-        }
-      }
-
-      // Count unique days with attendance
+      
       final uniqueDays =
           (attendanceState as states.AttendanceData).attendance
               .where((a) => a.attendance == 'PRESENT')
