@@ -363,7 +363,7 @@ class _LeaveTabState extends ConsumerState<LeaveTab> {
                       },
                     ),
                 },
-                // Pending Tab
+              
                 switch (leaveRequestState) {
                   LeaveRequestLoading() => const Center(
                     child: CircularProgressIndicator(),
@@ -375,17 +375,27 @@ class _LeaveTabState extends ConsumerState<LeaveTab> {
                     ),
                   ),
                   LeaveRequestData(leaveRequest: final requests) =>
+                  
                     ListView.builder(
                       itemCount:
                           requests.where((r) => r.status == 'PENDING').length,
                       itemBuilder: (context, index) {
-                        final pendingRequests =
+                         final pendingRequests =
                             requests
                                 .where((r) => r.status == 'PENDING')
                                 .toList();
+                       
+                  
+                        
+                      
+                        
                         return _buildLeaveRequestCard(pendingRequests[index]);
+                        
+   
                       },
                     ),
+                    
+
                 },
               ],
             ),
