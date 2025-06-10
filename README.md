@@ -4,7 +4,7 @@
 ## Group Members
 
 | Name              | ID.NO         | Section |  
-|-------------------|--------------|----------|  
+|-------------------|-------------- |----------|  
 | Milki Legesse     | UGR/9040/15   | 2       |  
 | Tesfanesh Asefa   | UGR/1233/15   | 2       |  
 | Yitbarek Alemu    | UGR/7554/15   | 1       |  
