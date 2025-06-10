@@ -178,10 +178,7 @@ class _ChangePasswordState extends ConsumerState<ChangePassword> {
                               valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                             ),
                           )
-                        : const Text(
-                            "Change Password",
-                            style: TextStyle(fontSize: 16),
-                          ),
+                        : const Text('Change Password', style: TextStyle(fontSize: 16, color: Colors.white)),
                   ),
                 )
               ],

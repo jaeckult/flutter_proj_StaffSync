@@ -17,6 +17,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final NetworkService _networkService = NetworkService();
   bool _isLoading = false;
+  bool passwordVisible = false;
+  bool _isEnable = false;
 
   @override
   void dispose() {
@@ -24,6 +26,19 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     _passwordController.dispose();
     super.dispose();
   }
+  @override
+  void initState() {
+  super.initState();
+  _usernameController.addListener(_validateForm);
+  _passwordController.addListener(_validateForm);
+}
+  void _validateForm() {
+  setState(() {
+    _isEnable = _usernameController.text.isNotEmpty &&
+        _passwordController.text.isNotEmpty &&
+        _passwordController.text.length >= 8;
+  });
+}
 
   Future<void> _handleLogin() async {
     if (_formKey.currentState!.validate()) {
@@ -65,11 +80,18 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           );
         }
       } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text(e.toString())));
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  e.toString().replaceFirst('Exception: ', ''), 
+                ),
+                backgroundColor: const Color.fromRGBO(236, 19, 7, 0.815),
+              ),
+            );
+          }
         }
-      } finally {
+        finally {
         if (mounted) {
           setState(() {
             _isLoading = false;
@@ -81,6 +103,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+   
     return Scaffold(
       body: Center(
         child: SingleChildScrollView(
@@ -113,21 +136,31 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                 const SizedBox(height: 20),
                 TextFormField(
                   controller: _passwordController,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    hintText: 'Password',
-                    prefixIcon: Icon(Icons.lock),
-                  ),
-                  obscureText: true,
+                  obscureText: !passwordVisible,
+                  
                   validator: (value) =>
                       value == null || value.isEmpty ? 'Please enter your password' : null,
+                  decoration: InputDecoration(
+                    hintText: 'Password',
+                    prefixIcon: const Icon(Icons.lock),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    suffixIcon: IconButton(
+                      icon: Icon(passwordVisible ? Icons.visibility : Icons.visibility_off),
+                      onPressed: () {
+                        setState(() {
+                          passwordVisible = !passwordVisible;
+                        });
+                      },
+                    ),
+                  ),
                 ),
+            
                 const SizedBox(height: 20),
                 SizedBox(
                   width: 250,
                   height: 50,
                   child: ElevatedButton(
-                    onPressed: _isLoading ? null : _handleLogin,
+                    onPressed:_isLoading || !_isEnable ? null : _handleLogin,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.orange[700],
                       shape: RoundedRectangleBorder(

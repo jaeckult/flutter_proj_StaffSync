@@ -23,9 +23,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = LoggedIn(role: loggedInRole);
       return loggedInRole;
     } catch (error) {
+      final errorMessage = error.toString().split(":").length > 1
+        ? error.toString().split(":")[1].trim()
+        : error.toString();
       state = AuthError(error.toString().split(":")[1]);
+      throw Exception(errorMessage);
     }
-    return null;
+    
   }
 
   Future<void> signup(
@@ -74,9 +78,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
   Future<void> connectToIO() async {
     try {
-     
-      final response = await authRepository.connectToIO();
-      print("tying to connect");
+      await authRepository.connectToIO();
     }
     catch(e){
       print(e);

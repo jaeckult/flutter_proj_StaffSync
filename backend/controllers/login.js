@@ -21,7 +21,7 @@ loginRouter.post('/', async(req, res)=>{
     
         if(!(user && correctPass)){
             return res.status(400).json({
-                error : 'username or password incorrect'
+                error : 'Username or password incorrect'
             });
 
         }
@@ -33,8 +33,7 @@ loginRouter.post('/', async(req, res)=>{
             role: user.role, 
            
           };
-        console.log('userToken:', userToken);
-        const token = jwt.sign(userToken, process.env.SECRET, { expiresIn: '1h' }); //this took me an hour to figure out, if you remove the expiration date, the logout doesn't work.
+         const token = jwt.sign(userToken, process.env.SECRET, { expiresIn: '1h' }); //this took me an hour to figure out, if you remove the expiration date, the logout doesn't work.
         res.status(201).send({
             token,
             username : user.username,
@@ -48,7 +47,12 @@ loginRouter.post('/', async(req, res)=>{
     
     } catch (error){
         console.error('error during login', error);
-        res.status(500).json({error: 'internal server error during login'});
+        const message = error?.message || (typeof error === 'string' ? error : 'Internal server error during login');
+        res.status(500).json({
+        message,
+    });
+    console.log(message)
+
     } finally{
         await prisma.$disconnect();
     }

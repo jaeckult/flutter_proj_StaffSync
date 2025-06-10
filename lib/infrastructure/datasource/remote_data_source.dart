@@ -35,10 +35,16 @@ class RemoteDataSource {
       }
 
       return data;
-    } on DioException catch (e) {
-      final error = e.response?.data;
-      throw Exception(error["message"] ?? 'Invalid credentials!');
-    }
+          } on DioException catch (e) {
+        final errorData = e.response?.data;
+
+        if (errorData != null && errorData is Map<String, dynamic> && errorData.containsKey('error')) {
+          throw Exception(errorData['error']);
+        } else {
+          throw Exception('Login failed: ${e.message}');
+        }
+}
+
   }
 
   Future<Map<String, dynamic>> signup(
@@ -77,9 +83,15 @@ class RemoteDataSource {
 
       return data;
     } on DioException catch (e) {
-      final error = e.response?.data;
-      throw Exception(error["message"] ?? 'Signup failed!');
-    }
+        final errorData = e.response?.data;
+
+        if (errorData != null && errorData is Map<String, dynamic> && errorData.containsKey('error')) {
+          throw Exception(errorData['error']);
+        } else {
+          throw Exception('Login failed: ${e.message}');
+        }
+      }
+
   }
 
   Future<Map<String, dynamic>> getCurrUser(int id, String endpoint) async {
