@@ -171,7 +171,7 @@ class RemoteDataSource {
   }) async {
     try {
       final response = await dio.patch(
-        'http://localhost:3000/api/users/$userId',
+        'http://$endpoint:3000/api/users/$userId',
         data: {
           'oldPassword': oldPassword,
           'newPassword': newPassword,

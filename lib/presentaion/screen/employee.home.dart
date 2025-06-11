@@ -56,7 +56,7 @@ class _EmployeeHomeScreenState extends ConsumerState<EmployeeHomeScreen> {
       final hasActiveCheckIn = notifier.hasActiveCheckIn();
 
       if (hasActiveCheckIn) {
-       
+        // If already checked in, perform check-out
         await notifier.checkOut();
         if (mounted) {
           Flushbar(
@@ -75,9 +75,10 @@ class _EmployeeHomeScreenState extends ConsumerState<EmployeeHomeScreen> {
         final attendanceResponse = AttendanceResponse(
           message: 'Checking in...',
           attendance: AttendanceData(
-            id: 0, // This will be set by the backend
+            id: 0,
             checkIn: DateTime.now(),
             attendance: 'PRESENT',
+            checkOut: null,
           ),
         );
         await notifier.checkIn(attendanceResponse);
@@ -129,9 +130,9 @@ class _EmployeeHomeScreenState extends ConsumerState<EmployeeHomeScreen> {
   Widget build(BuildContext context) {
     final attendanceState = ref.watch(attendanceNotifierProvider);
     final hasActiveCheckIn =
-        ref.watch(attendanceNotifierProvider.notifier).hasActiveCheckIn();
+    ref.watch(attendanceNotifierProvider.notifier).hasActiveCheckIn();
     final todayAttendance =
-        ref.watch(attendanceNotifierProvider.notifier).getTodayAttendance();
+    ref.watch(attendanceNotifierProvider.notifier).getTodayAttendance();
 
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
@@ -152,7 +153,7 @@ class _EmployeeHomeScreenState extends ConsumerState<EmployeeHomeScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // _TodayAttendance(attendanceState: attendanceState),
+                      _TodayAttendance(attendanceState: attendanceState),
                       const SizedBox(height: 16),
                       const Text(
                         "Today's Activity",
@@ -166,23 +167,23 @@ class _EmployeeHomeScreenState extends ConsumerState<EmployeeHomeScreen> {
                         ...todayAttendance
                             .map(
                               (attendance) => [
-                                _ActivityItem(
-                                  date: attendance.date,
-                                  time: attendance.checkIn,
-                                  type: 'Check In',
-                                  status: attendance.attendance,
-                                  id: attendance.id,
-                                ),
-                                if (attendance.checkOut != null)
-                                  _ActivityItem(
-                                    date: attendance.date,
-                                    time: attendance.checkOut!,
-                                    type: 'Check Out',
-                                    status: attendance.attendance,
-                                    id: attendance.id,
-                                  ),
-                              ],
-                            )
+                            _ActivityItem(
+                              date: attendance.date,
+                              time: attendance.checkIn,
+                              type: 'Check In',
+                              status: attendance.attendance,
+                              id: attendance.id,
+                            ),
+                            if (attendance.checkOut != null)
+                              _ActivityItem(
+                                date: attendance.date,
+                                time: attendance.checkOut!,
+                                type: 'Check Out',
+                                status: attendance.attendance,
+                                id: attendance.id,
+                              ),
+                          ],
+                        )
                             .expand((items) => items),
                       ] else ...[
                         const Center(child: Text('No activity today')),
@@ -200,19 +201,19 @@ class _EmployeeHomeScreenState extends ConsumerState<EmployeeHomeScreen> {
                         ...(attendanceState).attendance
                             .where(
                               (a) =>
-                                  a.date.year != DateTime.now().year ||
-                                  a.date.month != DateTime.now().month ||
-                                  a.date.day != DateTime.now().day,
-                            )
+                          a.date.year != DateTime.now().year ||
+                              a.date.month != DateTime.now().month ||
+                              a.date.day != DateTime.now().day,
+                        )
                             .map(
                               (attendance) => _ActivityItem(
-                                date: attendance.date,
-                                time: attendance.checkIn,
-                                type: 'Check In',
-                                status: attendance.attendance,
-                                id: attendance.id,
-                              ),
-                            ),
+                            date: attendance.date,
+                            time: attendance.checkIn,
+                            type: 'Check In',
+                            status: attendance.attendance,
+                            id: attendance.id,
+                          ),
+                        ),
                       ] else if (attendanceState is states.AttendanceError) ...[
                         Center(child: Text('Error: ${attendanceState.message}')),
                       ] else ...[
@@ -233,9 +234,9 @@ class _EmployeeHomeScreenState extends ConsumerState<EmployeeHomeScreen> {
                     onPressed: _handleAttendance,
                     style: ElevatedButton.styleFrom(
                       backgroundColor:
-                          hasActiveCheckIn
-                              ? Colors.red
-                              : const Color.fromARGB(255, 58, 168, 62),
+                      hasActiveCheckIn
+                          ? Colors.red
+                          : const Color.fromARGB(255, 58, 168, 62),
                       padding: const EdgeInsets.all(18),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -346,14 +347,14 @@ class _DateSelector extends StatelessWidget {
               color: isSelected ? Colors.deepOrange : Colors.white,
               borderRadius: BorderRadius.circular(8),
               boxShadow:
-                  isSelected
-                      ? [
-                        BoxShadow(
-                          color: Colors.deepOrange.withOpacity(0.5),
-                          blurRadius: 6,
-                        ),
-                      ]
-                      : [],
+              isSelected
+                  ? [
+                BoxShadow(
+                  color: Colors.deepOrange.withOpacity(0.5),
+                  blurRadius: 6,
+                ),
+              ]
+                  : [],
             ),
             child: Center(
               child: Column(
@@ -407,45 +408,27 @@ class _TodayAttendance extends ConsumerWidget {
               )
               .toList();
 
-      // if (todayAttendance.isNotEmpty) {
-      //   final checkIns = todayAttendance.where((a) => a.checkIn != null).toList();
-      
-      //   final latestCheckIn = todayAttendance
-      //       .where((a) => a.checkIn != null)
-      //       .reduce((a, b) => a.checkIn.isAfter(b.checkIn) ? a : b);
-
-       
-      //   final latestCheckOut = todayAttendance
-      //       .where((a) => a.checkOut != null)
-      //       .reduce((a, b) => a.checkOut!.isAfter(b.checkOut!) ? a : b);
-
-      //   checkInTime = DateFormat('hh:mm a').format(latestCheckIn.checkIn);
-
-      //   if (latestCheckOut.checkOut != null) {
-      //     checkOutTime = DateFormat('hh:mm a').format(latestCheckOut.checkOut!);
-      //   }
-      // } 
       if (todayAttendance.isNotEmpty) {
-  final checkIns = todayAttendance.where((a) => a.checkIn != null).toList();
-  if (checkIns.isNotEmpty) {
-    final latestCheckIn = checkIns.reduce(
-      (a, b) => a.checkIn.isAfter(b.checkIn) ? a : b,
-    );
-    checkInTime = DateFormat('hh:mm a').format(latestCheckIn.checkIn);
-  }
+        // Get the latest check-in
+        final checkIns = todayAttendance.where((a) => a.checkIn != null).toList();
+        if (checkIns.isNotEmpty) {
+          final latestCheckIn = checkIns.reduce(
+            (a, b) => a.checkIn.isAfter(b.checkIn) ? a : b,
+          );
+          checkInTime = DateFormat('hh:mm a').format(latestCheckIn.checkIn);
+        }
 
-  final checkOuts = todayAttendance.where((a) => a.checkOut != null).toList();
-  if (checkOuts.isNotEmpty) {
-    final latestCheckOut = checkOuts.reduce(
-      (a, b) => a.checkOut!.isAfter(b.checkOut!) ? a : b,
-    );
-    checkOutTime = DateFormat('hh:mm a').format(latestCheckOut.checkOut!);
-  }
-}
+        // Get the latest check-out
+        final checkOuts = todayAttendance.where((a) => a.checkOut != null).toList();
+        if (checkOuts.isNotEmpty) {
+          final latestCheckOut = checkOuts.reduce(
+            (a, b) => a.checkOut!.isAfter(b.checkOut!) ? a : b,
+          );
+          checkOutTime = DateFormat('hh:mm a').format(latestCheckOut.checkOut!);
+        }
+      }
 
-      
-
-      
+      // Count unique days with attendance
       final uniqueDays =
           (attendanceState as states.AttendanceData).attendance
               .where((a) => a.attendance == 'PRESENT')
@@ -466,18 +449,18 @@ class _TodayAttendance extends ConsumerWidget {
               title: "Check In",
               value: checkInTime,
               status:
-                  checkInTime == "Not checked in"
-                      ? "Not Checked In"
-                      : "On Time",
+              checkInTime == "Not checked in"
+                  ? "Not Checked In"
+                  : "On Time",
               icon: Icons.login,
             ),
             _AttendanceCard(
               title: "Check Out",
               value: checkOutTime,
               status:
-                  checkOutTime == "Not checked out"
-                      ? "Not Checked Out"
-                      : "Checked Out",
+              checkOutTime == "Not checked out"
+                  ? "Not Checked Out"
+                  : "Checked Out",
               icon: Icons.logout,
             ),
             _AttendanceCard(
@@ -569,9 +552,9 @@ class _ActivityItem extends ConsumerWidget {
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor:
-              type == 'Check In'
-                  ? Colors.green
-                  : const Color.fromARGB(255, 162, 93, 68),
+          type == 'Check In'
+              ? Colors.green
+              : const Color.fromARGB(255, 162, 93, 68),
           child: Icon(
             type == 'Check In' ? Icons.login : Icons.logout,
             color: Colors.white,
@@ -728,14 +711,14 @@ Widget _buildDashboard(states.AttendanceState attendanceState) {
     final totalDays =
         attendances.where((a) => a.attendance == 'PRESENT').length;
     final todayAttendance =
-        attendances
-            .where(
-              (a) =>
-                  a.date.year == DateTime.now().year &&
-                  a.date.month == DateTime.now().month &&
-                  a.date.day == DateTime.now().day,
-            )
-            .toList();
+    attendances
+        .where(
+          (a) =>
+      a.date.year == DateTime.now().year &&
+          a.date.month == DateTime.now().month &&
+          a.date.day == DateTime.now().day,
+    )
+        .toList();
 
     return Column(
       children: [
@@ -759,14 +742,14 @@ Widget _buildDashboard(states.AttendanceState attendanceState) {
 Widget _buildTodayAttendance(states.AttendanceState attendanceState) {
   if (attendanceState is states.AttendanceData) {
     final todayAttendance =
-        attendanceState.attendance
-            .where(
-              (a) =>
-                  a.date.year == DateTime.now().year &&
-                  a.date.month == DateTime.now().month &&
-                  a.date.day == DateTime.now().day,
-            )
-            .toList();
+    attendanceState.attendance
+        .where(
+          (a) =>
+      a.date.year == DateTime.now().year &&
+          a.date.month == DateTime.now().month &&
+          a.date.day == DateTime.now().day,
+    )
+        .toList();
 
     if (todayAttendance.isEmpty) {
       return const Center(
@@ -785,14 +768,14 @@ Widget _buildTodayAttendance(states.AttendanceState attendanceState) {
 Widget _buildPastActivity(states.AttendanceState attendanceState) {
   if (attendanceState is states.AttendanceData) {
     final pastAttendance =
-        attendanceState.attendance
-            .where(
-              (a) =>
-                  a.date.year != DateTime.now().year ||
-                  a.date.month != DateTime.now().month ||
-                  a.date.day != DateTime.now().day,
-            )
-            .toList();
+    attendanceState.attendance
+        .where(
+          (a) =>
+      a.date.year != DateTime.now().year ||
+          a.date.month != DateTime.now().month ||
+          a.date.day != DateTime.now().day,
+    )
+        .toList();
 
     if (pastAttendance.isEmpty) {
       return const Center(
