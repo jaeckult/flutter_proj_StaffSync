@@ -5,6 +5,8 @@ import 'package:staffsync/application/providers/providers.dart';
 import 'package:intl/intl.dart';
 
 enum UserRole { MANAGER, EMPLOYEE }
+enum EmploymentType { PERMANENT, CONTRACTUAL, INTERNSHIP }
+enum Gender { MALE, FEMALE}
 
 class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});
@@ -16,15 +18,16 @@ class SignupScreen extends ConsumerStatefulWidget {
 class _SignupScreenState extends ConsumerState<SignupScreen> {
   final _formKey = GlobalKey<FormState>();
   int _currentStep = 0;
+  bool passwordVisible = false;
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _emailController = TextEditingController();
   final _fullnameController = TextEditingController();
-  final _genderController = TextEditingController();
-  final _employmentTypeController = TextEditingController();
   final _designationController = TextEditingController();
   DateTime? _dateOfBirth;
+  EmploymentType _selectedEmploymentType = EmploymentType.PERMANENT;
   UserRole _selectedRole = UserRole.EMPLOYEE;
+  Gender _selectedGender = Gender.MALE;
 
   @override
   void dispose() {
@@ -32,8 +35,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     _passwordController.dispose();
     _emailController.dispose();
     _fullnameController.dispose();
-    _genderController.dispose();
-    _employmentTypeController.dispose();
+
     _designationController.dispose();
     super.dispose();
   }
@@ -90,8 +92,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
               _passwordController.text,
               _emailController.text,
               _fullnameController.text,
-              _genderController.text,
-              _employmentTypeController.text,
+              _selectedGender.name,
+              _selectedEmploymentType.name,
               _designationController.text,
               _dateOfBirth!.toIso8601String(),
               _selectedRole.name,
@@ -112,26 +114,28 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
+      body: SafeArea(child: SingleChildScrollView(child:Column(
         children: [
-          const Expanded(
+          const SizedBox(
             child: Image(
+              height: 200,
               image: AssetImage('assets/signup_illustration.png'),
               fit: BoxFit.cover,
             ),
           ),
-          Expanded(
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 0.2),
             child: Form(
               key: _formKey,
               child: Theme(
                 data: Theme.of(context).copyWith(
-                  colorScheme: ColorScheme.light(
+                  colorScheme: const ColorScheme.light(
                     primary: Colors.deepOrange,
                     secondary: Colors.deepOrange,
                   ),
                 ),
-                child: Stepper(
-                  margin: const EdgeInsets.all(20),
+                child: SizedBox(height: MediaQuery.of(context).size.height * 0.9, child: Stepper(
+                  margin: const EdgeInsets.all(16),
                   type: StepperType.horizontal,
                   controlsBuilder: (context, details) => Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -174,6 +178,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                             ),
                           ),
                           child: Text(
+                            
                             _currentStep == 2 ? 'Sign Up' : 'Next',
                             style: const TextStyle(color: Colors.white),
                           ),
@@ -210,10 +215,10 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                           ),
                           TextFormField(
                             controller: _usernameController,
-                            decoration: InputDecoration(
-                              border: const OutlineInputBorder(),
+                            decoration: const InputDecoration(
+                              border: OutlineInputBorder(),
                               hintText: 'Enter your username',
-                              prefixIcon: const Icon(Icons.person),
+                              prefixIcon: Icon(Icons.person),
                               focusedBorder: OutlineInputBorder(
                                 borderSide: BorderSide(color: Colors.deepOrange),
                               ),
@@ -234,19 +239,30 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                             ),
                           ),
                           TextFormField(
-                            controller: _passwordController,
-                            decoration: InputDecoration(
-                              border: const OutlineInputBorder(),
-                              hintText: 'Enter your password',
-                              prefixIcon: const Icon(Icons.lock),
-                              focusedBorder: OutlineInputBorder(
+                          controller: _passwordController,
+                          obscureText: !passwordVisible,
+                  
+                  validator: (value) =>
+                      value == null || value.isEmpty ? 'Please enter your password' : null,
+                    decoration: InputDecoration(
+                    hintText: 'Enter your password',
+                    prefixIcon: const Icon(Icons.lock),
+                    focusedBorder: const OutlineInputBorder(
                                 borderSide: BorderSide(color: Colors.deepOrange),
                               ),
-                              focusColor: Colors.deepOrange,
-                            ),
-                            obscureText: true,
-                            validator: _validatePassword,
-                          ),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    suffixIcon: IconButton(
+                      icon: Icon(passwordVisible ? Icons.visibility : Icons.visibility_off),
+                      onPressed: () {
+                        setState(() {
+                          passwordVisible = !passwordVisible;
+                        });
+                      },
+                    ),
+                    
+                  ),
+                ),
+            
                           const SizedBox(height: 10),
                           const Align(
                             alignment: Alignment.centerLeft,
@@ -257,10 +273,10 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                           ),
                           TextFormField(
                             controller: _emailController,
-                            decoration: InputDecoration(
-                              border: const OutlineInputBorder(),
+                            decoration: const InputDecoration(
+                              border: OutlineInputBorder(),
                               hintText: 'Enter your email',
-                              prefixIcon: const Icon(Icons.email),
+                              prefixIcon: Icon(Icons.email),
                               focusedBorder: OutlineInputBorder(
                                 borderSide: BorderSide(color: Colors.deepOrange),
                               ),
@@ -283,12 +299,12 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                               style: TextStyle(fontSize: 14, color: Colors.grey),
                             ),
                           ),
-                          TextFormField(
+                           TextFormField(
                             controller: _fullnameController,
-                            decoration: InputDecoration(
-                              border: const OutlineInputBorder(),
+                            decoration: const InputDecoration(
+                              border: OutlineInputBorder(),
                               hintText: 'Enter your full name',
-                              prefixIcon: const Icon(Icons.person_outline),
+                              prefixIcon: Icon(Icons.person_outline),
                               focusedBorder: OutlineInputBorder(
                                 borderSide: BorderSide(color: Colors.deepOrange),
                               ),
@@ -308,22 +324,33 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                               style: TextStyle(fontSize: 14, color: Colors.grey),
                             ),
                           ),
-                          TextFormField(
-                            controller: _genderController,
-                            decoration: InputDecoration(
-                              border: const OutlineInputBorder(),
-                              hintText: 'Enter your gender',
-                              prefixIcon: const Icon(Icons.people),
+                          DropdownButtonFormField<Gender>(
+                            value: _selectedGender,
+                            decoration: const InputDecoration(
+                              border:  OutlineInputBorder(),
+                              prefixIcon:  Icon(Icons.male_rounded),
                               focusedBorder: OutlineInputBorder(
                                 borderSide: BorderSide(color: Colors.deepOrange),
                               ),
                               focusColor: Colors.deepOrange,
                             ),
+                            items:
+                                Gender.values.map((role) {
+                                  return DropdownMenuItem(
+                                    value: role,
+                                    child: Text(role.name.toUpperCase()),
+                                  );
+                                }).toList(),
+                            onChanged: (Gender? newValue) {
+                              if (newValue != null) {
+                                setState(() {
+                                  _selectedGender = newValue;
+                                });
+                              }
+                            },
                             validator:
                                 (value) =>
-                                    value == null || value.isEmpty
-                                        ? 'Gender is required'
-                                        : null,
+                                    value == null ? 'Please select a Gender' : null,
                           ),
                           const SizedBox(height: 10),
                           const Align(
@@ -336,9 +363,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                           InkWell(
                             onTap: () => _selectDate(context),
                             child: InputDecorator(
-                              decoration: InputDecoration(
-                                border: const OutlineInputBorder(),
-                                prefixIcon: const Icon(Icons.calendar_today),
+                              decoration: const InputDecoration(
+                                border:  OutlineInputBorder(),
+                                prefixIcon: Icon(Icons.calendar_today),
                                 focusedBorder: OutlineInputBorder(
                                   borderSide: BorderSide(
                                     color: Colors.deepOrange,
@@ -370,22 +397,34 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                               style: TextStyle(fontSize: 14, color: Colors.grey),
                             ),
                           ),
-                          TextFormField(
-                            controller: _employmentTypeController,
-                            decoration: InputDecoration(
-                              border: const OutlineInputBorder(),
-                              hintText: 'Enter your employment type',
-                              prefixIcon: const Icon(Icons.work),
+                          
+                            DropdownButtonFormField<EmploymentType>(
+                            value: _selectedEmploymentType,
+                            decoration: const InputDecoration(
+                              border:  OutlineInputBorder(),
+                              prefixIcon:  Icon(Icons.work),
                               focusedBorder: OutlineInputBorder(
                                 borderSide: BorderSide(color: Colors.deepOrange),
                               ),
                               focusColor: Colors.deepOrange,
                             ),
+                            items:
+                                EmploymentType.values.map((role) {
+                                  return DropdownMenuItem(
+                                    value: role,
+                                    child: Text(role.name.toUpperCase()),
+                                  );
+                                }).toList(),
+                            onChanged: (EmploymentType? newValue) {
+                              if (newValue != null) {
+                                setState(() {
+                                  _selectedEmploymentType = newValue;
+                                });
+                              }
+                            },
                             validator:
                                 (value) =>
-                                    value == null || value.isEmpty
-                                        ? 'Employment type is required'
-                                        : null,
+                                    value == null ? 'Please select an Employment Type' : null,
                           ),
                           const SizedBox(height: 10),
                           const Align(
@@ -397,10 +436,10 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                           ),
                           TextFormField(
                             controller: _designationController,
-                            decoration: InputDecoration(
-                              border: const OutlineInputBorder(),
+                            decoration: const InputDecoration(
+                              border:  OutlineInputBorder(),
                               hintText: 'Enter your designation',
-                              prefixIcon: const Icon(Icons.badge),
+                              prefixIcon: Icon(Icons.badge),
                               focusedBorder: OutlineInputBorder(
                                 borderSide: BorderSide(color: Colors.deepOrange),
                               ),
@@ -422,9 +461,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                           ),
                           DropdownButtonFormField<UserRole>(
                             value: _selectedRole,
-                            decoration: InputDecoration(
-                              border: const OutlineInputBorder(),
-                              prefixIcon: const Icon(Icons.admin_panel_settings),
+                            decoration: const InputDecoration(
+                              border:  OutlineInputBorder(),
+                              prefixIcon:  Icon(Icons.admin_panel_settings),
                               focusedBorder: OutlineInputBorder(
                                 borderSide: BorderSide(color: Colors.deepOrange),
                               ),
@@ -452,7 +491,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       ),
                       isActive: _currentStep >= 2,
                     ),
-                  ],
+                  ],)
                 ),
               ),
             ),
@@ -475,6 +514,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
           ),
         ],
       ),
-    );
+    )));
   }
 }

@@ -2,12 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mockito/mockito.dart';
-import 'package:staffsync/application/notifiers/auth.notifier.dart';
 import 'package:staffsync/application/providers/providers.dart';
-import 'package:staffsync/application/states/auth.state.dart';
-import 'package:staffsync/domain/repositories/auth.repository.dart';
 import 'package:staffsync/presentaion/screen/login.screen.dart';
-
 import '../mock/auth_repository_mock.mocks.dart';
 
 
@@ -19,6 +15,7 @@ void main() {
 
   testWidgets('Login button enables, disables and logs in', (tester) async {
     final mockAuthRepo = MockAuthRepository();
+    
 
     // Stub login method
     when(mockAuthRepo.getToken()).thenAnswer((_) async => null);

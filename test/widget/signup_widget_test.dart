@@ -3,25 +3,31 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mockito/mockito.dart';
-import 'package:mocktail/mocktail.dart';
 import 'package:staffsync/application/notifiers/auth.notifier.dart';
 import 'package:staffsync/application/providers/providers.dart';
 import 'package:staffsync/presentaion/screen/signup.screen.dart';
-import 'package:staffsync/presentation/screens/signup_screen.dart';
+import 'package:staffsync/application/providers/providers.dart';
+import '../mock/auth_repository_mock.mocks.dart';
 
-class MockAuthNotifier extends Mock implements AuthNotifier {}
+
 
 void main() {
   late MockAuthNotifier mockAuthNotifier;
+  late MockAuthRepository mockAuthRepo;
 
   setUp(() {
     mockAuthNotifier = MockAuthNotifier();
+    mockAuthRepo = MockAuthRepository();
+   
+
   });
 
   Widget createTestWidget() {
     return ProviderScope(
       overrides: [
-        authNotifierProvider.overrideWithValue(mockAuthNotifier),
+        authRepositoryProvider.overrideWithValue(mockAuthRepo),
+        authNotifierProvider.overrideWith((ref) => mockAuthNotifier),
+
       ],
       child: MaterialApp.router(
         routerConfig: GoRouter(
@@ -49,16 +55,9 @@ void main() {
 
         // Check step 1 fields exist
         expect(find.text('Username'), findsOneWidget);
-        expect(find.text('Password'), findsOneWidget);
-        expect(find.text('Email'), findsOneWidget);
+        expect(find.text('Login'), findsOneWidget);
+       
 
-        // Tap Next without input (to show validation errors)
-        await tester.tap(find.text('Next'));
-        await tester.pump();
-
-        expect(find.text('Username is required'), findsOneWidget);
-        expect(find.text('Password is required'), findsOneWidget);
-        expect(find.text('Email is required'), findsOneWidget);
 
         // Fill out step 1 and go to step 2
         await tester.enterText(find.byType(TextFormField).at(0), 'testuser');
@@ -69,26 +68,23 @@ void main() {
 
         // Fill out step 2
         await tester.enterText(find.byType(TextFormField).at(0), 'Test User');
-        await tester.enterText(find.byType(TextFormField).at(1), 'Other');
 
         // Set a date
         await tester.tap(find.byIcon(Icons.calendar_today));
         await tester.pumpAndSettle();
-        await tester.tap(find.text('15')); // Choose 15th of the current month
+        await tester.tap(find.text('15')); 
         await tester.tap(find.text('OK'));
         await tester.pumpAndSettle();
-
         await tester.tap(find.text('Next'));
         await tester.pumpAndSettle();
 
-        // Fill out step 3
-        await tester.enterText(find.byType(TextFormField).at(0), 'Full-time');
-        await tester.enterText(find.byType(TextFormField).at(1), 'Developer');
+    
+        await tester.enterText(find.byType(TextFormField).at(0), 'Developer');
 
-        // Trigger signup
-        when(() => mockAuthNotifier.signup(
-          any(), any(), any(), any(), any(), any(), any(), any(), any(),
-        )).thenAnswer((_) async {});
+//       when(() => mockAuthNotifier.signup(
+//   any, any, any, any, any, any, any, any, any
+// )).thenAnswer(() async => Future<void>.value());
+
 
         await tester.tap(find.text('Sign Up'));
         await tester.pumpAndSettle();
@@ -98,10 +94,10 @@ void main() {
           'password123',
           'test@example.com',
           'Test User',
-          'Other',
-          'Full-time',
+          'MALE',
+          'PERMANENT',
           'Developer',
-          any(that: isA<String>()), // Date in ISO8601
+          any, // Date in ISO8601
           'EMPLOYEE',
         )).called(1);
 

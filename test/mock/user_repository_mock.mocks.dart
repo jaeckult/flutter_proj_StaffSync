@@ -26,7 +26,7 @@ import 'package:staffsync/domain/repositories/user.repository.dart' as _i3;
 
 class _FakeUser_0 extends _i1.SmartFake implements _i2.User {
   _FakeUser_0(Object parent, Invocation parentInvocation)
-      : super(parent, parentInvocation);
+    : super(parent, parentInvocation);
 }
 
 /// A class which mocks [UserRepository].
@@ -40,41 +40,41 @@ class MockUserRepository extends _i1.Mock implements _i3.UserRepository {
   @override
   _i4.Future<_i2.User> getCurrUser(int? id, String? endpoint) =>
       (super.noSuchMethod(
-        Invocation.method(#getCurrUser, [id, endpoint]),
-        returnValue: _i4.Future<_i2.User>.value(
-          _FakeUser_0(
-            this,
             Invocation.method(#getCurrUser, [id, endpoint]),
-          ),
-        ),
-      )
-      as _i4.Future<_i2.User>);
+            returnValue: _i4.Future<_i2.User>.value(
+              _FakeUser_0(
+                this,
+                Invocation.method(#getCurrUser, [id, endpoint]),
+              ),
+            ),
+          )
+          as _i4.Future<_i2.User>);
 
   @override
   _i4.Future<List<_i2.User>> getEmployees(String? token) =>
       (super.noSuchMethod(
-        Invocation.method(#getEmployees, [token]),
-        returnValue: _i4.Future<List<_i2.User>>.value(<_i2.User>[]),
-      )
-      as _i4.Future<List<_i2.User>>);
+            Invocation.method(#getEmployees, [token]),
+            returnValue: _i4.Future<List<_i2.User>>.value(<_i2.User>[]),
+          )
+          as _i4.Future<List<_i2.User>>);
 
   @override
   _i4.Future<void> deleteEmployee(int? id, String? token) =>
       (super.noSuchMethod(
-        Invocation.method(#deleteEmployee, [id, token]),
-        returnValue: _i4.Future<void>.value(),
-        returnValueForMissingStub: _i4.Future<void>.value(),
-      )
-      as _i4.Future<void>);
+            Invocation.method(#deleteEmployee, [id, token]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
 
   @override
   _i4.Future<void> deleteNotification() =>
       (super.noSuchMethod(
-        Invocation.method(#deleteNotification, []),
-        returnValue: _i4.Future<void>.value(),
-        returnValueForMissingStub: _i4.Future<void>.value(),
-      )
-      as _i4.Future<void>);
+            Invocation.method(#deleteNotification, []),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
 
   @override
   _i4.Future<void> changePassword({
@@ -85,47 +85,48 @@ class MockUserRepository extends _i1.Mock implements _i3.UserRepository {
     required String? endpoint,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(#changePassword, [], {
-          #userId: userId,
-          #oldPassword: oldPassword,
-          #newPassword: newPassword,
-          #token: token,
-          #endpoint: endpoint,
-        }),
-        returnValue: _i4.Future<void>.value(),
-        returnValueForMissingStub: _i4.Future<void>.value(),
-      )
-      as _i4.Future<void>);
+            Invocation.method(#changePassword, [], {
+              #userId: userId,
+              #oldPassword: oldPassword,
+              #newPassword: newPassword,
+              #token: token,
+              #endpoint: endpoint,
+            }),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
 
   @override
   _i4.Future<List<_i5.NotificationModel>> getNotificationMessage() =>
       (super.noSuchMethod(
-        Invocation.method(#getNotificationMessage, []),
-        returnValue: _i4.Future<List<_i5.NotificationModel>>.value(
-          <_i5.NotificationModel>[],
-        ),
-      )
-      as _i4.Future<List<_i5.NotificationModel>>);
+            Invocation.method(#getNotificationMessage, []),
+            returnValue: _i4.Future<List<_i5.NotificationModel>>.value(
+              <_i5.NotificationModel>[],
+            ),
+          )
+          as _i4.Future<List<_i5.NotificationModel>>);
 
   @override
   _i4.Future<void> editProfile(
-      int? id,
-      String? fullName,
-      String? designation,
-      String? email,
-      String? employmentType,
-      String? profilePicture,
-      ) =>
+    int? id,
+    String? fullName,
+    String? designation,
+    String? email,
+    String? employmentType,
+    String? profilePicture,
+  ) =>
       (super.noSuchMethod(
-          Invocation.method(#editProfile, [id,
-            fullName,
-            designation,
-            email,
-            employmentType,
-            profilePicture,
-          ]),
-        returnValue: _i4.Future<void>.value(),
-        returnValueForMissingStub: _i4.Future<void>.value(),
-      )
-      as _i4.Future<void>);
+            Invocation.method(#editProfile, [
+              id,
+              fullName,
+              designation,
+              email,
+              employmentType,
+              profilePicture,
+            ]),
+            returnValue: _i4.Future<void>.value(),
+            returnValueForMissingStub: _i4.Future<void>.value(),
+          )
+          as _i4.Future<void>);
 }

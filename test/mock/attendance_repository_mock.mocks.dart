@@ -8,7 +8,7 @@ import 'dart:async' as _i3;
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:staffsync/domain/model/attendance.model.dart' as _i4;
 import 'package:staffsync/domain/repositories/attendance.repository.dart'
-as _i2;
+    as _i2;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -36,37 +36,37 @@ class MockAttendanceRepository extends _i1.Mock
   @override
   _i3.Future<List<_i4.Attendance>> getAttendances(String? token) =>
       (super.noSuchMethod(
-        Invocation.method(#getAttendances, [token]),
-        returnValue: _i3.Future<List<_i4.Attendance>>.value(
-          <_i4.Attendance>[],
-        ),
-      )
-      as _i3.Future<List<_i4.Attendance>>);
+            Invocation.method(#getAttendances, [token]),
+            returnValue: _i3.Future<List<_i4.Attendance>>.value(
+              <_i4.Attendance>[],
+            ),
+          )
+          as _i3.Future<List<_i4.Attendance>>);
 
   @override
   _i3.Future<void> checkIn(_i4.AttendanceResponse? attendanceResponse) =>
       (super.noSuchMethod(
-        Invocation.method(#checkIn, [attendanceResponse]),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      )
-      as _i3.Future<void>);
+            Invocation.method(#checkIn, [attendanceResponse]),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 
   @override
   _i3.Future<void> checkOut(_i4.AttendanceResponse? attendanceResponse) =>
       (super.noSuchMethod(
-        Invocation.method(#checkOut, [attendanceResponse]),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      )
-      as _i3.Future<void>);
+            Invocation.method(#checkOut, [attendanceResponse]),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 
   @override
   _i3.Future<void> deleteAttendance(int? id) =>
       (super.noSuchMethod(
-        Invocation.method(#deleteAttendance, [id]),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      )
-      as _i3.Future<void>);
+            Invocation.method(#deleteAttendance, [id]),
+            returnValue: _i3.Future<void>.value(),
+            returnValueForMissingStub: _i3.Future<void>.value(),
+          )
+          as _i3.Future<void>);
 }
