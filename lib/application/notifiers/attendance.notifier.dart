@@ -20,7 +20,7 @@ class AttendanceNotifier extends StateNotifier<states.AttendanceState> {
         throw Exception("Token is missing");
       }
 
-      final requests = await attendanceRepository.getAttendances(token);
+      final requests = await attendanceRepository.getAttendances();
       state = states.AttendanceData(requests);
     } catch (error) {
       print("Attendance error: $error");

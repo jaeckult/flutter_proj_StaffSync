@@ -124,15 +124,12 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 0.2),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Form(
               key: _formKey,
               child: Theme(
                 data: Theme.of(context).copyWith(
-                  colorScheme: const ColorScheme.light(
-                    primary: Colors.deepOrange,
-                    secondary: Colors.deepOrange,
-                  ),
+                  colorScheme: Theme.of(context).colorScheme,
                 ),
                 child: SizedBox(height: MediaQuery.of(context).size.height * 0.9, child: Stepper(
                   margin: const EdgeInsets.all(16),
@@ -147,7 +144,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                           child: ElevatedButton(
                             onPressed: details.onStepCancel,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.grey[300],
+                              backgroundColor: Theme.of(context).colorScheme.surfaceVariant,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(8),
                               ),
@@ -156,10 +153,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                                 vertical: 12,
                               ),
                             ),
-                            child: const Text(
-                              'Back',
-                              style: TextStyle(color: Color.fromARGB(255, 88, 84, 84)),
-                            ),
+                            child: Text('Back', style: Theme.of(context).textTheme.labelLarge?.copyWith(color: Theme.of(context).colorScheme.onSurface)),
                           ),
                         ),
                       Container(
@@ -168,7 +162,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                         child: ElevatedButton(
                           onPressed: _currentStep == 2 ? _handleSignup : details.onStepContinue,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.deepOrange,
+                            backgroundColor: Theme.of(context).colorScheme.primary,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -180,7 +174,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                           child: Text(
                             
                             _currentStep == 2 ? 'Sign Up' : 'Next',
-                            style: const TextStyle(color: Colors.white),
+                            style: Theme.of(context).textTheme.labelLarge?.copyWith(color: Theme.of(context).colorScheme.onPrimary),
                           ),
                         ),
                       ),
@@ -203,26 +197,22 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   },
                   steps: [
                     Step(
-                      title: const Text('Account'),
+                      title: Text('Account', style: Theme.of(context).textTheme.labelLarge),
                       content: Column(
                         children: [
-                          const Align(
+                          Align(
                             alignment: Alignment.centerLeft,
-                            child: Text(
-                              'Username',
-                              style: TextStyle(fontSize: 14, color: Colors.grey),
-                            ),
+                            child: Text('Username', style: Theme.of(context).textTheme.labelLarge?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
                           ),
                           TextFormField(
                             controller: _usernameController,
-                            decoration: const InputDecoration(
-                              border: OutlineInputBorder(),
+                            decoration: InputDecoration(
+                              border: const OutlineInputBorder(),
                               hintText: 'Enter your username',
-                              prefixIcon: Icon(Icons.person),
+                              prefixIcon: const Icon(Icons.person),
                               focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.deepOrange),
+                                borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
                               ),
-                              focusColor: Colors.deepOrange,
                             ),
                             validator:
                                 (value) =>
@@ -231,12 +221,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                                         : null,
                           ),
                           const SizedBox(height: 10),
-                          const Align(
+                          Align(
                             alignment: Alignment.centerLeft,
-                            child: Text(
-                              'Password',
-                              style: TextStyle(fontSize: 14, color: Colors.grey),
-                            ),
+                            child: Text('Password', style: Theme.of(context).textTheme.labelLarge?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
                           ),
                           TextFormField(
                           controller: _passwordController,
@@ -247,8 +234,8 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                     decoration: InputDecoration(
                     hintText: 'Enter your password',
                     prefixIcon: const Icon(Icons.lock),
-                    focusedBorder: const OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.deepOrange),
+                    focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
                               ),
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                     suffixIcon: IconButton(
@@ -264,23 +251,19 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 ),
             
                           const SizedBox(height: 10),
-                          const Align(
+                          Align(
                             alignment: Alignment.centerLeft,
-                            child: Text(
-                              'Email',
-                              style: TextStyle(fontSize: 14, color: Colors.grey),
-                            ),
+                            child: Text('Email', style: Theme.of(context).textTheme.labelLarge?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
                           ),
                           TextFormField(
                             controller: _emailController,
-                            decoration: const InputDecoration(
-                              border: OutlineInputBorder(),
+                            decoration: InputDecoration(
+                              border: const OutlineInputBorder(),
                               hintText: 'Enter your email',
-                              prefixIcon: Icon(Icons.email),
+                              prefixIcon: const Icon(Icons.email),
                               focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.deepOrange),
+                                borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
                               ),
-                              focusColor: Colors.deepOrange,
                             ),
                             validator: _validateEmail,
                           ),
@@ -289,26 +272,22 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       isActive: _currentStep >= 0,
                     ),
                     Step(
-                      title: const Text('Personal'),
+                      title: Text('Personal', style: Theme.of(context).textTheme.labelLarge),
                       content: Column(
                         children: [
-                          const Align(
+                          Align(
                             alignment: Alignment.centerLeft,
-                            child: Text(
-                              'Full Name',
-                              style: TextStyle(fontSize: 14, color: Colors.grey),
-                            ),
+                            child: Text('Full Name', style: Theme.of(context).textTheme.labelLarge?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
                           ),
                            TextFormField(
                             controller: _fullnameController,
-                            decoration: const InputDecoration(
-                              border: OutlineInputBorder(),
+                            decoration: InputDecoration(
+                              border: const OutlineInputBorder(),
                               hintText: 'Enter your full name',
-                              prefixIcon: Icon(Icons.person_outline),
+                              prefixIcon: const Icon(Icons.person_outline),
                               focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.deepOrange),
+                                borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
                               ),
-                              focusColor: Colors.deepOrange,
                             ),
                             validator:
                                 (value) =>
@@ -317,22 +296,18 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                                         : null,
                           ),
                           const SizedBox(height: 10),
-                          const Align(
+                          Align(
                             alignment: Alignment.centerLeft,
-                            child: Text(
-                              'Gender',
-                              style: TextStyle(fontSize: 14, color: Colors.grey),
-                            ),
+                            child: Text('Gender', style: Theme.of(context).textTheme.labelLarge?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
                           ),
                           DropdownButtonFormField<Gender>(
                             value: _selectedGender,
-                            decoration: const InputDecoration(
-                              border:  OutlineInputBorder(),
-                              prefixIcon:  Icon(Icons.male_rounded),
+                            decoration: InputDecoration(
+                              border:  const OutlineInputBorder(),
+                              prefixIcon:  const Icon(Icons.male_rounded),
                               focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.deepOrange),
+                                borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
                               ),
-                              focusColor: Colors.deepOrange,
                             ),
                             items:
                                 Gender.values.map((role) {
@@ -353,25 +328,21 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                                     value == null ? 'Please select a Gender' : null,
                           ),
                           const SizedBox(height: 10),
-                          const Align(
+                          Align(
                             alignment: Alignment.centerLeft,
-                            child: Text(
-                              'Date of Birth',
-                              style: TextStyle(fontSize: 14, color: Colors.grey),
-                            ),
+                            child: Text('Date of Birth', style: Theme.of(context).textTheme.labelLarge?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
                           ),
                           InkWell(
                             onTap: () => _selectDate(context),
                             child: InputDecorator(
-                              decoration: const InputDecoration(
-                                border:  OutlineInputBorder(),
-                                prefixIcon: Icon(Icons.calendar_today),
+                              decoration: InputDecoration(
+                                border:  const OutlineInputBorder(),
+                                prefixIcon: const Icon(Icons.calendar_today),
                                 focusedBorder: OutlineInputBorder(
                                   borderSide: BorderSide(
-                                    color: Colors.deepOrange,
+                                    color: Theme.of(context).colorScheme.primary,
                                   ),
                                 ),
-                                focusColor: Colors.deepOrange,
                               ),
                               child: Text(
                                 _dateOfBirth == null
@@ -387,26 +358,22 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                       isActive: _currentStep >= 1,
                     ),
                     Step(
-                      title: const Text('Work'),
+                      title: Text('Work', style: Theme.of(context).textTheme.labelLarge),
                       content: Column(
                         children: [
-                          const Align(
+                          Align(
                             alignment: Alignment.centerLeft,
-                            child: Text(
-                              'Employment Type',
-                              style: TextStyle(fontSize: 14, color: Colors.grey),
-                            ),
+                            child: Text('Employment Type', style: Theme.of(context).textTheme.labelLarge?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
                           ),
                           
                             DropdownButtonFormField<EmploymentType>(
                             value: _selectedEmploymentType,
-                            decoration: const InputDecoration(
-                              border:  OutlineInputBorder(),
-                              prefixIcon:  Icon(Icons.work),
+                            decoration: InputDecoration(
+                              border:  const OutlineInputBorder(),
+                              prefixIcon:  const Icon(Icons.work),
                               focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.deepOrange),
+                                borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
                               ),
-                              focusColor: Colors.deepOrange,
                             ),
                             items:
                                 EmploymentType.values.map((role) {
@@ -427,23 +394,19 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                                     value == null ? 'Please select an Employment Type' : null,
                           ),
                           const SizedBox(height: 10),
-                          const Align(
+                          Align(
                             alignment: Alignment.centerLeft,
-                            child: Text(
-                              'Designation',
-                              style: TextStyle(fontSize: 14, color: Colors.grey),
-                            ),
+                            child: Text('Designation', style: Theme.of(context).textTheme.labelLarge?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
                           ),
                           TextFormField(
                             controller: _designationController,
-                            decoration: const InputDecoration(
-                              border:  OutlineInputBorder(),
+                            decoration: InputDecoration(
+                              border:  const OutlineInputBorder(),
                               hintText: 'Enter your designation',
-                              prefixIcon: Icon(Icons.badge),
+                              prefixIcon: const Icon(Icons.badge),
                               focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.deepOrange),
+                                borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
                               ),
-                              focusColor: Colors.deepOrange,
                             ),
                             validator:
                                 (value) =>
@@ -452,22 +415,18 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                                         : null,
                           ),
                           const SizedBox(height: 10),
-                          const Align(
+                          Align(
                             alignment: Alignment.centerLeft,
-                            child: Text(
-                              'Role',
-                              style: TextStyle(fontSize: 14, color: Colors.grey),
-                            ),
+                            child: Text('Role', style: Theme.of(context).textTheme.labelLarge?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)),
                           ),
                           DropdownButtonFormField<UserRole>(
                             value: _selectedRole,
-                            decoration: const InputDecoration(
-                              border:  OutlineInputBorder(),
-                              prefixIcon:  Icon(Icons.admin_panel_settings),
+                            decoration: InputDecoration(
+                              border:  const OutlineInputBorder(),
+                              prefixIcon:  const Icon(Icons.admin_panel_settings),
                               focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: Colors.deepOrange),
+                                borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
                               ),
-                              focusColor: Colors.deepOrange,
                             ),
                             items:
                                 UserRole.values.map((role) {
@@ -501,13 +460,10 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text("Already have an account?"),
+                Text("Already have an account?", style: Theme.of(context).textTheme.bodyMedium),
                 TextButton(
                   onPressed: () => context.go('/login'),
-                  child: const Text(
-                    'Login',
-                    style: TextStyle(color: Colors.deepOrange),
-                  ),
+                  child: Text('Login', style: Theme.of(context).textTheme.labelLarge?.copyWith(color: Theme.of(context).colorScheme.primary)),
                 ),
               ],
             ),

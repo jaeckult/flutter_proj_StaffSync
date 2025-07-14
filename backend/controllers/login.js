@@ -6,6 +6,7 @@ const { identifyUser } = require('../utils/middleware');
 const prisma = new PrismaClient();
 
 loginRouter.post('/', async(req, res)=>{
+    console.log(req.body);
     const {username, password} = req.body;
     
     if(!(username && password)){

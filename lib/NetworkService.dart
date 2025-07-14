@@ -14,59 +14,47 @@ class NetworkService {
     };
   }
 
-  Future<String> login(String username, String password) async {
+  Future<Response<T>> get<T>(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+    CancelToken? cancelToken,
+    ProgressCallback? onReceiveProgress,
+  }) async {
     try {
-      final response = await _dio.post(
-        '/api/login',
-        data: {
-          'username': username,
-          'password': password,
-        },
+      final res = await _dio.get<T>(
+        path,
+        queryParameters: queryParameters,
+        options: options,
+        cancelToken: cancelToken,
+        onReceiveProgress: onReceiveProgress,
       );
-      
-      if (response.statusCode == 200) {
-        final data = response.data as Map<String, dynamic>;
-        return data['role'] as String;
-      } else {
-        throw Exception('Login failed: ${response.statusMessage}');
-      }
+      return res;
     } on DioException catch (e) {
       throw _handleError(e);
     }
   }
 
-  Future<void> signup(
-    String username,
-    String password,
-    String email,
-    String fullname,
-    String gender,
-    String employmentType,
-    String designation,
-    String dateOfBirth,
-    String role,
-  ) async {
+  Future<Response<T>> post<T>(
+    String path, {
+    Object? data,
+    Map<String, dynamic>? queryParameters,
+    Options? options,
+    CancelToken? cancelToken,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
     try {
-     
-      final response = await _dio.post(
-        '/api/signup',
-        data: {
-          'username': username,
-          'password': password,
-          'email': email,
-          'fullname': fullname,
-          'gender': gender,
-          'employmentType': employmentType,
-          'designation': designation,
-          'dateOfBirth': dateOfBirth,
-          'role': role,
-        },
-       
+      final res = await _dio.post<T>(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+        cancelToken: cancelToken,
+        onSendProgress: onSendProgress,
+        onReceiveProgress: onReceiveProgress,
       );
-      
-      if (response.statusCode != 201) {
-        throw Exception('Signup failed: ${response.statusMessage}');
-      }
+      return res;
     } on DioException catch (e) {
       throw _handleError(e);
     }

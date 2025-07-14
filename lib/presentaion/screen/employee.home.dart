@@ -11,6 +11,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' show ref;
 import 'package:another_flushbar/flushbar.dart';
 import 'package:staffsync/presentaion/widgets/profile_picture_widget.dart';
+import 'package:staffsync/presentaion/widgets/shimmer_skeletons.dart';
 
 void main() => runApp(const ProviderScope(child: EmployeeHomeApp()));
 
@@ -130,9 +131,9 @@ class _EmployeeHomeScreenState extends ConsumerState<EmployeeHomeScreen> {
   Widget build(BuildContext context) {
     final attendanceState = ref.watch(attendanceNotifierProvider);
     final hasActiveCheckIn =
-    ref.watch(attendanceNotifierProvider.notifier).hasActiveCheckIn();
+        ref.watch(attendanceNotifierProvider.notifier).hasActiveCheckIn();
     final todayAttendance =
-    ref.watch(attendanceNotifierProvider.notifier).getTodayAttendance();
+        ref.watch(attendanceNotifierProvider.notifier).getTodayAttendance();
 
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
@@ -167,23 +168,23 @@ class _EmployeeHomeScreenState extends ConsumerState<EmployeeHomeScreen> {
                         ...todayAttendance
                             .map(
                               (attendance) => [
-                            _ActivityItem(
-                              date: attendance.date,
-                              time: attendance.checkIn,
-                              type: 'Check In',
-                              status: attendance.attendance,
-                              id: attendance.id,
-                            ),
-                            if (attendance.checkOut != null)
-                              _ActivityItem(
-                                date: attendance.date,
-                                time: attendance.checkOut!,
-                                type: 'Check Out',
-                                status: attendance.attendance,
-                                id: attendance.id,
-                              ),
-                          ],
-                        )
+                                _ActivityItem(
+                                  date: attendance.date,
+                                  time: attendance.checkIn,
+                                  type: 'Check In',
+                                  status: attendance.attendance,
+                                  id: attendance.id,
+                                ),
+                                if (attendance.checkOut != null)
+                                  _ActivityItem(
+                                    date: attendance.date,
+                                    time: attendance.checkOut!,
+                                    type: 'Check Out',
+                                    status: attendance.attendance,
+                                    id: attendance.id,
+                                  ),
+                              ],
+                            )
                             .expand((items) => items),
                       ] else ...[
                         const Center(child: Text('No activity today')),
@@ -201,23 +202,23 @@ class _EmployeeHomeScreenState extends ConsumerState<EmployeeHomeScreen> {
                         ...(attendanceState).attendance
                             .where(
                               (a) =>
-                          a.date.year != DateTime.now().year ||
-                              a.date.month != DateTime.now().month ||
-                              a.date.day != DateTime.now().day,
-                        )
+                                  a.date.year != DateTime.now().year ||
+                                  a.date.month != DateTime.now().month ||
+                                  a.date.day != DateTime.now().day,
+                            )
                             .map(
                               (attendance) => _ActivityItem(
-                            date: attendance.date,
-                            time: attendance.checkIn,
-                            type: 'Check In',
-                            status: attendance.attendance,
-                            id: attendance.id,
-                          ),
-                        ),
+                                date: attendance.date,
+                                time: attendance.checkIn,
+                                type: 'Check In',
+                                status: attendance.attendance,
+                                id: attendance.id,
+                              ),
+                            ),
                       ] else if (attendanceState is states.AttendanceError) ...[
                         Center(child: Text('Error: ${attendanceState.message}')),
                       ] else ...[
-                        const Center(child: CircularProgressIndicator()),
+                        const ShimmerList(itemCount: 6),
                       ],
                     ],
                   ),
@@ -234,9 +235,9 @@ class _EmployeeHomeScreenState extends ConsumerState<EmployeeHomeScreen> {
                     onPressed: _handleAttendance,
                     style: ElevatedButton.styleFrom(
                       backgroundColor:
-                      hasActiveCheckIn
-                          ? Colors.red
-                          : const Color.fromARGB(255, 58, 168, 62),
+                          hasActiveCheckIn
+                              ? Colors.red
+                              : const Color.fromARGB(255, 58, 168, 62),
                       padding: const EdgeInsets.all(18),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
@@ -272,17 +273,34 @@ class _ProfileSection extends ConsumerWidget {
         if (snapshot.hasData) {
           notificationCount = snapshot.data!.length;
         }
+        if (user == null) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: Row(
+                  children: const [
+                    ShimmerCircle(size: 48),
+                    SizedBox(width: 12),
+                    Expanded(child: ShimmerListTile()),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
 
         return ListTile(
           leading: ProfilePictureWidget(
-            profilePicture: user?.profile.profilePicture,
+            profilePicture: user.profile.profilePicture,
             radius: 24,
           ),
           title: Text(
-            user?.profile.fullName ?? "Loading...",
+            user.profile.fullName,
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
-          subtitle: Text(user?.profile.designation ?? "Loading..."),
+          subtitle: Text(user.profile.designation),
           trailing: GestureDetector(
             onTap: () => context.push('/notification'),
             child: Stack(
@@ -347,14 +365,14 @@ class _DateSelector extends StatelessWidget {
               color: isSelected ? Colors.deepOrange : Colors.white,
               borderRadius: BorderRadius.circular(8),
               boxShadow:
-              isSelected
-                  ? [
-                BoxShadow(
-                  color: Colors.deepOrange.withOpacity(0.5),
-                  blurRadius: 6,
-                ),
-              ]
-                  : [],
+                  isSelected
+                      ? [
+                          BoxShadow(
+                            color: Colors.deepOrange.withOpacity(0.5),
+                            blurRadius: 6,
+                          ),
+                        ]
+                      : [],
             ),
             child: Center(
               child: Column(
@@ -391,6 +409,9 @@ class _TodayAttendance extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (attendanceState is! states.AttendanceData) {
+      return const ShimmerCardGrid(count: 4);
+    }
     String checkInTime = "Not checked in";
     String checkOutTime = "Not checked out";
     String breakTime = "No break";

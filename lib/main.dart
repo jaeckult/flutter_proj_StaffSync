@@ -12,6 +12,7 @@ import 'package:staffsync/presentaion/screen/notification.setting.dart';
 import './presentaion/screen/login.screen.dart';
 import './presentaion/screen/signup.screen.dart';
 import 'package:inspector/inspector.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 void main() {
   runApp(const ProviderScope(child: MyApp()));
@@ -36,14 +37,6 @@ class MyApp extends StatelessWidget {
         builder: (context, state) => const SignupScreen(),
       ),
       GoRoute(
-        path: '/employee/home',
-        builder: (context, state) => const EmployeeLogic(),
-      ),
-      GoRoute(
-        path: '/manager/home',
-        builder: (context, state) => const ManagerLogic(),
-      ),
-      GoRoute(
         path: '/setting',
         builder: (context, state) => const NotificationSetting(),
       ),
@@ -59,6 +52,29 @@ class MyApp extends StatelessWidget {
         path: '/notification',
         builder: (context, state) => NotificationList(),
       ),
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) {
+          return navigationShell;
+        },
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/employee/home',
+                builder: (context, state) => const EmployeeLogic(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/manager/home',
+                builder: (context, state) => const ManagerLogic(),
+              ),
+            ],
+          ),
+        ],
+      ),
     ],
     errorBuilder: (context, state) => Scaffold(
       body: Center(
@@ -69,12 +85,17 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = ColorScheme.fromSeed(seedColor: Colors.orange);
+
     return MaterialApp.router(
-      
       title: 'StaffSync',
       theme: ThemeData(
-        primarySwatch: Colors.orange,
+        colorScheme: colorScheme,
         useMaterial3: true,
+        textTheme: GoogleFonts.interTextTheme().apply(
+          bodyColor: colorScheme.onSurface,
+          displayColor: colorScheme.onSurface,
+        ),
       ),
       builder: (context, child) => Inspector(child: child!),
       debugShowCheckedModeBanner: false,
