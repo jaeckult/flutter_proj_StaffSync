@@ -1,19 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:staffsync/application/providers/providers.dart';
-import 'package:staffsync/application/states/attendance.state.dart' as states;
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:staffsync/application/bloc/attendance/attendance_bloc.dart';
+import 'package:staffsync/application/bloc/attendance/attendance_event.dart';
+import 'package:staffsync/application/bloc/user/user_cubit.dart';
+import 'package:staffsync/application/bloc/attendance/attendance_state.dart' as states;
 import 'package:staffsync/domain/model/attendance.model.dart';
 import 'package:intl/intl.dart';
-import 'package:staffsync/presentaion/screen/employee.profileScreen.dart';
-import 'package:staffsync/presentaion/screen/employee.scheduleScreen.dart';
-import 'package:staffsync/domain/model/notification.model.dart';
-import 'package:go_router/go_router.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart' show ref;
 import 'package:another_flushbar/flushbar.dart';
-import 'package:staffsync/presentaion/widgets/profile_picture_widget.dart';
 import 'package:staffsync/presentaion/widgets/shimmer_skeletons.dart';
+import 'package:staffsync/utils/timezone_helper.dart';
+import 'package:staffsync/presentaion/screen/employee_home/widgets/attendance_card.dart';
+import 'package:staffsync/presentaion/screen/employee_home/widgets/profile_section.dart';
+import 'package:staffsync/presentaion/screen/employee_home/widgets/date_selector.dart';
+import 'package:staffsync/presentaion/screen/employee_home/widgets/activity_item.dart';
 
-void main() => runApp(const ProviderScope(child: EmployeeHomeApp()));
+void main() => runApp(const EmployeeHomeApp());
 
 class EmployeeHomeApp extends StatelessWidget {
   const EmployeeHomeApp({super.key});
@@ -27,38 +28,37 @@ class EmployeeHomeApp extends StatelessWidget {
   }
 }
 
-class EmployeeHomeScreen extends ConsumerStatefulWidget {
+class EmployeeHomeScreen extends StatefulWidget {
   const EmployeeHomeScreen({super.key});
 
   @override
-  ConsumerState<EmployeeHomeScreen> createState() => _EmployeeHomeScreenState();
+  State<EmployeeHomeScreen> createState() => _EmployeeHomeScreenState();
 }
 
-class _EmployeeHomeScreenState extends ConsumerState<EmployeeHomeScreen> {
+class _EmployeeHomeScreenState extends State<EmployeeHomeScreen> {
   @override
   void initState() {
     super.initState();
     Future.microtask(() {
-      ref.read(userNotifierProvider.notifier).loadUserFromStorage();
-      ref.read(attendanceNotifierProvider.notifier).getAttendances();
+      context.read<UserCubit>().loadUserFromStorage();
+      context.read<AttendanceBloc>().add(const AttendanceFetchRequested());
     });
   }
 
   Future<void> _refreshData() async {
-    await Future.wait([
-      ref.read(userNotifierProvider.notifier).loadUserFromStorage(),
-      ref.read(attendanceNotifierProvider.notifier).getAttendances(),
-    ]);
+    await context.read<UserCubit>().loadUserFromStorage();
+    context.read<AttendanceBloc>().add(const AttendanceFetchRequested());
   }
 
   void _handleAttendance() async {
     try {
-      final notifier = ref.read(attendanceNotifierProvider.notifier);
-      final hasActiveCheckIn = notifier.hasActiveCheckIn();
+      final attendanceState = context.read<AttendanceBloc>().state;
+      final today = TimezoneHelper.now();
+      final hasActiveCheckIn = attendanceState is states.AttendanceData &&
+        attendanceState.attendance.any((a) => a.date.year == today.year && a.date.month == today.month && a.date.day == today.day && a.checkOut == null);
 
       if (hasActiveCheckIn) {
-        // If already checked in, perform check-out
-        await notifier.checkOut();
+        context.read<AttendanceBloc>().add(const AttendanceCheckOutRequested());
         if (mounted) {
           Flushbar(
             message: "Check-out successful",
@@ -77,12 +77,12 @@ class _EmployeeHomeScreenState extends ConsumerState<EmployeeHomeScreen> {
           message: 'Checking in...',
           attendance: AttendanceData(
             id: 0,
-            checkIn: DateTime.now(),
+            checkIn: TimezoneHelper.now(),
             attendance: 'PRESENT',
             checkOut: null,
           ),
         );
-        await notifier.checkIn(attendanceResponse);
+        context.read<AttendanceBloc>().add(AttendanceCheckInRequested(attendanceResponse));
         if (mounted) {
           Flushbar(
             message: "Check-in successful",
@@ -97,7 +97,7 @@ class _EmployeeHomeScreenState extends ConsumerState<EmployeeHomeScreen> {
         }
       }
 
-      await notifier.getAttendances();
+      context.read<AttendanceBloc>().add(const AttendanceFetchRequested(showLoading: false));
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -129,11 +129,20 @@ class _EmployeeHomeScreenState extends ConsumerState<EmployeeHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final attendanceState = ref.watch(attendanceNotifierProvider);
-    final hasActiveCheckIn =
-        ref.watch(attendanceNotifierProvider.notifier).hasActiveCheckIn();
-    final todayAttendance =
-        ref.watch(attendanceNotifierProvider.notifier).getTodayAttendance();
+    final attendanceState = context.watch<AttendanceBloc>().state;
+    final today = TimezoneHelper.now();
+    List<Attendance> todayAttendance;
+    if (attendanceState is states.AttendanceData) {
+      todayAttendance = attendanceState.attendance
+          .where((a) => a.date.year == today.year && a.date.month == today.month && a.date.day == today.day)
+          .toList();
+    } else {
+      todayAttendance = <Attendance>[];
+    }
+    final hasActiveCheckIn = attendanceState is states.AttendanceData &&
+        todayAttendance.any((a) => a.checkOut == null);
+    final isCheckingIn = attendanceState is states.AttendanceData &&
+                         attendanceState.isCheckingIn;
 
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
@@ -142,8 +151,8 @@ class _EmployeeHomeScreenState extends ConsumerState<EmployeeHomeScreen> {
           onRefresh: _refreshData,
           child: Column(
             children: [
-              const _ProfileSection(),
-              const _DateSelector(),
+              const ProfileSection(),
+              const DateSelector(),
               Expanded(
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(),
@@ -166,26 +175,27 @@ class _EmployeeHomeScreenState extends ConsumerState<EmployeeHomeScreen> {
                       const SizedBox(height: 8),
                       if (todayAttendance.isNotEmpty) ...[
                         ...todayAttendance
-                            .map(
-                              (attendance) => [
-                                _ActivityItem(
-                                  date: attendance.date,
-                                  time: attendance.checkIn,
-                                  type: 'Check In',
-                                  status: attendance.attendance,
-                                  id: attendance.id,
-                                ),
-                                if (attendance.checkOut != null)
-                                  _ActivityItem(
+                            .map<List<Widget>>((attendance) => [
+                                  ActivityItem(
                                     date: attendance.date,
-                                    time: attendance.checkOut!,
-                                    type: 'Check Out',
+                                    time: attendance.checkIn,
+                                    type: 'Check In',
                                     status: attendance.attendance,
                                     id: attendance.id,
+                                    onDelete: () => _confirmDeleteAttendance(context, attendance.id),
                                   ),
-                              ],
-                            )
-                            .expand((items) => items),
+                                  if (attendance.checkOut != null)
+                                    ActivityItem(
+                                      date: attendance.date,
+                                      time: attendance.checkOut!,
+                                      type: 'Check Out',
+                                      status: attendance.attendance,
+                                      id: attendance.id,
+                                      onDelete: () => _confirmDeleteAttendance(context, attendance.id),
+                                    ),
+                                ])
+                            .expand((items) => items)
+                            .toList(),
                       ] else ...[
                         const Center(child: Text('No activity today')),
                       ],
@@ -201,18 +211,21 @@ class _EmployeeHomeScreenState extends ConsumerState<EmployeeHomeScreen> {
                       if (attendanceState is states.AttendanceData) ...[
                         ...(attendanceState).attendance
                             .where(
-                              (a) =>
-                                  a.date.year != DateTime.now().year ||
-                                  a.date.month != DateTime.now().month ||
-                                  a.date.day != DateTime.now().day,
+                              (a) {
+                                final today = TimezoneHelper.now();
+                                return a.date.year != today.year ||
+                                       a.date.month != today.month ||
+                                       a.date.day != today.day;
+                              },
                             )
                             .map(
-                              (attendance) => _ActivityItem(
+                              (attendance) => ActivityItem(
                                 date: attendance.date,
                                 time: attendance.checkIn,
                                 type: 'Check In',
                                 status: attendance.attendance,
                                 id: attendance.id,
+                                onDelete: () => _confirmDeleteAttendance(context, attendance.id),
                               ),
                             ),
                       ] else if (attendanceState is states.AttendanceError) ...[
@@ -232,7 +245,7 @@ class _EmployeeHomeScreenState extends ConsumerState<EmployeeHomeScreen> {
                 child: SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: _handleAttendance,
+                    onPressed: isCheckingIn ? null : _handleAttendance,
                     style: ElevatedButton.styleFrom(
                       backgroundColor:
                           hasActiveCheckIn
@@ -243,10 +256,19 @@ class _EmployeeHomeScreenState extends ConsumerState<EmployeeHomeScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    child: Text(
-                      hasActiveCheckIn ? "Check Out" : "Check In",
-                      style: const TextStyle(fontSize: 16, color: Colors.white),
-                    ),
+                    child: isCheckingIn
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : Text(
+                            hasActiveCheckIn ? "Check Out" : "Check In",
+                            style: const TextStyle(fontSize: 16, color: Colors.white),
+                          ),
                   ),
                 ),
               ),
@@ -258,157 +280,17 @@ class _EmployeeHomeScreenState extends ConsumerState<EmployeeHomeScreen> {
   }
 }
 
-class _ProfileSection extends ConsumerWidget {
-  const _ProfileSection();
+// extracted: _ProfileSection and _DateSelector moved to
+// `presentaion/screen/employee_home/widgets/profile_section.dart`
+// and `presentaion/screen/employee_home/widgets/date_selector.dart`
 
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(userNotifierProvider);
-    final notifier = ref.read(userNotifierProvider.notifier);
-
-    return FutureBuilder(
-      future: notifier.getNotificationMessage(),
-      builder: (context, AsyncSnapshot<List<NotificationModel>> snapshot) {
-        int notificationCount = 0;
-        if (snapshot.hasData) {
-          notificationCount = snapshot.data!.length;
-        }
-        if (user == null) {
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Card(
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Row(
-                  children: const [
-                    ShimmerCircle(size: 48),
-                    SizedBox(width: 12),
-                    Expanded(child: ShimmerListTile()),
-                  ],
-                ),
-              ),
-            ),
-          );
-        }
-
-        return ListTile(
-          leading: ProfilePictureWidget(
-            profilePicture: user.profile.profilePicture,
-            radius: 24,
-          ),
-          title: Text(
-            user.profile.fullName,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          subtitle: Text(user.profile.designation),
-          trailing: GestureDetector(
-            onTap: () => context.push('/notification'),
-            child: Stack(
-              children: [
-                const Icon(Icons.notifications_none, size: 28),
-                if (notificationCount > 0)
-                  Positioned(
-                    right: 0,
-                    top: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(2),
-                      decoration: BoxDecoration(
-                        color: Colors.red,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      constraints: const BoxConstraints(
-                        minWidth: 16,
-                        minHeight: 16,
-                      ),
-                      child: Text(
-                        '$notificationCount',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _DateSelector extends StatelessWidget {
-  const _DateSelector();
-
-  @override
-  Widget build(BuildContext context) {
-    final now = DateTime.now();
-    final dates = List.generate(6, (i) => now.add(Duration(days: i)));
-    const selectedIndex = 0;
-
-    return SizedBox(
-      height: 80,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: dates.length,
-        itemBuilder: (context, index) {
-          final date = dates[index];
-          final isSelected = index == selectedIndex;
-
-          return Container(
-            margin: const EdgeInsets.all(12),
-            width: 60,
-            decoration: BoxDecoration(
-              color: isSelected ? Colors.deepOrange : Colors.white,
-              borderRadius: BorderRadius.circular(8),
-              boxShadow:
-                  isSelected
-                      ? [
-                          BoxShadow(
-                            color: Colors.deepOrange.withOpacity(0.5),
-                            blurRadius: 6,
-                          ),
-                        ]
-                      : [],
-            ),
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    DateFormat('E').format(date),
-                    style: TextStyle(
-                      color: isSelected ? Colors.white : Colors.black,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    DateFormat('dd').format(date),
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: isSelected ? Colors.white : Colors.black,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _TodayAttendance extends ConsumerWidget {
+class _TodayAttendance extends StatelessWidget {
   final states.AttendanceState attendanceState;
 
   const _TodayAttendance({required this.attendanceState});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     if (attendanceState is! states.AttendanceData) {
       return const ShimmerCardGrid(count: 4);
     }
@@ -418,7 +300,7 @@ class _TodayAttendance extends ConsumerWidget {
     String totalDays = "0";
 
     if (attendanceState is states.AttendanceData) {
-      final today = DateTime.now();
+      final today = TimezoneHelper.now();
       final todayAttendance =
           (attendanceState as states.AttendanceData).attendance
               .where(
@@ -431,7 +313,7 @@ class _TodayAttendance extends ConsumerWidget {
 
       if (todayAttendance.isNotEmpty) {
         // Get the latest check-in
-        final checkIns = todayAttendance.where((a) => a.checkIn != null).toList();
+        final checkIns = todayAttendance;
         if (checkIns.isNotEmpty) {
           final latestCheckIn = checkIns.reduce(
             (a, b) => a.checkIn.isAfter(b.checkIn) ? a : b,
@@ -466,7 +348,7 @@ class _TodayAttendance extends ConsumerWidget {
           spacing: 16,
           runSpacing: 16,
           children: [
-            _AttendanceCard(
+            AttendanceCard(
               title: "Check In",
               value: checkInTime,
               status:
@@ -475,7 +357,7 @@ class _TodayAttendance extends ConsumerWidget {
                   : "On Time",
               icon: Icons.login,
             ),
-            _AttendanceCard(
+            AttendanceCard(
               title: "Check Out",
               value: checkOutTime,
               status:
@@ -484,13 +366,13 @@ class _TodayAttendance extends ConsumerWidget {
                   : "Checked Out",
               icon: Icons.logout,
             ),
-            _AttendanceCard(
+            AttendanceCard(
               title: "Break Time",
               value: breakTime,
               status: "Break Time",
               icon: Icons.breakfast_dining,
             ),
-            _AttendanceCard(
+            AttendanceCard(
               title: "Total Days",
               value: totalDays,
               status: "Working Days",
@@ -503,122 +385,31 @@ class _TodayAttendance extends ConsumerWidget {
   }
 }
 
-class _AttendanceCard extends StatelessWidget {
-  final String title;
-  final String value;
-  final String status;
-  final IconData icon;
+// moved to: presentaion/screen/employee_home/widgets/attendance_card.dart
 
-  const _AttendanceCard({
-    required this.title,
-    required this.value,
-    required this.status,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: (MediaQuery.of(context).size.width - 48) / 2,
-      child: Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        elevation: 2,
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Column(
-            children: [
-              Icon(icon, size: 28, color: Colors.deepOrange),
-              const SizedBox(height: 8),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(title, style: const TextStyle(color: Colors.grey)),
-              const SizedBox(height: 2),
-              Text(
-                status,
-                style: const TextStyle(fontSize: 12, color: Colors.black54),
-              ),
-            ],
+void _confirmDeleteAttendance(BuildContext context, int id) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text('Delete Attendance Record'),
+        content: const Text('Are you sure you want to delete this record?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ActivityItem extends ConsumerWidget {
-  final DateTime date;
-  final DateTime time;
-  final String type;
-  final String status;
-  final int id;
-
-  const _ActivityItem({
-    required this.date,
-    required this.time,
-    required this.type,
-    required this.status,
-    required this.id,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor:
-          type == 'Check In'
-              ? Colors.green
-              : const Color.fromARGB(255, 162, 93, 68),
-          child: Icon(
-            type == 'Check In' ? Icons.login : Icons.logout,
-            color: Colors.white,
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              context.read<AttendanceBloc>().add(AttendanceDeleteRequested(id));
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
           ),
-        ),
-        title: Text(type),
-        subtitle: Text(
-          '${DateFormat('MMM dd, yyyy').format(date)} at ${DateFormat('hh:mm a').format(time)}',
-        ),
-        trailing: IconButton(
-          icon: const Icon(Icons.delete_outline, color: Colors.red),
-          onPressed: () => _showDeleteConfirmation(context, ref),
-        ),
-      ),
-    );
-  }
-
-  void _showDeleteConfirmation(BuildContext context, WidgetRef ref) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Delete Attendance Record'),
-          content: Text('Are you sure you want to delete this $type record?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                ref
-                    .read(attendanceNotifierProvider.notifier)
-                    .deleteAttendance(id);
-              },
-              child: const Text('Delete', style: TextStyle(color: Colors.red)),
-            ),
-          ],
-        );
-      },
-    );
-  }
+        ],
+      );
+    },
+  );
 }
 
 Widget _buildActivityList(List<Attendance> attendances) {
@@ -628,22 +419,14 @@ Widget _buildActivityList(List<Attendance> attendances) {
     itemCount: attendances.length,
     itemBuilder: (context, index) {
       final attendance = attendances[index];
-      return _ActivityItem(
+      return ActivityItem(
         date: attendance.date,
         time: attendance.checkIn,
         type: 'Check In',
         status: attendance.attendance,
         id: attendance.id,
+        onDelete: () => _confirmDeleteAttendance(context, attendance.id),
       );
-      if (attendance.checkOut != null) {
-        return _ActivityItem(
-          date: attendance.date,
-          time: attendance.checkOut!,
-          type: 'Check Out',
-          status: attendance.attendance,
-          id: attendance.id,
-        );
-      }
     },
   );
 }
@@ -658,20 +441,22 @@ Widget _buildTodayActivity(List<Attendance> todayAttendance) {
       final isCheckIn = index.isEven;
 
       if (isCheckIn) {
-        return _ActivityItem(
+        return ActivityItem(
           date: attendance.date,
           time: attendance.checkIn,
           type: 'Check In',
           status: attendance.attendance,
           id: attendance.id,
+          onDelete: () => _confirmDeleteAttendance(context, attendance.id),
         );
       } else if (attendance.checkOut != null) {
-        return _ActivityItem(
+        return ActivityItem(
           date: attendance.date,
           time: attendance.checkOut!,
           type: 'Check Out',
           status: attendance.attendance,
           id: attendance.id,
+          onDelete: () => _confirmDeleteAttendance(context, attendance.id),
         );
       }
       return const SizedBox.shrink();
@@ -731,13 +516,14 @@ Widget _buildDashboard(states.AttendanceState attendanceState) {
     final attendances = attendanceState.attendance;
     final totalDays =
         attendances.where((a) => a.attendance == 'PRESENT').length;
+    final today = TimezoneHelper.now();
     final todayAttendance =
     attendances
         .where(
           (a) =>
-      a.date.year == DateTime.now().year &&
-          a.date.month == DateTime.now().month &&
-          a.date.day == DateTime.now().day,
+      a.date.year == today.year &&
+          a.date.month == today.month &&
+          a.date.day == today.day,
     )
         .toList();
 
@@ -762,13 +548,14 @@ Widget _buildDashboard(states.AttendanceState attendanceState) {
 
 Widget _buildTodayAttendance(states.AttendanceState attendanceState) {
   if (attendanceState is states.AttendanceData) {
+    final today = TimezoneHelper.now();
     final todayAttendance =
     attendanceState.attendance
         .where(
           (a) =>
-      a.date.year == DateTime.now().year &&
-          a.date.month == DateTime.now().month &&
-          a.date.day == DateTime.now().day,
+      a.date.year == today.year &&
+          a.date.month == today.month &&
+          a.date.day == today.day,
     )
         .toList();
 
@@ -788,13 +575,14 @@ Widget _buildTodayAttendance(states.AttendanceState attendanceState) {
 
 Widget _buildPastActivity(states.AttendanceState attendanceState) {
   if (attendanceState is states.AttendanceData) {
+    final today = TimezoneHelper.now();
     final pastAttendance =
     attendanceState.attendance
         .where(
           (a) =>
-      a.date.year != DateTime.now().year ||
-          a.date.month != DateTime.now().month ||
-          a.date.day != DateTime.now().day,
+      a.date.year != today.year ||
+          a.date.month != today.month ||
+          a.date.day != today.day,
     )
         .toList();
 

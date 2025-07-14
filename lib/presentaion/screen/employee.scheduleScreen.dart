@@ -1,25 +1,27 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:staffsync/application/notifiers/leaveDashboard.notifier.dart';
-import 'package:staffsync/application/notifiers/leaveRequest.notifiers.dart';
-import 'package:staffsync/application/providers/providers.dart';
-import 'package:staffsync/application/states/leaveDashboard.state.dart';
-import 'package:staffsync/application/states/leaveRequest.state.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:staffsync/application/bloc/leave_dashboard/leave_dashboard_bloc.dart';
+import 'package:staffsync/application/bloc/leave_dashboard/leave_dashboard_event.dart';
+import 'package:staffsync/application/bloc/leave_dashboard/leave_dashboard_state.dart';
+import 'package:staffsync/application/bloc/leave_request/leave_request_bloc.dart';
+import 'package:staffsync/application/bloc/leave_request/leave_request_event.dart';
+import 'package:staffsync/application/bloc/leave_request/leave_request_state.dart';
 import 'package:staffsync/domain/model/leaveRequest.model.dart';
 
-class ScheduleScreen extends ConsumerStatefulWidget {
+class ScheduleScreen extends StatefulWidget {
   const ScheduleScreen({super.key});
 
   @override
-  ConsumerState<ScheduleScreen> createState() => _ScheduleScreenState();
+  State<ScheduleScreen> createState() => _ScheduleScreenState();
 }
 
-class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
+class _ScheduleScreenState extends State<ScheduleScreen> {
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(leaveNotifierProvider.notifier).getLeaveDashboardStats();
+      context.read<LeaveDashboardBloc>().add(const LeaveDashboardFetchRequested());
+      context.read<LeaveRequestBloc>().add(const LeaveRequestFetchRequested());
     });
   }
 
@@ -31,7 +33,8 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
   }
 
   void _refreshDashboard() {
-    ref.read(leaveNotifierProvider.notifier).getLeaveDashboardStats();
+    context.read<LeaveDashboardBloc>().add(const LeaveDashboardFetchRequested());
+    context.read<LeaveRequestBloc>().add(const LeaveRequestFetchRequested());
   }
 
   Widget leaveCard({
@@ -75,8 +78,6 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final leaveState = ref.watch(leaveNotifierProvider);
-
     return Scaffold(
       appBar: AppBar(
         actionsPadding: const EdgeInsets.all(15.0),
@@ -104,94 +105,93 @@ class _ScheduleScreenState extends ConsumerState<ScheduleScreen> {
         },
         child: Padding(
           padding: const EdgeInsets.all(15.0),
-          child: switch (leaveState) {
-            LeaveDashboardLoading() => const Center(
-              child: CircularProgressIndicator(),
-            ),
-            LeaveDashboardError(message: final error) => Center(
-              child: Text(
-                'Error: $error',
-                style: const TextStyle(color: Colors.red),
-              ),
-            ),
-            LeaveDashboardData(leaveDashboard: final data) =>
-              data.isEmpty
-                  ? const Center(child: Text('No data available'))
-                  : SingleChildScrollView(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(height: 20),
-                          GridView.count(
-                            crossAxisCount: 2,
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            crossAxisSpacing: 16,
-                            mainAxisSpacing: 16,
-                            children: [
-                              leaveCard(
-                                title: 'Leave Balance',
-                                value: data.first.balance.toString(),
-                                borderColor: Colors.blue.shade100,
-                                backgroundColor: Colors.blue.shade50,
-                                valueColor: Colors.blue,
-                              ),
-                              leaveCard(
-                                title: 'Leave Approved',
-                                value: data.first.approved.toString(),
-                                borderColor: Colors.green.shade100,
-                                backgroundColor: Colors.green.shade50,
-                                valueColor: Colors.green,
-                              ),
-                              leaveCard(
-                                title: 'Leave Pending',
-                                value: data.first.pending.toString(),
-                                borderColor: Colors.teal.shade100,
-                                backgroundColor: Colors.teal.shade50,
-                                valueColor: Colors.teal,
-                              ),
-                              leaveCard(
-                                title: 'Leave Cancelled',
-                                value: data.first.cancelled.toString(),
-                                borderColor: Colors.red.shade100,
-                                backgroundColor: Colors.red.shade50,
-                                valueColor: Colors.red,
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 30),
-                          const Divider(),
-                          const SizedBox(height: 10),
-                          const LeaveTab(),
-                        ],
+          child: BlocBuilder<LeaveDashboardBloc, LeaveDashboardState>(
+            builder: (context, leaveState) {
+              return switch (leaveState) {
+                LeaveDashboardLoading() => const Center(child: CircularProgressIndicator()),
+                LeaveDashboardError(message: final error) => Center(
+                    child: Text('Error: $error', style: const TextStyle(color: Colors.red)),
+                  ),
+                LeaveDashboardData(leaveDashboard: final data) => data.isEmpty
+                    ? const Center(child: Text('No data available'))
+                    : SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 20),
+                            GridView.count(
+                              crossAxisCount: 2,
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              crossAxisSpacing: 16,
+                              mainAxisSpacing: 16,
+                              children: [
+                                leaveCard(
+                                  title: 'Leave Balance',
+                                  value: data.first.balance.toString(),
+                                  borderColor: Colors.blue.shade100,
+                                  backgroundColor: Colors.blue.shade50,
+                                  valueColor: Colors.blue,
+                                ),
+                                leaveCard(
+                                  title: 'Leave Approved',
+                                  value: data.first.approved.toString(),
+                                  borderColor: Colors.green.shade100,
+                                  backgroundColor: Colors.green.shade50,
+                                  valueColor: Colors.green,
+                                ),
+                                leaveCard(
+                                  title: 'Leave Pending',
+                                  value: data.first.pending.toString(),
+                                  borderColor: Colors.teal.shade100,
+                                  backgroundColor: Colors.teal.shade50,
+                                  valueColor: Colors.teal,
+                                ),
+                                leaveCard(
+                                  title: 'Leave Cancelled',
+                                  value: data.first.cancelled.toString(),
+                                  borderColor: Colors.red.shade100,
+                                  backgroundColor: Colors.red.shade50,
+                                  valueColor: Colors.red,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 30),
+                            const Divider(),
+                            const SizedBox(height: 10),
+                            const LeaveTab(),
+                          ],
+                        ),
                       ),
-                    ),
-          },
+                _ => const Center(child: CircularProgressIndicator()),
+              };
+            },
+          ),
         ),
       ),
     );
   }
 }
 
-class LeaveTab extends ConsumerStatefulWidget {
+class LeaveTab extends StatefulWidget {
   const LeaveTab({super.key});
 
   @override
-  ConsumerState<LeaveTab> createState() => _LeaveTabState();
+  State<LeaveTab> createState() => _LeaveTabState();
 }
 
-class _LeaveTabState extends ConsumerState<LeaveTab> {
+class _LeaveTabState extends State<LeaveTab> {
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(leaveRequestNotifierProvider.notifier).getLeaveRequests();
+      context.read<LeaveRequestBloc>().add(const LeaveRequestFetchRequested());
     });
   }
 
   void _refreshLeaveRequests() {
-    ref.read(leaveRequestNotifierProvider.notifier).getLeaveRequests();
+    context.read<LeaveRequestBloc>().add(const LeaveRequestFetchRequested());
   }
 
   Widget _buildLeaveRequestCard(LeaveRequest request) {
@@ -323,7 +323,7 @@ class _LeaveTabState extends ConsumerState<LeaveTab> {
 
   @override
   Widget build(BuildContext context) {
-    final leaveRequestState = ref.watch(leaveRequestNotifierProvider);
+    final leaveRequestState = context.watch<LeaveRequestBloc>().state;
 
     return DefaultTabController(
       length: 2,
@@ -362,8 +362,8 @@ class _LeaveTabState extends ConsumerState<LeaveTab> {
                         return _buildLeaveRequestCard(pastRequests[index]);
                       },
                     ),
+                  _ => const SizedBox.shrink(),
                 },
-              
                 switch (leaveRequestState) {
                   LeaveRequestLoading() => const Center(
                     child: CircularProgressIndicator(),
@@ -394,8 +394,7 @@ class _LeaveTabState extends ConsumerState<LeaveTab> {
    
                       },
                     ),
-                    
-
+                  _ => const SizedBox.shrink(),
                 },
               ],
             ),
@@ -406,14 +405,14 @@ class _LeaveTabState extends ConsumerState<LeaveTab> {
   }
 }
 
-class LeaveRequestForm extends ConsumerStatefulWidget {
+class LeaveRequestForm extends StatefulWidget {
   const LeaveRequestForm({super.key});
 
   @override
-  ConsumerState<LeaveRequestForm> createState() => _LeaveRequestFormState();
+  State<LeaveRequestForm> createState() => _LeaveRequestFormState();
 }
 
-class _LeaveRequestFormState extends ConsumerState<LeaveRequestForm> {
+class _LeaveRequestFormState extends State<LeaveRequestForm> {
   final _formKey = GlobalKey<FormState>();
   String _selectedType = 'SICK';
   DateTime _startDate = DateTime.now();
@@ -450,14 +449,12 @@ class _LeaveRequestFormState extends ConsumerState<LeaveRequestForm> {
   void _submitForm() async {
     if (_formKey.currentState!.validate()) {
       try {
-        await ref
-            .read(leaveRequestNotifierProvider.notifier)
-            .addLeaveRequests(
-              type: _selectedType,
-              startDate: _startDate,
-              endDate: _endDate,
-              reason: _reasonController.text,
-            );
+        context.read<LeaveRequestBloc>().add(LeaveRequestAddRequested(
+          type: _selectedType,
+          startDate: _startDate,
+          endDate: _endDate,
+          reason: _reasonController.text,
+        ));
 
         if (mounted) {
           Navigator.of(context).pop();
@@ -467,7 +464,7 @@ class _LeaveRequestFormState extends ConsumerState<LeaveRequestForm> {
             ),
           );
           // Refresh the leave requests list
-          ref.read(leaveRequestNotifierProvider.notifier).getLeaveRequests();
+          context.read<LeaveRequestBloc>().add(const LeaveRequestFetchRequested());
         }
       } catch (e) {
         if (mounted) {

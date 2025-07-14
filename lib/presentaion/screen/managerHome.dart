@@ -2,46 +2,51 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:staffsync/application/providers/providers.dart';
-import 'package:staffsync/application/states/attendance.state.dart' as states;
+import 'package:staffsync/application/bloc/attendance/attendance_state.dart' as states;
 import 'package:staffsync/domain/model/attendance.model.dart';
 import 'package:intl/intl.dart';
-import 'package:staffsync/application/states/manager.state.dart';
 import 'package:staffsync/domain/model/managerDashboard.model.dart';
 import 'package:staffsync/domain/model/user.model.dart';
-import 'package:staffsync/application/states/leaveDashboard.state.dart';
+import 'package:staffsync/application/bloc/leave_dashboard/leave_dashboard_state.dart';
+import 'package:staffsync/application/bloc/user/user_cubit.dart';
+import 'package:staffsync/application/bloc/manager_dashboard/manager_dashboard_bloc.dart';
+import 'package:staffsync/application/bloc/manager_dashboard/manager_dashboard_event.dart';
+import 'package:staffsync/application/bloc/leave_dashboard/leave_dashboard_bloc.dart';
+import 'package:staffsync/application/bloc/leave_dashboard/leave_dashboard_event.dart';
+import 'package:staffsync/application/bloc/bulk_user/bulk_user_cubit.dart';
+import 'package:staffsync/application/bloc/manager_dashboard/manager_dashboard_state.dart';
 
-class ManagerHomeScreen extends ConsumerStatefulWidget {
+class ManagerHomeScreen extends StatefulWidget {
   const ManagerHomeScreen({super.key});
 
   @override
-  ConsumerState<ManagerHomeScreen> createState() => _ManagerHomeScreenState();
+  State<ManagerHomeScreen> createState() => _ManagerHomeScreenState();
 }
 
-class _ManagerHomeScreenState extends ConsumerState<ManagerHomeScreen> {
+class _ManagerHomeScreenState extends State<ManagerHomeScreen> {
   @override
   void initState() {
     super.initState();
     Future.microtask(() {
-      ref.read(userNotifierProvider.notifier).loadUserFromStorage();
-      ref.read(managerDashboardNotifierProvider.notifier).fetchDashboardStats();
-      ref.read(leaveNotifierProvider.notifier).getLeaveDashboardStats();
+      context.read<UserCubit>().loadUserFromStorage();
+      context.read<ManagerDashboardBloc>().add(const ManagerDashboardFetchRequested());
+      context.read<LeaveDashboardBloc>().add(const LeaveDashboardFetchRequested());
+      context.read<BulkUserCubit>().getEmployees();
     });
   }
 
   Future<void> _refreshData() async {
-    await Future.wait([
-      ref.read(userNotifierProvider.notifier).loadUserFromStorage(),
-      ref.read(managerDashboardNotifierProvider.notifier).fetchDashboardStats(),
-      ref.read(leaveNotifierProvider.notifier).getLeaveDashboardStats(),
-    ]);
+    context.read<UserCubit>().loadUserFromStorage();
+    context.read<ManagerDashboardBloc>().add(const ManagerDashboardFetchRequested());
+    context.read<LeaveDashboardBloc>().add(const LeaveDashboardFetchRequested());
+    context.read<BulkUserCubit>().getEmployees();
   }
 
   @override
   Widget build(BuildContext context) {
-    final managerDashboardState = ref.watch(managerDashboardNotifierProvider);
+    final managerDashboardState = context.watch<ManagerDashboardBloc>().state;
 
     return Scaffold(
       backgroundColor: Colors.grey.shade100,
@@ -109,12 +114,12 @@ class _ManagerHomeScreenState extends ConsumerState<ManagerHomeScreen> {
   }
 }
 
-class _ProfileSection extends ConsumerWidget {
+class _ProfileSection extends StatelessWidget {
   const _ProfileSection();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(userNotifierProvider);
+  Widget build(BuildContext context) {
+    final user = context.watch<UserCubit>().state;
     return ListTile(
       leading: const CircleAvatar(
         radius: 24,
@@ -196,13 +201,13 @@ class _DateSelector extends StatelessWidget {
   }
 }
 
-class _TodayAttendance extends ConsumerWidget {
+class _TodayAttendance extends StatelessWidget {
   final states.AttendanceState attendanceState;
 
   const _TodayAttendance({required this.attendanceState});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     String checkInTime = "Not checked in";
     String checkOutTime = "Not checked out";
     String breakTime = "No break";
@@ -223,7 +228,6 @@ class _TodayAttendance extends ConsumerWidget {
       if (todayAttendance.isNotEmpty) {
         // Get the latest check-in
         final latestCheckIn = todayAttendance
-            .where((a) => a.checkIn != null)
             .reduce((a, b) => a.checkIn.isAfter(b.checkIn) ? a : b);
 
         // Get the latest check-out
@@ -232,10 +236,7 @@ class _TodayAttendance extends ConsumerWidget {
             .reduce((a, b) => a.checkOut!.isAfter(b.checkOut!) ? a : b);
 
         checkInTime = DateFormat('hh:mm a').format(latestCheckIn.checkIn);
-
-        if (latestCheckOut.checkOut != null) {
-          checkOutTime = DateFormat('hh:mm a').format(latestCheckOut.checkOut!);
-        }
+        checkOutTime = DateFormat('hh:mm a').format(latestCheckOut.checkOut!);
       }
 
       // Count unique days with attendance
@@ -568,20 +569,20 @@ extension StringExtension on String {
   }
 }
 
-class _AttendanceSummaryCards extends ConsumerWidget {
+class _AttendanceSummaryCards extends StatelessWidget {
   final Managerdashboard stats;
 
   const _AttendanceSummaryCards({required this.stats});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
     final double horizontalPadding = 16.0;
     final double spacing = 16.0;
     final double cardWidth =
         (screenWidth - 2 * horizontalPadding - spacing) / 2;
 
-    final leaveDashboardState = ref.watch(leaveNotifierProvider);
+    final leaveDashboardState = context.watch<LeaveDashboardBloc>().state;
     int onLeaveToday = 0;
 
     if (leaveDashboardState is LeaveDashboardData) {
@@ -672,7 +673,7 @@ class _SummaryCard extends StatelessWidget {
   }
 }
 
-class _EmployeesDailyStatusList extends ConsumerWidget {
+class _EmployeesDailyStatusList extends StatelessWidget {
   const _EmployeesDailyStatusList();
 
   String getStatus(User employee) {
@@ -687,13 +688,9 @@ class _EmployeesDailyStatusList extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final employees = ref.watch(bulkUserNotifierProvider);
-
+  Widget build(BuildContext context) {
+    final employees = context.watch<BulkUserCubit>().state;
     if (employees.isEmpty) {
-      Future.microtask(
-        () => ref.read(bulkUserNotifierProvider.notifier).getEmployees(),
-      );
       return const Center(child: CircularProgressIndicator());
     }
 
@@ -717,14 +714,24 @@ class _EmployeesDailyStatusList extends ConsumerWidget {
         }
 
         return ListTile(
-          leading: CircleAvatar(
-            radius: 24,
-            backgroundImage:
-                imageBytes != null
-                    ? MemoryImage(imageBytes)
-                    : const AssetImage('assets/images/profile_placeholder.png')
-                        as ImageProvider,
-            backgroundColor: Colors.grey[300],
+          leading: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            transitionBuilder: (Widget child, Animation<double> animation) {
+              return FadeTransition(
+                opacity: animation,
+                child: child,
+              );
+            },
+            child: CircleAvatar(
+              key: ValueKey(employee.profile.profilePicture),
+              radius: 24,
+              backgroundImage:
+                  imageBytes != null
+                      ? MemoryImage(imageBytes)
+                      : const AssetImage('assets/images/profile_placeholder.png')
+                          as ImageProvider,
+              backgroundColor: Colors.grey[300],
+            ),
           ),
           title: Text(
             employee.profile.fullName,

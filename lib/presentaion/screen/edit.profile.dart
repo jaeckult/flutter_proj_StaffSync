@@ -3,25 +3,18 @@ import 'dart:typed_data';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:staffsync/application/providers/providers.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:staffsync/application/bloc/user/user_cubit.dart';
 import 'package:staffsync/presentaion/widgets/profile_picture_widget.dart';
 
-
-final fullNameProvider = StateProvider<String>((ref) => "");
-final designationProvider = StateProvider<String>((ref) => "");
-final emailProvider = StateProvider<String>((ref) => "");
-final experienceProvider = StateProvider<String>((ref) => "");
-final profilePictureProvider = StateProvider<String>((ref) => "");
-
-class EditProfile extends ConsumerStatefulWidget {
+class EditProfile extends StatefulWidget {
   const EditProfile({super.key});
 
   @override
-  ConsumerState<EditProfile> createState() => _EditProfileState();
+  State<EditProfile> createState() => _EditProfileState();
 }
 
-class _EditProfileState extends ConsumerState<EditProfile> {
+class _EditProfileState extends State<EditProfile> {
   File? _image;
   String? _base64Image;
   late TextEditingController nameController;
@@ -38,11 +31,9 @@ class _EditProfileState extends ConsumerState<EditProfile> {
     emailController = TextEditingController();
     experienceController = TextEditingController();
     profilePictureController = TextEditingController();
-    
-    
     Future.microtask(() async {
-      await ref.read(userNotifierProvider.notifier).loadUserFromStorage();
-      final user = ref.read(userNotifierProvider);
+      await context.read<UserCubit>().loadUserFromStorage();
+      final user = context.read<UserCubit>().state;
       if (user != null) {
         nameController.text = user.profile.fullName;
         designationController.text = user.profile.designation;
@@ -65,7 +56,7 @@ class _EditProfileState extends ConsumerState<EditProfile> {
 
   @override
   Widget build(BuildContext context) {
-    final user = ref.watch(userNotifierProvider);
+    final user = context.watch<UserCubit>().state;
     
     if (user == null) {
       return const Scaffold(
@@ -125,8 +116,7 @@ class _EditProfileState extends ConsumerState<EditProfile> {
               ElevatedButton(
                 onPressed: () async {
                   try {
-                    final userNotifier = ref.read(userNotifierProvider.notifier);
-                    await userNotifier.editProfile(
+                    await context.read<UserCubit>().editProfile(
                       user.id,
                       nameController.text,
                       designationController.text,

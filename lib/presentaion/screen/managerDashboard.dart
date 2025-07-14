@@ -1,27 +1,26 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:staffsync/application/notifiers/leaveRequest.notifiers.dart';
-import 'package:staffsync/application/providers/providers.dart';
-import 'package:staffsync/application/states/leaveRequest.state.dart';
-import 'package:staffsync/application/states/manager.state.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:staffsync/application/bloc/manager_dashboard/manager_dashboard_bloc.dart';
+import 'package:staffsync/application/bloc/manager_dashboard/manager_dashboard_event.dart';
+import 'package:staffsync/application/bloc/leave_request/leave_request_bloc.dart';
+import 'package:staffsync/application/bloc/leave_request/leave_request_event.dart';
+import 'package:staffsync/application/bloc/leave_request/leave_request_state.dart';
 import 'package:staffsync/domain/model/leaveRequest.model.dart';
-import 'package:staffsync/domain/model/managerDashboard.model.dart';
 
-class ManagerScheduleScreen extends ConsumerStatefulWidget {
+class ManagerScheduleScreen extends StatefulWidget {
   const ManagerScheduleScreen({super.key});
 
   @override
-  ConsumerState<ManagerScheduleScreen> createState() => _ScheduleScreenState();
+  State<ManagerScheduleScreen> createState() => _ScheduleScreenState();
 }
 
-class _ScheduleScreenState extends ConsumerState<ManagerScheduleScreen> {
+class _ScheduleScreenState extends State<ManagerScheduleScreen> {
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(managerDashboardNotifierProvider.notifier).fetchDashboardStats();
-      ref.read(leaveRequestNotifierProvider.notifier).getLeaveRequests();
+      context.read<ManagerDashboardBloc>().add(const ManagerDashboardFetchRequested());
+      context.read<LeaveRequestBloc>().add(const LeaveRequestFetchRequested());
     });
   }
 
@@ -59,8 +58,8 @@ class _ScheduleScreenState extends ConsumerState<ManagerScheduleScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final dashboardState = ref.watch(managerDashboardNotifierProvider);
-    final leaveRequestState = ref.watch(leaveRequestNotifierProvider);
+    final dashboardState = context.watch<ManagerDashboardBloc>().state;
+    final leaveRequestState = context.watch<LeaveRequestBloc>().state;
 
     int approvedCount = 0;
     int pendingCount = 0;
@@ -142,15 +141,15 @@ class _ScheduleScreenState extends ConsumerState<ManagerScheduleScreen> {
   }
 }
 
-class LeaveTab extends ConsumerStatefulWidget {
+class LeaveTab extends StatefulWidget {
   final LeaveRequestState leaveRequestState;
   const LeaveTab({super.key, required this.leaveRequestState});
 
   @override
-  ConsumerState<LeaveTab> createState() => _LeaveTabState();
+  State<LeaveTab> createState() => _LeaveTabState();
 }
 
-class _LeaveTabState extends ConsumerState<LeaveTab> {
+class _LeaveTabState extends State<LeaveTab> {
   @override
   Widget build(BuildContext context) {
     final leaveRequestState = widget.leaveRequestState;
@@ -255,17 +254,13 @@ class _LeaveTabState extends ConsumerState<LeaveTab> {
                     IconButton(
                       icon: const Icon(Icons.check, color: Colors.green),
                       onPressed: () {
-                        ref
-                            .read(leaveRequestNotifierProvider.notifier)
-                            .updateLeaveRequest(request.id, 'APPROVED');
+                        context.read<LeaveRequestBloc>().add(LeaveRequestUpdateRequested(request.id, 'APPROVED'));
                       },
                     ),
                     IconButton(
                       icon: const Icon(Icons.close, color: Colors.red),
                       onPressed: () {
-                        ref
-                            .read(leaveRequestNotifierProvider.notifier)
-                            .updateLeaveRequest(request.id, 'REJECTED');
+                        context.read<LeaveRequestBloc>().add(LeaveRequestUpdateRequested(request.id, 'REJECTED'));
                       },
                     ),
                   ],

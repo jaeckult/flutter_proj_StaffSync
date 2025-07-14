@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:staffsync/application/providers/providers.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:staffsync/application/bloc/user/user_cubit.dart';
 import 'package:another_flushbar/flushbar.dart';
 
 void main() {
@@ -10,14 +10,14 @@ void main() {
   ));
 }
 
-class ChangePassword extends ConsumerStatefulWidget {
+class ChangePassword extends StatefulWidget {
   const ChangePassword({super.key});
 
   @override
   _ChangePasswordState createState() => _ChangePasswordState();
 }
 
-class _ChangePasswordState extends ConsumerState<ChangePassword> {
+class _ChangePasswordState extends State<ChangePassword> {
   bool oldPasswordVisible = false;
   bool newPasswordVisible = false;
   bool isLoading = false;
@@ -41,8 +41,7 @@ class _ChangePasswordState extends ConsumerState<ChangePassword> {
     });
 
     try {
-      final userNotifier = ref.read(userNotifierProvider.notifier);
-      await userNotifier.changePassword(
+      await context.read<UserCubit>().changePassword(
         oldPasswordController.text,
         newPasswordController.text,
       );

@@ -1,4 +1,3 @@
-import 'package:staffsync/application/providers/providers.dart';
 import 'package:staffsync/domain/model/attendance.model.dart';
 import 'package:staffsync/domain/repositories/attendance.repository.dart';
 import 'package:staffsync/domain/repositories/auth.repository.dart';

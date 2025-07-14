@@ -1,21 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:staffsync/application/providers/providers.dart';
 import 'package:intl/intl.dart';
+import 'package:staffsync/application/bloc/auth/auth_bloc.dart';
+import 'package:staffsync/application/bloc/auth/auth_event.dart';
+import 'package:staffsync/application/bloc/auth/auth_state.dart';
 
 enum UserRole { MANAGER, EMPLOYEE }
 enum EmploymentType { PERMANENT, CONTRACTUAL, INTERNSHIP }
 enum Gender { MALE, FEMALE}
 
-class SignupScreen extends ConsumerStatefulWidget {
+class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
 
   @override
-  ConsumerState<SignupScreen> createState() => _SignupScreenState();
+  State<SignupScreen> createState() => _SignupScreenState();
 }
 
-class _SignupScreenState extends ConsumerState<SignupScreen> {
+class _SignupScreenState extends State<SignupScreen> {
   final _formKey = GlobalKey<FormState>();
   int _currentStep = 0;
   bool passwordVisible = false;
@@ -85,22 +87,17 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
       }
 
       try {
-        await ref
-            .read(authNotifierProvider.notifier)
-            .signup(
-              _usernameController.text,
-              _passwordController.text,
-              _emailController.text,
-              _fullnameController.text,
-              _selectedGender.name,
-              _selectedEmploymentType.name,
-              _designationController.text,
-              _dateOfBirth!.toIso8601String(),
-              _selectedRole.name,
-            );
-        if (mounted) {
-          context.go('/login');
-        }
+        context.read<AuthBloc>().add(AuthSignupRequested(
+          username: _usernameController.text,
+          password: _passwordController.text,
+          email: _emailController.text,
+          fullName: _fullnameController.text,
+          gender: _selectedGender.name,
+          employmentType: _selectedEmploymentType.name,
+          designation: _designationController.text,
+          dateOfBirth: _dateOfBirth!.toIso8601String(),
+          role: _selectedRole.name,
+        ));
       } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(
@@ -113,7 +110,19 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthSuccess) {
+          if (mounted) context.go('/login');
+        } else if (state is AuthError) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(state.message)),
+            );
+          }
+        }
+      },
+      child: Scaffold(
       body: SafeArea(child: SingleChildScrollView(child:Column(
         children: [
           const SizedBox(
@@ -470,6 +479,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
           ),
         ],
       ),
-    )));
+    ))),
+    );
   }
 }

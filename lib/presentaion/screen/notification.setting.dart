@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:staffsync/application/providers/providers.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:staffsync/application/bloc/user/user_cubit.dart';
 
 void main() {
   runApp(MaterialApp(
@@ -9,22 +9,19 @@ void main() {
   ));
 }
 
-class NotificationSetting extends ConsumerStatefulWidget {
+class NotificationSetting extends StatefulWidget {
   const NotificationSetting({super.key});
 
   @override
   _NotificationSettingState createState() => _NotificationSettingState();
 }
 
-class _NotificationSettingState extends ConsumerState<NotificationSetting> {
-  bool isNotificationOn = true;
+class _NotificationSettingState extends State<NotificationSetting> {
+  bool isOn = true;
   bool isDropdownExpanded = false;
   String selectedOption = 'Only my activities';
   @override
   Widget build(BuildContext context) {
-    final isOn = ref.watch(toggleProvider);
-    final delete =  ref.read(userNotifierProvider.notifier);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Notification Setting', style: TextStyle(color: Colors.black)),
@@ -46,7 +43,9 @@ class _NotificationSettingState extends ConsumerState<NotificationSetting> {
                   value: isOn,
                   activeColor: Colors.deepOrange,
                   onChanged: (value) {
-                    ref.read(toggleProvider.notifier).set(value);
+                    setState(() {
+                      isOn = value;
+                    });
                   },
                 )
               ],
@@ -57,7 +56,7 @@ class _NotificationSettingState extends ConsumerState<NotificationSetting> {
   children: [
     GestureDetector(
       onTap: () {
-        delete.deleteNotification();
+        context.read<UserCubit>().deleteNotification();
          ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Cleared Notification')));
            
@@ -73,7 +72,7 @@ class _NotificationSettingState extends ConsumerState<NotificationSetting> {
     ),
     GestureDetector(
       onTap: () {
-        delete.deleteNotification();
+        context.read<UserCubit>().deleteNotification();
          ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Cleared Notification')));
            

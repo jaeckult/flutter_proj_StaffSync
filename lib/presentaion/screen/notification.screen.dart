@@ -1,26 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:staffsync/application/providers/providers.dart';
 import 'package:staffsync/domain/model/notification.model.dart';
+import 'package:staffsync/application/bloc/user/user_cubit.dart';
 
 void main() {
-  runApp(ProviderScope(child: MaterialApp(home: NotificationList())));
+  runApp(MaterialApp(home: NotificationList()));
 }
 
-class NotificationList extends ConsumerStatefulWidget {
+class NotificationList extends StatefulWidget {
   @override
-  ConsumerState<NotificationList> createState() => _NotificationListState();
+  State<NotificationList> createState() => _NotificationListState();
 }
 
-class _NotificationListState extends ConsumerState<NotificationList> {
+class _NotificationListState extends State<NotificationList> {
   late Future<List<NotificationModel>> notificationsFuture;
 
   @override
   void initState() {
     super.initState();
-    notificationsFuture =
-        ref.read(userNotifierProvider.notifier).getNotificationMessage();
+    notificationsFuture = context.read<UserCubit>().getNotificationMessage();
   }
 
   @override

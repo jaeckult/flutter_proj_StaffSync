@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:staffsync/presentaion/screen/employee.collegues.Screen.dart';
 import 'package:staffsync/presentaion/screen/employee.holidayScreen.dart';
 import 'package:staffsync/presentaion/screen/managerColleagues.dart';
@@ -49,13 +48,13 @@ class ManagerNavigationManager {
   }
 }
 
-class ManagerLogic extends ConsumerStatefulWidget {
+class ManagerLogic extends StatefulWidget {
   const ManagerLogic({super.key});
   @override
   _ManagerLogicState createState() => _ManagerLogicState();
 }
 
-class _ManagerLogicState extends ConsumerState<ManagerLogic> {
+class _ManagerLogicState extends State<ManagerLogic> {
   final ManagerNavigationManager _logic = ManagerNavigationManager();
 
   @override

@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:staffsync/application/providers/providers.dart';
+import 'package:staffsync/application/bloc/auth/auth_bloc.dart';
+import 'package:staffsync/application/bloc/auth/auth_event.dart';
+import 'package:staffsync/application/bloc/auth/auth_state.dart';
 
-class LoginPage extends ConsumerStatefulWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
   @override
-  ConsumerState<LoginPage> createState() => _LoginPageState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends ConsumerState<LoginPage> {
+class _LoginPageState extends State<LoginPage> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
@@ -45,51 +47,23 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       });
 
       try {
-        final authNotifier = ref.read(authNotifierProvider.notifier);
-        final role = await authNotifier.logIn(
-          _usernameController.text,
-          _passwordController.text,
+        context.read<AuthBloc>().add(
+          AuthLoginRequested(
+            _usernameController.text,
+            _passwordController.text,
+          ),
         );
-
-        if (mounted && role != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Successfully logged in!'),
-              backgroundColor: Color.fromRGBO(123, 205, 109, 0.816),
-            ),
-          );
-
-          switch (role) {
-            case "EMPLOYEE":
-              context.go('/employee/home');
-              break;
-            case "MANAGER":
-              context.go('/manager/home');
-              break;
-          }
-
-          await authNotifier.connectToIO();
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Invalid Credential'),
-              backgroundColor: Color.fromRGBO(236, 19, 7, 0.815),
-            ),
-          );
-        }
       } catch (e) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  e.toString().replaceFirst('Exception: ', ''), 
-                ),
-                backgroundColor: const Color.fromRGBO(236, 19, 7, 0.815),
-              ),
-            );
-          }
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(e.toString().replaceFirst('Exception: ', '')),
+              backgroundColor: const Color.fromRGBO(236, 19, 7, 0.815),
+            ),
+          );
         }
-        finally {
+      }
+      finally {
         if (mounted) {
           setState(() {
             _isLoading = false;
@@ -102,7 +76,36 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   @override
   Widget build(BuildContext context) {
    
-    return Scaffold(
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) async {
+        if (state is LoggedIn) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Successfully logged in!'),
+                backgroundColor: Color.fromRGBO(123, 205, 109, 0.816),
+              ),
+            );
+            final role = state.role;
+            if (role == 'EMPLOYEE') {
+              context.go('/employee/home');
+            } else if (role == 'MANAGER') {
+              context.go('/manager/home');
+            }
+            context.read<AuthBloc>().add(const AuthConnectIoRequested());
+          }
+        } else if (state is AuthError) {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: const Color.fromRGBO(236, 19, 7, 0.815),
+              ),
+            );
+          }
+        }
+      },
+      child: Scaffold(
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
@@ -200,6 +203,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           ),
         ),
       ),
+    ),
     );
   }
 }

@@ -1,10 +1,8 @@
-import 'dart:convert';
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:staffsync/application/providers/providers.dart';
+import 'package:staffsync/application/bloc/user/user_cubit.dart';
+import 'package:staffsync/presentaion/widgets/profile_picture_widget.dart';
 
 void main() {
   runApp(const MyApp());
@@ -21,25 +19,26 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class ProfileScreen extends ConsumerStatefulWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
   @override
-  ConsumerState<ConsumerStatefulWidget> createState() => _ProfileScreen();
+  State<ProfileScreen> createState() => _ProfileScreen();
 }
 
-class _ProfileScreen extends ConsumerState<ProfileScreen> {
+class _ProfileScreen extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
     Future.microtask(() {
-      ref.read(userNotifierProvider.notifier).loadUserFromStorage();
+      context.read<UserCubit>().loadUserFromStorage();
     });
   }
 
   void _handleLogout() async {
     try {
-      await ref.read(authNotifierProvider.notifier).logout();
+      // If you have an AuthBloc, you can dispatch a logout event here.
+      // For now, just navigate to login.
       if (mounted) {
         context.go('/');
       }
@@ -77,39 +76,12 @@ class _ProfileScreen extends ConsumerState<ProfileScreen> {
     );
 
     if (confirmDelete == true) {
-      try {
-        final user = ref.read(userNotifierProvider);
-        final token = await ref.read(authNotifierProvider.notifier).getToken();
-
-        if (user != null && token != null) {
-          await ref
-              .read(bulkUserNotifierProvider.notifier)
-              .deleteEmployee(user.id, token);
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Account deleted successfully.')),
-            );
-            context.go('/');
-          }
-        } else {
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text(
-                  'Unable to delete account: User or token not found.',
-                ),
-              ),
-            );
-          }
-        }
-      } catch (e) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to delete account: ${e.toString()}'),
-            ),
-          );
-        }
+      // Implement deletion via a dedicated cubit or repository if needed.
+      // For now, show not implemented to avoid accidental destructive action.
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Account deletion via BLoC not implemented yet.')),
+        );
       }
     }
   }
@@ -128,12 +100,10 @@ class _ProfileScreen extends ConsumerState<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = ref.watch(userNotifierProvider);
+    final user = context.watch<UserCubit>().state;
     if (user == null) {
       return const Center(child: CircularProgressIndicator());
     }
-    final imageUrl = user.profile.profilePicture;
-    Uint8List imageBytes = base64Decode(imageUrl);
 
     return Scaffold(
       body: SafeArea(
@@ -141,27 +111,9 @@ class _ProfileScreen extends ConsumerState<ProfileScreen> {
           children: [
             const SizedBox(height: 20),
             Center(
-              child: Stack(
-                alignment: Alignment.bottomRight,
-                children: [
-                  CircleAvatar(
-                    radius: 50,
-                    backgroundImage: MemoryImage(
-                      imageBytes,
-                    ), // Replace with your image URL
-                  ),
-                  Positioned(
-                    bottom: 0,
-                    right: 4,
-                    child: Container(
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                      ),
-                      padding: const EdgeInsets.all(4),
-                    ),
-                  ),
-                ],
+              child: ProfilePictureWidget(
+                profilePicture: user.profile.profilePicture,
+                radius: 50,
               ),
             ),
             const SizedBox(height: 10),

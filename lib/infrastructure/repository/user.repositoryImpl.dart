@@ -1,4 +1,3 @@
-import 'package:staffsync/application/providers/providers.dart';
 import 'package:staffsync/domain/model/notification.model.dart';
 import 'package:staffsync/domain/model/user.model.dart';
 import 'package:staffsync/domain/repositories/user.repository.dart';
